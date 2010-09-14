@@ -1,0 +1,133 @@
+TABLE, BODY, P, DIV, FONT, FORM {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size:11px;
+  color: #000000;
+  	SCROLLBAR-FACE-COLOR: #B9CEB7; 
+  	SCROLLBAR-HIGHLIGHT-COLOR: #ffffff; 
+  	SCROLLBAR-SHADOW-COLOR: #ffffff; 
+  	SCROLLBAR-ARROW-COLOR: #000000; 
+  	SCROLLBAR-TRACK-COLOR: #F0F1F5; 
+  	SCROLLBAR-BASE-COLOR: #000066;
+   }
+   H1 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY: tahoma
+}
+H2 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY:  tahoma
+}
+H3 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY:  tahoma
+}
+H4 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY:  tahoma
+}
+H5 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY:  tahoma
+}
+H6 {
+	FONT-WEIGHT: bold; FONT-SIZE: 11px; FONT-FAMILY:  tahoma
+	}
+.arthead {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size:11px;
+  color:#000000;
+  font-weight: bold;
+   }
+.artsubhead {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size:10px;
+   }
+.art {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size:11px;
+   }
+.menuehead {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size:11px;
+  font-weight: bold;
+   }
+
+	.big {
+font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12 px;
+  color: #000000;
+	}
+
+.cml {
+	font-family: Palatino, Verdana, Arial, Helvetica, sans-serif;
+	font-size: 15 px;
+	font-style : italic;
+	font-weight: bold;
+	color : #330066;
+}
+
+.tiny  {
+font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 10 px;
+  color: #000000;
+	}
+
+INPUT, TEXTAREA, SELECT {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #000000;
+	background : #FFFFFF;
+}
+.small      { height: 3mm; color: black;
+                 border-style: solid; border-color: black;
+                 border-width:  0px 2px 0px 0px; 
+                 font-family: Arial; font-size: 9pt; font-weight: bold;}
+
+   .smallx     { background-color: #e5e5e5; height: 3mm; color: black;
+                 font-family: Arial; font-size: 9pt; font-weight: bold;}
+
+ table.print    { border-style: solid; border-color: black;
+                  border-width: 2px 0px 1px 2px; 
+                  background-color: black; width: 257mm }
+
+ tr.print       { background-color: white; height: 3mm; color: black;
+                  border-width:  0px 0px 0px 0px;
+                  text-align: center; font-family: Arial; font-size: 9pt;
+                  font-weight: normal;}
+
+ .print       { border-style: solid; border-color: black;
+                  border-width:  0px 1px 1px 0px; 
+                  background-color: white; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: normal; 
+                 }
+
+ .print_d     { border-style: solid; border-color: black;
+                  border-width:  0px 2px 1px 0px; 
+                  background-color: white; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: normal; 
+                 }
+
+ .print_dd     { border-style: solid; border-color: black;
+                  border-width:  0px 2px 2px 0px; 
+                  background-color: white; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: normal; 
+                 }
+
+ .print_ddd     { border-style: solid; border-color: black;
+                  border-width:  1px 2px 2px 0px; 
+                  background-color: white; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: normal; 
+                 }
+
+ .print_b       { border-style: solid; border-color: black;
+                  border-width:  1px 1px 1px 0px; 
+                  background-color: white; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: normal; 
+                 }
+
+ .print_grey    { border-style: solid; border-color: black;
+                  border-width:  0px 2px 1px 0px; 
+                  background-color: #e5e5e5; height: 3mm; color: black;
+                  font-family: Arial; font-size: 9pt; font-weight: bold; 
+                 }
+
+
+A:active { text-decoration : none; font-weight : bold; color : #587A50; font-family: Verdana, Arial, Helvetica, sans-serif; }
+A:link { text-decoration : none; font-weight : bold; color : #587A50; font-family: Verdana, Arial, Helvetica, sans-serif; }
+A:visited { text-decoration : none; font-weight : bold; color : #587A50; font-family: Verdana, Arial, Helvetica, sans-serif; }
+A:hover { text-decoration : underline; font-weight : bold; color : #587A50; font-family: Verdana, Arial, Helvetica, sans-serif; }
