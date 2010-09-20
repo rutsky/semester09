@@ -1,0 +1,1 @@
+Summary obtained from teacher.
