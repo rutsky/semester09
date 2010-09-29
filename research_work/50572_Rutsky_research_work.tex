@@ -1,0 +1,105 @@
+% Research work task for 9th semester in SPbSTU.
+% Copyright (C) 2010 Vladimir Rutsky <altsysrq@gmail.com>
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\usepackage{amsmath, amsthm, amssymb}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+%\flushbottom       % page height aligning
+%\hoffset=0cm
+\pagestyle{empty}  % without numeration
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+\usepackage{setspace}
+%\linespread{1.5}
+
+% from http://www.latex-community.org/forum/viewtopic.php?f=5&t=1383&start=0&st=0&sk=t&sd=a
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {-3.25ex\@plus -1ex \@minus -.2ex}%
+  {1.5ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\begin{document}
+
+\begin{center}
+\begin{spacing}{1.5}
+  {\Large\bfseries Задание на НИРС} \\
+  {\large Руцкий Владимир Владимирович, гр.~5057/2, 9~семестр 2010~г.}
+\end{spacing}
+\end{center}
+
+{\setlength\parindent{0cm}
+\textbf{Тема работы:}\quad Разработка технологии создания ортофотоплана местности \\
+\textbf{Место выполнения:}\quad ЗАО <<Транзас Новые Технологии>> \\
+\textbf{Руководитель:}\quad Ковалёв Антон Сергеевич, 
+магистр прикладной математики и информатики, 
+ведущий инженер-программист (руководитель группы) ЗАО <<Транзас Новые Технологии>>
+}
+
+\paragraph{Постановка задачи}
+
+Test
+
+\paragraph{Элементы исследования и новизны}
+
+Тест
+
+\paragraph{Ожидаемый результат}
+
+Тест
+
+\paragraph{Среда разработки}
+
+Платформа: Microsoft Windows XP
+
+Языки программирования: C++, Python
+
+Среда разработки: Microsoft Visual Studio, NetBeans
+
+\paragraph{Литература}
+
+\begin{enumerate}
+  \item R.\,Szeliski.\quad Image Alignment and Stitching: A Tutorial.\quad Now Publishers Inc, 2006.
+  \item R.\,Szeliski.\quad Computer Vision: Algorithms and Applications.\quad Springer, 2010.
+\end{enumerate}
+
+\vspace{3cm}
+
+\begin{flushright} % выровнять её содержимое по правому краю
+\begin{spacing}{2}
+
+\begin{tabular}{l l l}
+Студент & \noindent\underline{\makebox[2.5cm][l]{}} & В.\,В.\,Руцкий \\
+Руководитель & \noindent\underline{\makebox[2.5cm][l]{}} & А.\,С.\,Ковалёв\\
+\end{tabular}
+
+\vspace{1cm}
+29~сентября~2010~г.
+
+\end{spacing}
+\end{flushright} % конец выравнивания по правому краю
+
+\end{document}
