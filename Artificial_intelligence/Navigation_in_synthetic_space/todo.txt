@@ -1,0 +1,2 @@
+1. Fix footnote: can't add at end "В. Руцкий. гр. 5057/2" due to uncentered footnote.
+2. Title page should not be numbered
