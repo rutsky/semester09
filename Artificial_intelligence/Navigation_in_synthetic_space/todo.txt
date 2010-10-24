@@ -1,2 +1,6 @@
 1. Fix footnote: can't add at end "В. Руцкий. гр. 5057/2" due to uncentered footnote.
-2. Title page should not be numbered
+2. Title page should not be numbered.
+3. Remove "Спасибо за внимание" at end.
+4. Add algorithms complexities.
+5. Add algorithms usage information (применимость).
+6. Fix illustration for BUG1 (bug at first walks around full obstacle).
