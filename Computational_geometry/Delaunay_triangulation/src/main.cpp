@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include "delaunay_triangulation.hpp"
+
 int main( int argc, char const *argv[] )
 {
   std::cout << "Hi!\n";
