@@ -19,9 +19,35 @@
 
 #include <iostream>
 
+#include <boost/tuple/tuple_io.hpp>
+
 #include "delaunay_triangulation.hpp"
+
+struct point_2
+{
+  double x, y;
+
+  point_2()
+    : x(0)
+    , y(y)
+  {
+  }
+
+  point_2( double x, double y )
+    : x(x)
+    , y(y)
+  {
+  }
+};
 
 int main( int argc, char const *argv[] )
 {
   std::cout << "Hi!\n";
+
+  typedef dt::delaunay_triangulation<point_2> triangulation_t;
+  triangulation_t triangulation;
+
+  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
+    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
+      std::cout, "\n"));
 }
