@@ -17,21 +17,35 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+#ifndef POINT_HPP
+#define POINT_HPP
 
-#include <boost/tuple/tuple_io.hpp>
-
-#include "delaunay_triangulation.hpp"
-#include "point.hpp"
-
-int main( int argc, char const *argv[] )
+template<typename Scalar, int Dim>
+struct point_t
 {
-  std::cout << "Hi!\n";
+};
 
-  typedef dt::delaunay_triangulation<point_2> triangulation_t;
-  triangulation_t triangulation;
+template<typename Scalar>
+struct point_t<Scalar, 2>
+{
+  typedef point_t<Scalar, 2> self_t;
+  typedef Scalar scalar_t;
 
-  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
-}
+  scalar_t x, y;
+
+  point_t()
+    : x()
+    , y()
+  {
+  }
+
+  point_t( scalar_t x, scalar_t y )
+    : x(x)
+    , y(y)
+  {
+  }
+};
+
+typedef point_t<double, 2> point_2;
+
+#endif // POINT_HPP

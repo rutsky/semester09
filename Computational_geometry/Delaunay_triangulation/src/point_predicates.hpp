@@ -17,21 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+#ifndef POINT_PREDICATES_HPP
+#define POINT_PREDICATES_HPP
 
-#include <boost/tuple/tuple_io.hpp>
 
-#include "delaunay_triangulation.hpp"
-#include "point.hpp"
 
-int main( int argc, char const *argv[] )
-{
-  std::cout << "Hi!\n";
-
-  typedef dt::delaunay_triangulation<point_2> triangulation_t;
-  triangulation_t triangulation;
-
-  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
-}
+#endif // POINT_PREDICATES_HPP

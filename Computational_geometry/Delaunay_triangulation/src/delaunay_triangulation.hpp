@@ -93,10 +93,12 @@ namespace dt
   public:
     delaunay_triangulation()
     {
+      /*
       // Test data
       triangles_.push_back(triangle_t(0, 1, 2, 0, 0, 0));
       triangles_.push_back(triangle_t(3, -1, 5, 0, 0, 0));
       triangles_.push_back(triangle_t(2, 3, 5, 0, 0, 0));
+       */
     }
 
   public:
