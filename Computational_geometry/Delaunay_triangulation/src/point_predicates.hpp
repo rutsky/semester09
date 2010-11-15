@@ -31,12 +31,15 @@
 
 namespace cg
 {
-  enum orientation_t
-  {
-    CLOCKWISE = -1,
-    COLLINEAR = 0,
-    COUNTERCLOCKWISE = 1,
-  };
+  typedef CGAL::Sign orientation_t;
+
+  using CGAL::COLLINEAR;
+  using CGAL::CLOCKWISE;
+  using CGAL::COUNTERCLOCKWISE;
+
+  using CGAL::ON_ORIENTED_BOUNDARY;
+  using CGAL::ON_POSITIVE_SIDE;
+  using CGAL::ON_NEGATIVE_SIDE;
 
   template< class CharT, class Traits >
   inline
@@ -61,8 +64,8 @@ namespace cg
   }
 
   /*
-   * Returns orientation of (p0, p1, p2) triangle vertices as seen from (0, 0, 1)
-   * in right-hand coordinate system.
+   * Returns orientation of (p0, p1, p2) triangle vertices as seen from
+   * (0, 0, 1) in right-hand coordinate system.
    */
   template<class Scalar>
   inline
@@ -72,20 +75,10 @@ namespace cg
   {
     typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
 
-    CGAL::Orientation const result = CGAL::SF_Orientation_2<kernel_t>()(
+    return CGAL::SF_Orientation_2<kernel_t>()(
         construct_2d_point<kernel_t::Point_2>(p1),
         construct_2d_point<kernel_t::Point_2>(p0),
         construct_2d_point<kernel_t::Point_2>(p2));
-    
-    if (result == CGAL::NEGATIVE)
-      return CLOCKWISE;
-    else if (result == CGAL::POSITIVE)
-      return COUNTERCLOCKWISE;
-    else
-    {
-      BOOST_ASSERT(result == CGAL::ZERO);
-      return COLLINEAR;
-    }
   }
 
   /*
@@ -93,9 +86,9 @@ namespace cg
    */
   template<class Scalar>
   inline
-  bool exact_left_turn( point_t<Scalar, 2> const &p0,
-                        point_t<Scalar, 2> const &p1,
-                        point_t<Scalar, 2> const &p2 )
+  bool exact_is_left_turn( point_t<Scalar, 2> const &p0,
+                           point_t<Scalar, 2> const &p1,
+                           point_t<Scalar, 2> const &p2 )
   {
     return exact_orientation(p0, p1, p2) == CLOCKWISE;
   }
@@ -105,9 +98,9 @@ namespace cg
    */
   template<class Scalar>
   inline
-  bool exact_right_turn( point_t<Scalar, 2> const &p0,
-                         point_t<Scalar, 2> const &p1,
-                         point_t<Scalar, 2> const &p2 )
+  bool exact_is_right_turn( point_t<Scalar, 2> const &p0,
+                            point_t<Scalar, 2> const &p1,
+                            point_t<Scalar, 2> const &p2 )
   {
     return exact_orientation(p0, p1, p2) == COUNTERCLOCKWISE;
   }
@@ -117,11 +110,37 @@ namespace cg
    */
   template<class Scalar>
   inline
-  bool exact_collinear( point_t<Scalar, 2> const &p0,
-                        point_t<Scalar, 2> const &p1,
-                        point_t<Scalar, 2> const &p2 )
+  bool exact_is_collinear( point_t<Scalar, 2> const &p0,
+                           point_t<Scalar, 2> const &p1,
+                           point_t<Scalar, 2> const &p2 )
   {
     return exact_orientation(p0, p1, p2) == COLLINEAR;
+  }
+
+  /*
+   * Returns:
+   *   ON_POSITIVE_SIDE - 
+   *       q is on the left side of oriented (p0, p1, p2) circle,
+   *   ON_ORIENTED_BOUNDARY, -
+   *       q lies on (p0, p1, p2) circle,
+   *   ON_NEGATIVE_SIDE, -
+   *       q is on the right side of oriented (p0, p1, p2) circle.
+   */
+  template<class Scalar>
+  inline
+  orientation_t exact_side_of_oriented_circle(
+      point_t<Scalar, 2> const &p0,
+      point_t<Scalar, 2> const &p1,
+      point_t<Scalar, 2> const &p2,
+      point_t<Scalar, 2> const &q )
+  {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
+
+    return CGAL::SF_Side_of_oriented_circle_2<kernel_t>()(
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p2),
+        construct_2d_point<kernel_t::Point_2>(q));
   }
 }
 

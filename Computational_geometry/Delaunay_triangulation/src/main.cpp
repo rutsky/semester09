@@ -49,4 +49,23 @@ int main( int argc, char const *argv[] )
     cg::exact_orientation(cg::point_2(0, 0),
                           cg::point_2(0, 1),
                           cg::point_2(1, 0)) == cg::COUNTERCLOCKWISE);
+
+  BOOST_VERIFY(
+    exact_side_of_oriented_circle(
+          cg::point_2(0, -1),
+          cg::point_2(1, 0),
+          cg::point_2(0, 1),
+          cg::point_2(-1, 0)) == cg::ON_ORIENTED_BOUNDARY);
+  BOOST_VERIFY(
+    exact_side_of_oriented_circle(
+          cg::point_2(0, -1),
+          cg::point_2(1, 0),
+          cg::point_2(0, 1),
+          cg::point_2(1, 1)) == cg::ON_NEGATIVE_SIDE);
+  BOOST_VERIFY(
+    exact_side_of_oriented_circle(
+          cg::point_2(0, -1),
+          cg::point_2(1, 0),
+          cg::point_2(0, 1),
+          cg::point_2(0, 0)) == cg::ON_POSITIVE_SIDE);
 }
