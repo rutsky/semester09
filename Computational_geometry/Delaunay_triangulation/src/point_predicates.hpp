@@ -20,6 +20,9 @@
 #ifndef POINT_PREDICATES_HPP
 #define POINT_PREDICATES_HPP
 
-
+namespace cg
+{
+  
+}
 
 #endif // POINT_PREDICATES_HPP

@@ -21,6 +21,8 @@
 
 #include <boost/tuple/tuple_io.hpp>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
 #include "delaunay_triangulation.hpp"
 #include "point.hpp"
 
@@ -28,7 +30,7 @@ int main( int argc, char const *argv[] )
 {
   std::cout << "Hi!\n";
 
-  typedef dt::delaunay_triangulation<point_2> triangulation_t;
+  typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
   triangulation_t triangulation;
 
   std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),

@@ -20,32 +20,35 @@
 #ifndef POINT_HPP
 #define POINT_HPP
 
-template<typename Scalar, int Dim>
-struct point_t
+namespace cg
 {
-};
-
-template<typename Scalar>
-struct point_t<Scalar, 2>
-{
-  typedef point_t<Scalar, 2> self_t;
-  typedef Scalar scalar_t;
-
-  scalar_t x, y;
-
-  point_t()
-    : x()
-    , y()
+  template<typename Scalar, int Dim>
+  struct point_t
   {
-  }
+  };
 
-  point_t( scalar_t x, scalar_t y )
-    : x(x)
-    , y(y)
+  template<typename Scalar>
+  struct point_t<Scalar, 2>
   {
-  }
-};
+    typedef point_t<Scalar, 2> self_t;
+    typedef Scalar scalar_t;
 
-typedef point_t<double, 2> point_2;
+    scalar_t x, y;
+
+    point_t()
+      : x()
+      , y()
+    {
+    }
+
+    point_t( scalar_t x, scalar_t y )
+      : x(x)
+      , y(y)
+    {
+    }
+  };
+
+  typedef point_t<double, 2> point_2;
+}
 
 #endif // POINT_HPP
