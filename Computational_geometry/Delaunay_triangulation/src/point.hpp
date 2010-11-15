@@ -22,12 +22,12 @@
 
 namespace cg
 {
-  template<typename Scalar, int Dim>
+  template< typename Scalar, int Dim >
   struct point_t
   {
   };
 
-  template<typename Scalar>
+  template< typename Scalar >
   struct point_t<Scalar, 2>
   {
     typedef point_t<Scalar, 2> self_t;
@@ -49,6 +49,12 @@ namespace cg
   };
 
   typedef point_t<double, 2> point_2;
+
+  template< class DestPointType, class SrcPointType >
+  DestPointType construct_2d_point( SrcPointType const &p )
+  {
+    return DestPointType(p.x, p.y);
+  }
 }
 
 #endif // POINT_HPP

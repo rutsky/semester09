@@ -37,8 +37,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=
-CXXFLAGS=
+CCFLAGS=-I/usr/include -frounding-math
+CXXFLAGS=-I/usr/include -frounding-math
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -55,7 +55,7 @@ LDLIBSOPTIONS=
 
 dist/Debug/GNU-Linux-x86/netbeans: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/netbeans ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -L/usr/lib -lCGAL -lCGAL_Core -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/netbeans ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/src/main.o: nbproject/Makefile-${CND_CONF}.mk src/main.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src

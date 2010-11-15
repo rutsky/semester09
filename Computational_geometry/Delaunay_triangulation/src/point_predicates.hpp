@@ -20,9 +20,48 @@
 #ifndef POINT_PREDICATES_HPP
 #define POINT_PREDICATES_HPP
 
+#include <boost/assert.hpp>
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Filtered_predicate.h>
+
+#include "point.hpp"
+
 namespace cg
 {
-  
+  enum orientation_t
+  {
+    CLOCKWISE = -1,
+    COLLINEAR = 0,
+    COUNTERCLOCKWISE = 1,
+  };
+
+  /*
+   * Returns orientation of PQR triangle vertices as seen from (0, 0, 1)
+   * in right-hand coordinate system.
+   */
+  template<class Scalar>
+  orientation_t exact_orientation( point_t<Scalar, 2> const &p,
+                                   point_t<Scalar, 2> const &q,
+                                   point_t<Scalar, 2> const &r )
+  {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
+
+    CGAL::Orientation const result = CGAL::SF_Orientation_2<kernel_t>()(
+        construct_2d_point<kernel_t::Point_2>(p),
+        construct_2d_point<kernel_t::Point_2>(q),
+        construct_2d_point<kernel_t::Point_2>(r));
+    
+    if (result == CGAL::CLOCKWISE)
+      return CLOCKWISE;
+    else if (result == CGAL::COUNTERCLOCKWISE)
+      return COUNTERCLOCKWISE;
+    else
+    {
+      BOOST_ASSERT(result == CGAL::COLLINEAR);
+      return COLLINEAR;
+    }
+  }
 }
 
 #endif // POINT_PREDICATES_HPP

@@ -21,10 +21,9 @@
 
 #include <boost/tuple/tuple_io.hpp>
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-
 #include "delaunay_triangulation.hpp"
 #include "point.hpp"
+#include "point_predicates.hpp"
 
 int main( int argc, char const *argv[] )
 {
@@ -36,4 +35,6 @@ int main( int argc, char const *argv[] )
   std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
     std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
       std::cout, "\n"));
+
+  
 }
