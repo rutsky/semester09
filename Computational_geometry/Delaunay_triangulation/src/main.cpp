@@ -36,5 +36,17 @@ int main( int argc, char const *argv[] )
     std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
       std::cout, "\n"));
 
-  
+  // Orientation tests.
+  BOOST_VERIFY(
+    cg::exact_orientation(cg::point_2(0, 0),
+                          cg::point_2(0, 0),
+                          cg::point_2(0, 0)) == cg::COLLINEAR);
+  BOOST_VERIFY(
+    cg::exact_orientation(cg::point_2(0, 0),
+                          cg::point_2(1, 0),
+                          cg::point_2(0, 1)) == cg::CLOCKWISE);
+  BOOST_VERIFY(
+    cg::exact_orientation(cg::point_2(0, 0),
+                          cg::point_2(0, 1),
+                          cg::point_2(1, 0)) == cg::COUNTERCLOCKWISE);
 }

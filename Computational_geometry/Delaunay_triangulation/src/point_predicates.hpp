@@ -20,6 +20,8 @@
 #ifndef POINT_PREDICATES_HPP
 #define POINT_PREDICATES_HPP
 
+#include <ostream>
+
 #include <boost/assert.hpp>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -36,31 +38,90 @@ namespace cg
     COUNTERCLOCKWISE = 1,
   };
 
+  template< class CharT, class Traits >
+  inline
+  std::basic_ostream<CharT, Traits> &
+    operator << ( std::basic_ostream<CharT, Traits> &os, orientation_t o )
+  {
+    switch (o)
+    {
+    case CLOCKWISE:
+      os << "CW";
+      break;
+    case COLLINEAR:
+      os << "COLLINEAR";
+      break;
+    case COUNTERCLOCKWISE:
+      os << "CCW";
+      break;
+    default:
+      BOOST_ASSERT(0);
+    }
+    return os;
+  }
+
   /*
-   * Returns orientation of PQR triangle vertices as seen from (0, 0, 1)
+   * Returns orientation of (p0, p1, p2) triangle vertices as seen from (0, 0, 1)
    * in right-hand coordinate system.
    */
   template<class Scalar>
-  orientation_t exact_orientation( point_t<Scalar, 2> const &p,
-                                   point_t<Scalar, 2> const &q,
-                                   point_t<Scalar, 2> const &r )
+  inline
+  orientation_t exact_orientation( point_t<Scalar, 2> const &p0,
+                                   point_t<Scalar, 2> const &p1,
+                                   point_t<Scalar, 2> const &p2 )
   {
     typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
 
     CGAL::Orientation const result = CGAL::SF_Orientation_2<kernel_t>()(
-        construct_2d_point<kernel_t::Point_2>(p),
-        construct_2d_point<kernel_t::Point_2>(q),
-        construct_2d_point<kernel_t::Point_2>(r));
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p2));
     
-    if (result == CGAL::CLOCKWISE)
+    if (result == CGAL::NEGATIVE)
       return CLOCKWISE;
-    else if (result == CGAL::COUNTERCLOCKWISE)
+    else if (result == CGAL::POSITIVE)
       return COUNTERCLOCKWISE;
     else
     {
-      BOOST_ASSERT(result == CGAL::COLLINEAR);
+      BOOST_ASSERT(result == CGAL::ZERO);
       return COLLINEAR;
     }
+  }
+
+  /*
+   * Returns true if p2 lies on the left side of line (p0,p1).
+   */
+  template<class Scalar>
+  inline
+  bool exact_left_turn( point_t<Scalar, 2> const &p0,
+                        point_t<Scalar, 2> const &p1,
+                        point_t<Scalar, 2> const &p2 )
+  {
+    return exact_orientation(p0, p1, p2) == CLOCKWISE;
+  }
+
+  /*
+   * Returns true if p2 lies on the right side of line (p0,p1).
+   */
+  template<class Scalar>
+  inline
+  bool exact_right_turn( point_t<Scalar, 2> const &p0,
+                         point_t<Scalar, 2> const &p1,
+                         point_t<Scalar, 2> const &p2 )
+  {
+    return exact_orientation(p0, p1, p2) == COUNTERCLOCKWISE;
+  }
+
+  /*
+   * Returns true if p2 lies on the line (p0,p1).
+   */
+  template<class Scalar>
+  inline
+  bool exact_collinear( point_t<Scalar, 2> const &p0,
+                        point_t<Scalar, 2> const &p1,
+                        point_t<Scalar, 2> const &p2 )
+  {
+    return exact_orientation(p0, p1, p2) == COLLINEAR;
   }
 }
 
