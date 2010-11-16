@@ -31,6 +31,8 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 
+#include "point_predicates.hpp"
+
 namespace dt
 {
   template< class PointType >
@@ -48,7 +50,7 @@ namespace dt
     // Common to all infinite triangles vertex.
     static vertex_handle_t const infinite_vertex = static_cast<size_t>(-1);
 
-    typedef std::list<size_t> points_queue_t;
+    typedef std::vector<size_t> points_queue_t;
 
     typedef size_t triangle_handle_t;
     static triangle_handle_t const invalid_triangle = static_cast<size_t>(-1);
@@ -93,17 +95,40 @@ namespace dt
   public:
     delaunay_triangulation()
     {
+      /*
       // Test data
       triangles_.push_back(triangle_t(0, 1, 2, 0, 0, 0));
       triangles_.push_back(triangle_t(3, -1, 5, 0, 0, 0));
       triangles_.push_back(triangle_t(2, 3, 5, 0, 0, 0));
+       */
     }
 
   public:
     // Add point to triangulation.
-    void add_point( point_t const &p )
+    // Returns index of point vertex buffer.
+    size_t add_point( point_t const &p )
     {
-      
+      if (triangles_.empty())
+      {
+        // Triangles structure not initialized yet.
+        // This can be when number of points is less than three or all points
+        // lies on same line.
+
+        // Check wheter new point will make possible to construct triangles
+        // structure.
+        pointsQueue_.push_back(p);
+        if (pointsQueue_.size() >= 3 &&
+            !cg::exact_is_collinear(
+                pointsQueue_[pointsQueue_.size() - 0],
+                pointsQueue_[pointsQueue_.size() - 1],
+                pointsQueue_[pointsQueue_.size() - 2]))
+        {
+          initTrianglesStructure(
+              pointsQueue_[pointsQueue_.size() - 0],
+              pointsQueue_[pointsQueue_.size() - 1],
+              pointsQueue_[pointsQueue_.size() - 2]);
+        }
+      }
     }
 
     // Add points to triangulation.
@@ -198,6 +223,14 @@ namespace dt
     static triangle_vertices_indices_t triangle_vertices( triangle_t const &tr )
     {
       return triangle_vertices_indices_t(tr.v[0], tr.v[1], tr.v[2]);
+    }
+
+  protected:
+    void initTrianglesStructure( point_t const &p0,
+                                 point_t const &p1,
+                                 point_t const &p2 )
+    {
+      BOOST_ASSERT(!cg::exact_is_collinear(p0, p1, p2));
     }
 
   protected:
