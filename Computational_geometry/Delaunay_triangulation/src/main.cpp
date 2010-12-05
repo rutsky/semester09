@@ -29,8 +29,10 @@ int main( int argc, char const *argv[] )
 {
   std::cout << "Hi!\n";
 
+  std::vector<cg::point_2> points;
+
   typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
-  triangulation_t triangulation;
+  triangulation_t triangulation(points.begin(), points.end());
 
   std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
     std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(

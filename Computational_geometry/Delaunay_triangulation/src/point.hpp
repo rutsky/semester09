@@ -33,6 +33,8 @@ namespace cg
     typedef point_t<Scalar, 2> self_t;
     typedef Scalar scalar_t;
 
+    static int const dim = 2;
+
     scalar_t x, y;
 
     point_t()
@@ -49,14 +51,14 @@ namespace cg
 
     scalar_t const & operator [] ( int i ) const
     {
-      BOOST_ASSERT(i >= 0, i < Dim);
+      BOOST_ASSERT(i >= 0 && i < dim);
       // TODO: We hope that padding is zero.
       return reinterpret_cast<scalar_t * const>(this)[i];
     }
 
     scalar_t       & operator [] ( int i )
     {
-      BOOST_ASSERT(i >= 0, i < Dim);
+      BOOST_ASSERT(i >= 0 && i < dim);
       // TODO: We hope that padding is zero.
       return reinterpret_cast<scalar_t *>(this)[i];
     }
@@ -80,7 +82,7 @@ namespace cg
     return result;
   }
 
-  template< typename Scalar, int Dim, OpScalar >
+  template< typename Scalar, int Dim, typename OpScalar >
   point_t<Scalar, Dim> operator * ( point_t<Scalar, Dim> const &a, OpScalar const &c )
   {
     point_t<Scalar, Dim> result;
@@ -89,7 +91,7 @@ namespace cg
     return result;
   }
 
-  template< typename Scalar, int Dim, OpScalar >
+  template< typename Scalar, int Dim, typename OpScalar >
   point_t<Scalar, Dim> operator * ( OpScalar const &c, point_t<Scalar, Dim> const &a )
   {
     point_t<Scalar, Dim> result;
@@ -98,7 +100,7 @@ namespace cg
     return result;
   }
 
-  template< typename Scalar, int Dim, OpScalar >
+  template< typename Scalar, int Dim, typename OpScalar >
   point_t<Scalar, Dim> operator / ( point_t<Scalar, Dim> const &a, OpScalar const &c )
   {
     point_t<Scalar, Dim> result;

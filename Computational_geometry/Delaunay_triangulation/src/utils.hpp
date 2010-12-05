@@ -33,15 +33,14 @@ namespace cg
 {
   // Calculates axis-aligned bounding box.
   // Returns pair<lower-left point, upper-right point>
-  template< class PointFwdIter,
-            class PointType = typename PointFwdIter::value_type >
+  template< class PointFwdIter >
   inline
-  std::pair<PointType, PointType>
+  std::pair<typename PointFwdIter::value_type, typename PointFwdIter::value_type>
     axis_aligned_bounding_box( PointFwdIter first, PointFwdIter beyond )
   {
     using namespace boost;
 
-    typedef PointType point_t;
+    typedef typename PointFwdIter::value_type point_t;
     typedef typename point_t::scalar_t scalar_t;
 
     scalar_t minX, maxX;

@@ -43,7 +43,7 @@ namespace dt
   public:
     typedef delaunay_triangulation<PointType> self_t;
     typedef PointType point_t;
-    typedef point_t::scalar_t scalar_t;
+    typedef typename point_t::scalar_t scalar_t;
     typedef boost::tuple<size_t, size_t, size_t> triangle_vertices_indices_t;
 
   protected:
@@ -285,14 +285,14 @@ namespace dt
 
   protected:
     typedef boost::function<bool (triangle_t const &)>
-        is_triangle_finite_pred;
-    typedef boost::filter_iterator<is_triangle_finite_pred, 
+        is_triangle_real_pred;
+    typedef boost::filter_iterator<is_triangle_real_pred,
                                    typename triangles_t::const_iterator>
-        finite_triangles_it;
+        real_triangles_it;
     typedef boost::function<triangle_vertices_indices_t (triangle_t const &)>
         extract_triangle_vertices_func;
     typedef boost::transform_iterator<extract_triangle_vertices_func,
-                                      finite_triangles_it>
+                                      real_triangles_it>
         extract_triangle_vertices_it;
 
   public:
@@ -300,64 +300,46 @@ namespace dt
 
     triangles_const_iterator triangles_begin() const
     {
-      is_triangle_finite_pred isFinitePred =
-          (bool (*)(triangle_t const &))&self_t::is_finite;
-      finite_triangles_it finiteTrianglesItBegin =
-          finite_triangles_it(isFinitePred,
+      is_triangle_real_pred isTriangleRealPred =
+         boost::bind(&self_t::isTriangleReal, *this, _1);
+      real_triangles_it realTrianglesItBegin =
+          real_triangles_it(isTriangleRealPred,
               triangles_.begin(), triangles_.end());
       extract_triangle_vertices_func extractTriangleFunc =
           &self_t::triangle_vertices;
       extract_triangle_vertices_it extractIt =
-          extract_triangle_vertices_it(finiteTrianglesItBegin,
+          extract_triangle_vertices_it(realTrianglesItBegin,
               extractTriangleFunc);
       return extractIt;
     }
 
     triangles_const_iterator triangles_end() const
     {
-      is_triangle_finite_pred isFinitePred =
-          (bool (*)(triangle_t const &))&self_t::is_finite;
-      finite_triangles_it finiteTrianglesItEnd =
-          finite_triangles_it(isFinitePred,
+      is_triangle_real_pred isTriangleRealPred =
+         boost::bind(&self_t::isTriangleReal, *this, _1);
+      real_triangles_it realTrianglesItEnd =
+          real_triangles_it(isTriangleRealPred,
               triangles_.end(), triangles_.end());
       extract_triangle_vertices_func extractTriangleFunc =
           &self_t::triangle_vertices;
       extract_triangle_vertices_it extractIt =
-          extract_triangle_vertices_it(finiteTrianglesItEnd,
+          extract_triangle_vertices_it(realTrianglesItEnd,
               extractTriangleFunc);
       return extractIt;
     }
 
   protected:
-    static bool is_finite( vertex_handle_t v )
-    {
-      return (v != invalid_vertex_handle);
-    }
-
-    /*
-     * Returns index of infinite vertex in triangle,
-     * (size_t)-1 if triangle is finite.
-     */
-    static size_t infinite_vertex_idx( triangle_t const &tr )
-    {
-      if (!is_finite(tr.v[0]))
-        return 0;
-      else if (!is_finite(tr.v[1]))
-        return 1;
-      else if (!is_finite(tr.v[2]))
-        return 2;
-      else
-        return static_cast<size_t>(-1);
-    }
-
-    static bool is_finite( triangle_t const &tr )
-    {
-      return (infinite_vertex_idx(tr) == static_cast<size_t>(-1));
-    }
-
     static triangle_vertices_indices_t triangle_vertices( triangle_t const &tr )
     {
       return triangle_vertices_indices_t(tr.v[0], tr.v[1], tr.v[2]);
+    }
+
+    bool isRealTriangle( triangle_t const &tr )
+    {
+      return !tr.has_children() && 
+              tr.vertex(0) < points_size() &&
+              tr.vertex(1) < points_size() &&
+              tr.vertex(2) < points_size();
     }
 
   protected:
