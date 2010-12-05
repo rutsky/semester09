@@ -119,12 +119,42 @@ namespace cg
 
   /*
    * Returns:
+   *   ON_POSITIVE_SIDE -
+   *       q is on the left side of oriented (p0, p1, p2) triangle,
+   *   ON_ORIENTED_BOUNDARY, -
+   *       q lies on (p0, p1, p2) triangle,
+   *   ON_NEGATIVE_SIDE, -
+   *       q is on the right side of oriented (p0, p1, p2) triangle.
+   * If points p0, p1, p2 oriented counterclockwise when seen from (0, 0, 1)
+   * in right-hand coordinate system, then "left side" is interior of triangle.
+   */
+  template<class Scalar>
+  inline
+  orientation_t exact_side_of_oriented_triangle(
+      point_t<Scalar, 2> const &p0,
+      point_t<Scalar, 2> const &p1,
+      point_t<Scalar, 2> const &p2,
+      point_t<Scalar, 2> const &q )
+  {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
+
+    return CGAL::Triangle_2<kernel_t>(
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p2)).oriented_side(
+            construct_2d_point<kernel_t::Point_2>(q));
+  }
+
+  /*
+   * Returns:
    *   ON_POSITIVE_SIDE - 
    *       q is on the left side of oriented (p0, p1, p2) circle,
    *   ON_ORIENTED_BOUNDARY, -
    *       q lies on (p0, p1, p2) circle,
    *   ON_NEGATIVE_SIDE, -
    *       q is on the right side of oriented (p0, p1, p2) circle.
+   * If points p0, p1, p2 oriented counterclockwise when seen from (0, 0, 1)
+   * in right-hand coordinate system, then "left side" is interior of circle.
    */
   template<class Scalar>
   inline
