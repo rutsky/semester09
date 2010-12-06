@@ -4,3 +4,4 @@
 (by using Boost.Interval I suppose).
  * Add tests for different triangulations.
  * Implement correct testing structure using SCons.
+ * Currently multiple valid results are possible, as in simple_4v.in.
