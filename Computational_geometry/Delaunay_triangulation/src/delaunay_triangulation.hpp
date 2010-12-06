@@ -358,10 +358,31 @@ namespace dt
     static triangle_vertices_indices_t triangle_vertices( triangle_t const &tr )
     {
       // TODO: Use functions like internalIdxToOutputIdx().
-      return triangle_vertices_indices_t(
-              tr.vertex(0) - 3,
-              tr.vertex(1) - 3,
-              tr.vertex(2) - 3);
+
+      size_t idx0 = tr.vertex(0) - 3,
+             idx1 = tr.vertex(1) - 3,
+             idx2 = tr.vertex(2) - 3;
+
+      BOOST_ASSERT(
+              idx0 != idx1 &&
+              idx0 != idx2 &&
+              idx1 != idx2);
+
+      // Sort vertices.
+      // TODO: Needed only for testing.
+      if (idx0 < idx1 && idx0 < idx2)
+      {
+        return triangle_vertices_indices_t(idx0, idx1, idx2);
+      }
+      else if (idx1 < idx0 && idx1 < idx2)
+      {
+        return triangle_vertices_indices_t(idx1, idx2, idx0);
+      }
+      else
+      {
+        BOOST_ASSERT(idx2 < idx0 && idx2 < idx1);
+        return triangle_vertices_indices_t(idx2, idx0, idx1);
+      }
     }
 
     static bool isFiniteVertex( vertex_handle_t vh )

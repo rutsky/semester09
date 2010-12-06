@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include <boost/tuple/tuple_io.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 
 #include "delaunay_triangulation.hpp"
 #include "point.hpp"
@@ -32,6 +33,16 @@ int main()
 
   triangulation_t triangulation(std::istream_iterator<cg::point_2>(std::cin),
                                 std::istream_iterator<cg::point_2>());
+
+  typedef std::vector<triangulation_t::triangle_vertices_indices_t> triangles_t;
+  triangles_t triangles;
+  
+  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
+            std::back_inserter(triangles));
+
+  // Sort output.
+  // TODO: Needed only for debug.
+  std::sort(triangles.begin(), triangles.end());
 
   std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
     std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(

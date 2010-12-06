@@ -3,4 +3,3 @@
  * Implement exact predicates inexactly but without use of CGAL
 (by using Boost.Interval I suppose).
  * Add tests for different triangulations.
- * Sort output result for stable work of tests.
