@@ -63,19 +63,18 @@ def runTests(env, target, source):
                 with open(test_result_file, 'r') as f:
                     test_correct_result = f.read()
                 if test_correct_result != stdout:
-                    print "Test failed due to different output."
+                    print "    Test failed due to different output."
                     with open(new_test_result_file, 'w') as f:
                         f.write(stdout)
-                    print "New result written to '{0}'".format(new_test_result_file,)
+                    print "    New result written to '{0}'".format(new_test_result_file,)
                     raise TestFailed()
                 else:
-                    #print "Test passed."
                     pass
             else:
-                print "Test has no precomputated results."
+                print "    Test has no precomputated results."
                 with open(new_test_result_file, 'w') as f:
                     f.write(stdout)
-                print "New result written to '{0}'".format(new_test_result_file,)
+                print "    New result written to '{0}'".format(new_test_result_file,)
 
         except TestFailed:
             failed_tests.append(test_name)
