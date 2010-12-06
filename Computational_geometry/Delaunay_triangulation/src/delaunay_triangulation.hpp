@@ -118,6 +118,7 @@ namespace dt
 
       vertex_handle_t   vertex( int idx ) const
       {
+        // TODO: Use some modular arithmetics library.
         return v[(3 + (idx % 3)) % 3];
       }
 
