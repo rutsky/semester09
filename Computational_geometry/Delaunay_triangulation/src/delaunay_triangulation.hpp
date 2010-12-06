@@ -214,18 +214,23 @@ namespace dt
   public:
     template< class PointFwdIt >
     delaunay_triangulation( PointFwdIt first, PointFwdIt beyond )
-      : vertexBuffer_(first, beyond)
     {
-      if (vertexBuffer_.empty())
+      if (first == beyond)
       {
         // Empty input.
         return;
       }
 
+      // Prepare space for border vertices.
+      vertexBuffer_.resize(3);
+
+      // Copy input data at end.
+      std::copy(first, beyond, std::back_inserter(vertexBuffer_));
+
       // Calculate points bounding box.
       point_t loPoint, hiPoint;
       boost::tie(loPoint, hiPoint) = 
-          cg::axis_aligned_bounding_box(vertexBuffer_.begin(),
+          cg::axis_aligned_bounding_box(vertexBuffer_.begin() + 3,
                                         vertexBuffer_.end());
 
       // Construct imaginary triangle that contains all points.
@@ -247,18 +252,15 @@ namespace dt
       point_t const rightAnglePoint = center_point + point_t( a / 2.0, -r);
       point_t const topAnglePoint   = center_point + point_t(       0,  R);
 
-      vertex_handle_t const leftAngleVH  = vertexBuffer_.size();
-      vertexBuffer_.push_back(leftAnglePoint);
-      vertex_handle_t const rightAngleVH = vertexBuffer_.size();
-      vertexBuffer_.push_back(rightAnglePoint);
-      vertex_handle_t const topAngleVH   = vertexBuffer_.size();
-      vertexBuffer_.push_back(topAnglePoint);
+      vertexBuffer_[0] = leftAnglePoint;
+      vertexBuffer_[1] = rightAnglePoint;
+      vertexBuffer_[2] = topAnglePoint;
 
       // Insert first triangle that contains all points.
-      triangles_.push_back(triangle_t(leftAngleVH, rightAngleVH, topAngleVH));
+      triangles_.push_back(triangle_t(0, 1, 2));
 
       // Insert input points.
-      for (vertex_handle_t vh = 0; vh < vertexBuffer_.size() - 3; ++vh)
+      for (vertex_handle_t vh = 3; vh < vertexBuffer_.size(); ++vh)
         addVertex(vh);
     }
 
@@ -272,7 +274,7 @@ namespace dt
     point_t point( size_t idx ) const
     {
       BOOST_ASSERT(idx < points_size());
-      return vertexBuffer_[idx];
+      return vertexBuffer_[idx + 3];
     }
 
   protected:
@@ -345,9 +347,9 @@ namespace dt
     bool isRealTriangle( triangle_t const &tr )
     {
       return !tr.has_children() && 
-              tr.vertex(0) < points_size() &&
-              tr.vertex(1) < points_size() &&
-              tr.vertex(2) < points_size();
+              tr.vertex(0) >= 3 &&
+              tr.vertex(1) >= 3 &&
+              tr.vertex(2) >= 3;
     }
 
   protected:
@@ -419,6 +421,19 @@ namespace dt
 
       int const idx = triangle(trh).vertex_index(vh);
       triangle_handle_t const neighTrH = triangle(trh).triangle(idx);
+      if (neighTrH == invalid_vertex_handle)
+      {
+        // No neighbor, must be triangle at border.
+
+        // Two vertices of neighbor must be border vertices.
+        BOOST_ASSERT(
+                (int)(triangle(trh).vertex(0) < 3) +
+                (int)(triangle(trh).vertex(1) < 3) +
+                (int)(triangle(trh).vertex(2) < 3) == 2);
+
+        return;
+      }
+
       BOOST_ASSERT(neighTrH != invalid_vertex_handle);
       BOOST_ASSERT(!triangle(neighTrH).has_children());
 

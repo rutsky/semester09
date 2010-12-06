@@ -32,27 +32,38 @@ int main( int argc, char const *argv[] )
   std::vector<cg::point_2> points;
 
   typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
-  triangulation_t triangulation(points.begin(), points.end());
 
-  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
+  if (0)
+  {
+    triangulation_t triangulation(points.begin(), points.end());
+
+    std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
+      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
+        std::cout, "\n"));
+  }
 
   points.push_back(cg::point_2(0, 0));
 
-  triangulation_t triangulation1(points.begin(), points.end());
+  if (0)
+  {
+    triangulation_t triangulation1(points.begin(), points.end());
 
-  std::copy(triangulation1.triangles_begin(), triangulation1.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
+    std::copy(triangulation1.triangles_begin(), triangulation1.triangles_end(),
+      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
+        std::cout, "\n"));
+  }
 
   points.push_back(cg::point_2(1, 0));
   points.push_back(cg::point_2(0, 1));
-  triangulation_t triangulation2(points.begin(), points.end());
 
-  std::copy(triangulation2.triangles_begin(), triangulation2.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
+  if (1)
+  {
+    triangulation_t triangulation2(points.begin(), points.end());
+
+    std::copy(triangulation2.triangles_begin(), triangulation2.triangles_end(),
+      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
+        std::cout, "\n"));
+  }
 
   // Orientation tests.
   BOOST_VERIFY(
