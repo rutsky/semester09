@@ -23,78 +23,17 @@
 
 #include "delaunay_triangulation.hpp"
 #include "point.hpp"
+#include "point_io.hpp"
 #include "point_predicates.hpp"
 
-int main( int argc, char const *argv[] )
+int main()
 {
-  std::cout << "Hi!\n";
-
-  std::vector<cg::point_2> points;
-
   typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
 
-  if (0)
-  {
-    triangulation_t triangulation(points.begin(), points.end());
+  triangulation_t triangulation(std::istream_iterator<cg::point_2>(std::cin),
+                                std::istream_iterator<cg::point_2>());
 
-    std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
-      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-        std::cout, "\n"));
-  }
-
-  points.push_back(cg::point_2(0, 0));
-
-  if (0)
-  {
-    triangulation_t triangulation1(points.begin(), points.end());
-
-    std::copy(triangulation1.triangles_begin(), triangulation1.triangles_end(),
-      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-        std::cout, "\n"));
-  }
-
-  points.push_back(cg::point_2(1, 0));
-  points.push_back(cg::point_2(0, 1));
-
-  if (1)
-  {
-    triangulation_t triangulation2(points.begin(), points.end());
-
-    std::copy(triangulation2.triangles_begin(), triangulation2.triangles_end(),
-      std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-        std::cout, "\n"));
-  }
-
-  // Orientation tests.
-  BOOST_VERIFY(
-    cg::exact_orientation(cg::point_2(0, 0),
-                          cg::point_2(0, 0),
-                          cg::point_2(0, 0)) == cg::COLLINEAR);
-  BOOST_VERIFY(
-    cg::exact_orientation(cg::point_2(0, 0),
-                          cg::point_2(1, 0),
-                          cg::point_2(0, 1)) == cg::COUNTERCLOCKWISE);
-  BOOST_VERIFY(
-    cg::exact_orientation(cg::point_2(0, 0),
-                          cg::point_2(0, 1),
-                          cg::point_2(1, 0)) == cg::CLOCKWISE);
-
-  BOOST_VERIFY(
-    exact_side_of_oriented_circle(
-          cg::point_2(0, -1),
-          cg::point_2(1, 0),
-          cg::point_2(0, 1),
-          cg::point_2(-1, 0)) == cg::ON_ORIENTED_BOUNDARY);
-  BOOST_VERIFY(
-    exact_side_of_oriented_circle(
-          cg::point_2(0, -1),
-          cg::point_2(1, 0),
-          cg::point_2(0, 1),
-          cg::point_2(1, 1)) == cg::ON_NEGATIVE_SIDE);
-  BOOST_VERIFY(
-    exact_side_of_oriented_circle(
-          cg::point_2(0, -1),
-          cg::point_2(1, 0),
-          cg::point_2(0, 1),
-          cg::point_2(0, 0)) == cg::ON_POSITIVE_SIDE);
+  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
+    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
+      std::cout, "\n"));
 }

@@ -38,6 +38,18 @@ namespace cg
 
     return os;
   }
+
+  template< class CharT, class Traits, typename Scalar, int Dim >
+  inline
+  std::basic_istream<CharT, Traits> &
+    operator >> ( std::basic_istream<CharT, Traits> &is, point_t<Scalar, Dim> &p )
+  {
+    // TODO: Handle reading input in format of output: "(x,y)".
+
+    is >> p.x >> p.y;
+    
+    return is;
+  }
 }
 
 #endif // POINT_IO_HPP
