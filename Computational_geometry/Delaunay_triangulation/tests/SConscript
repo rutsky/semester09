@@ -69,7 +69,8 @@ def runTests(env, target, source):
                     print "New result written to '{0}'".format(new_test_result_file,)
                     raise TestFailed()
                 else:
-                    print "Test passed."
+                    #print "Test passed."
+                    pass
             else:
                 print "Test has no precomputated results."
                 with open(new_test_result_file, 'w') as f:
@@ -78,9 +79,9 @@ def runTests(env, target, source):
 
         except TestFailed:
             failed_tests.append(test_name)
+            print
         else:
             pass
-        print 
       
     if len(failed_tests) == 0:
         with open(str(target[0]), 'w') as f:
