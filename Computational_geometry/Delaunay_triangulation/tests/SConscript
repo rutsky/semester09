@@ -1,0 +1,94 @@
+#  This file is part of Delaunay triangulation robust implementation.
+#
+#  Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os.path
+import itertools
+import re
+import subprocess
+
+Import('env')
+
+class TestFailed(Exception):
+    pass
+
+def runTests(env, target, source):
+    import subprocess
+    app = str(source[0].abspath)
+    
+    tests_dir = os.path.dirname(target[0].abspath)
+    
+    test_files = Glob(os.path.join(tests_dir, "*.in"), strings=True)
+    failed_tests = []
+    for test_file in test_files:
+        test_name = os.path.basename(re.sub(r"\.in$", "", test_file))
+        print " *** Running '{0}'".format(test_name)
+        
+        with open(test_file, 'r') as f:
+            test_data = f.read()
+    
+        try:
+            test_err_file = os.path.join(tests_dir, test_name + ".err")
+            if os.path.exists(test_err_file):
+                os.remove(test_err_file)
+        
+            process = subprocess.Popen([app], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate(test_data)
+            if process.returncode != 0 or len(stderr) > 0:
+                print "Test failed with error code {0}.\nstdout:\n{1}\nstderr:\n{2}\n".format(
+                    process.returncode, stdout, stderr)
+                with open(test_err_file, 'w') as f:
+                    f.write(stderr)
+                raise TestFailed()
+            
+            test_result_file = os.path.join(tests_dir, test_name + ".out")
+            new_test_result_file = os.path.join(tests_dir, test_name + ".new")
+            if os.path.exists(test_result_file):
+                if os.path.exists(new_test_result_file):
+                    os.remove(new_test_result_file)
+            
+                with open(test_result_file, 'r') as f:
+                    test_correct_result = f.read()
+                if test_correct_result != stdout:
+                    print "Test failed due to different output."
+                    with open(new_test_result_file, 'w') as f:
+                        f.write(stdout)
+                    print "New result written to '{0}'".format(new_test_result_file,)
+                    raise TestFailed()
+                else:
+                    print "Test passed."
+            else:
+                print "Test has no precomputated results."
+                with open(new_test_result_file, 'w') as f:
+                    f.write(stdout)
+                print "New result written to '{0}'".format(new_test_result_file,)
+
+        except TestFailed:
+            failed_tests.append(test_name)
+        else:
+            pass
+        print 
+      
+    if len(failed_tests) == 0:
+        with open(str(target[0]), 'w') as f:
+            f.write("PASSED\n")
+    else:
+        print "Following tests failed:\n  " + ", ".join(failed_tests)
+
+test_files = Glob("*.txt", strings=True)
+
+#print dir(env)
+Command("test.passed", env.my_main_program, runTests)

@@ -20,3 +20,4 @@ env = Environment(tools=["default"])
 Export('env')
 
 SConscript("src/SConscript", variant_dir="build")
+SConscript("tests/SConscript")
