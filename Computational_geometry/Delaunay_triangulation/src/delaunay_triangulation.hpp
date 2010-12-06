@@ -170,6 +170,16 @@ namespace dt
         return -1;
       }
 
+      int infinite_vertex_index() const
+      {
+        for (size_t i = 0; i < 3; ++i)
+          if (!isFiniteVertex(v[i]))
+            return i;
+
+        BOOST_VERIFY(false);
+        return -1;
+      }
+
       int triangle_index( triangle_handle_t trh ) const
       {
         for (size_t i = 0; i < 3; ++i)
@@ -344,12 +354,31 @@ namespace dt
       return triangle_vertices_indices_t(tr.v[0], tr.v[1], tr.v[2]);
     }
 
+    static bool isFiniteVertex( vertex_handle_t vh )
+    {
+      BOOST_ASSERT(vh != invalid_vertex_handle);
+      return vh >= 3;
+    }
+
+    size_t infiniteVerticesNum( triangle_handle_t trh )
+    {
+      return (int)!isFiniteVertex(triangle(trh).vertex(0)) +
+             (int)!isFiniteVertex(triangle(trh).vertex(1)) +
+             (int)!isFiniteVertex(triangle(trh).vertex(2));
+    }
+
+    bool isFiniteTriangle( triangle_handle_t trh )
+    {
+      return infiniteVerticesNum(trh) == 0;
+    }
+
     bool isRealTriangle( triangle_t const &tr )
     {
+      //return !tr.has_children();
       return !tr.has_children() && 
-              tr.vertex(0) >= 3 &&
-              tr.vertex(1) >= 3 &&
-              tr.vertex(2) >= 3;
+              isFiniteVertex(tr.vertex(0)) &&
+              isFiniteVertex(tr.vertex(1)) &&
+              isFiniteVertex(tr.vertex(2));
     }
 
   protected:
@@ -357,12 +386,11 @@ namespace dt
     void flip( triangle_handle_t trh, int const idx )
     {
       BOOST_ASSERT(triangle(trh).vertex(idx) != invalid_vertex_handle);
-      BOOST_ASSERT(exact_side_of_oriented_triangle(
-              trh, triangle(trh).vertex(idx)) == cg::ON_POSITIVE_SIDE);
 
       triangle_handle_t neighTrH = triangle(trh).triangle(idx);
       int const neighIdx = triangle(neighTrH).triangle_index(trh);
 
+      BOOST_ASSERT(is_flip_required(trh, triangle(neighTrH).vertex(neighIdx)));
       BOOST_ASSERT(!triangle(trh).has_children());
       BOOST_ASSERT(!triangle(neighTrH).has_children());
 
@@ -421,20 +449,19 @@ namespace dt
 
       int const idx = triangle(trh).vertex_index(vh);
       triangle_handle_t const neighTrH = triangle(trh).triangle(idx);
-      if (neighTrH == invalid_vertex_handle)
+      if (neighTrH == invalid_triangle_handle)
       {
         // No neighbor, must be triangle at border.
 
         // Two vertices of neighbor must be border vertices.
         BOOST_ASSERT(
-                (int)(triangle(trh).vertex(0) < 3) +
-                (int)(triangle(trh).vertex(1) < 3) +
-                (int)(triangle(trh).vertex(2) < 3) == 2);
+                (int)!isFiniteVertex(triangle(trh).vertex(0)) +
+                (int)!isFiniteVertex(triangle(trh).vertex(1)) +
+                (int)!isFiniteVertex(triangle(trh).vertex(2)) == 2);
 
         return;
       }
 
-      BOOST_ASSERT(neighTrH != invalid_vertex_handle);
       BOOST_ASSERT(!triangle(neighTrH).has_children());
 
       int const neighIdx = triangle(neighTrH).triangle_index(trh);
@@ -442,9 +469,9 @@ namespace dt
 
       vertex_handle_t oppositeVH = triangle(neighTrH).vertex(neighIdx);
       
-      if (exact_side_of_oriented_triangle(trh, oppositeVH) == cg::ON_POSITIVE_SIDE)
+      if (is_flip_required(trh, oppositeVH))
       {
-        // Point inside triangle - must flip.
+        // Must flip.
         flip(trh, idx);
         BOOST_ASSERT(triangle(trh).children_num() == 2);
         BOOST_ASSERT(triangle(neighTrH).children_num() == 2);
@@ -654,6 +681,70 @@ namespace dt
           vertex_point(triangle(trh).vertex(1)),
           vertex_point(triangle(trh).vertex(2)),
           vertex_point(vh));
+    }
+
+    bool is_flip_required( triangle_handle_t trh, vertex_handle_t vh )
+    {
+      if (isFiniteTriangle(trh))
+      {
+        if (isFiniteVertex(vh))
+        {
+          // Finite triangle, finite vertex - normal check.
+
+          return cg::exact_side_of_oriented_circle(
+            vertex_point(triangle(trh).vertex(0)),
+            vertex_point(triangle(trh).vertex(1)),
+            vertex_point(triangle(trh).vertex(2)),
+            vertex_point(vh)) == cg::ON_POSITIVE_SIDE;
+        }
+        else
+        {
+          // Finite triangle, infinite vertex - vertex always outside triangle.
+          return false;
+        }
+      }
+      else
+      {
+        if (!isFiniteVertex(vh))
+        {
+          // Infinite triangle, infinite vertex.
+
+          // TODO: case is not so simple, but looks like flip is not
+          // needed here.
+          return false;
+        }
+        else
+        {
+          // Infinite triangle, finite vertex.
+          size_t const nInfVert = infiniteVerticesNum(trh);
+          if (nInfVert == 2)
+          {
+            // Flipes not needed (because after flip situation will be same -
+            // edge of convex hull will remain old).
+            return false;
+          }
+          else
+          {
+            BOOST_ASSERT(nInfVert == 1);
+            // Should check is vertex lies in triangle half-plane.
+            int const infVertexIdx = triangle(trh).infinite_vertex_index();
+
+            if (cg::exact_orientation(
+                vertex_point(triangle(trh).vertex(infVertexIdx + 1)),
+                vertex_point(triangle(trh).vertex(infVertexIdx + 2)),
+                vertex_point(vh)) == cg::COUNTERCLOCKWISE)
+            {
+              // Point in triangle half-plane.
+              return true;
+            }
+            else
+            {
+              // Point and infinite vertex in different triangle half-planes.
+              return false;
+            }
+          }
+        }
+      }
     }
 
     enum location_t

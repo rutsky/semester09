@@ -73,11 +73,11 @@ int main( int argc, char const *argv[] )
   BOOST_VERIFY(
     cg::exact_orientation(cg::point_2(0, 0),
                           cg::point_2(1, 0),
-                          cg::point_2(0, 1)) == cg::CLOCKWISE);
+                          cg::point_2(0, 1)) == cg::COUNTERCLOCKWISE);
   BOOST_VERIFY(
     cg::exact_orientation(cg::point_2(0, 0),
                           cg::point_2(0, 1),
-                          cg::point_2(1, 0)) == cg::COUNTERCLOCKWISE);
+                          cg::point_2(1, 0)) == cg::CLOCKWISE);
 
   BOOST_VERIFY(
     exact_side_of_oriented_circle(

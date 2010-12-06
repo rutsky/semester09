@@ -76,8 +76,8 @@ namespace cg
     typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
 
     return CGAL::SF_Orientation_2<kernel_t>()(
-        construct_2d_point<kernel_t::Point_2>(p1),
         construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
         construct_2d_point<kernel_t::Point_2>(p2));
   }
 
