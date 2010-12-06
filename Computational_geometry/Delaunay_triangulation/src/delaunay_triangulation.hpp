@@ -62,7 +62,12 @@ namespace dt
     struct triangle_t
     {
       // Triangle vertices in CCW order.
-      vertex_handle_t v[3]; // TODO: Use fixed size container, like tuple.
+      vertex_handle_t v[3];
+      // TODO: Use fixed size container, like tuple.
+      // TODO: Close access to data memebers (access should be done using
+      // getters)
+      // TODO: Rename members.
+
       // Opposite to corresponding vertex triangle (for each triangle vertex).
       triangle_handle_t tr[3];
       // When triangle is subdivided by inserting new vertex or flipping edges
@@ -815,7 +820,7 @@ namespace dt
 
   protected:
     // Input vertices plus three vertices of containing all points
-    // imaginary triangle.
+    // imaginary triangle (three imaginaryvertices at vector start).
     vertex_buffer_t vertexBuffer_;
     // First triangle is containing all points imaginary triangle.
     triangles_t     triangles_;
