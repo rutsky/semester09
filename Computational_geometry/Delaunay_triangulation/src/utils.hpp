@@ -24,10 +24,11 @@
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
-#include <boost/iterator.hpp>
-#include <boost/iterator/transform_iterator.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/algorithm/minmax.hpp>
+#include <boost/iterator.hpp>
+#include <boost/function.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/algorithm/minmax_element.hpp>
 
 namespace cg
 {
@@ -43,17 +44,23 @@ namespace cg
     typedef typename PointFwdIter::value_type point_t;
     typedef typename point_t::scalar_t scalar_t;
 
-    scalar_t minX, maxX;
-    boost::tie(minX, maxX) = minmax(
-            make_transform_iterator(first,  bind(&point_t::x, _1)),
-            make_transform_iterator(beyond, bind(&point_t::x, _1)));
+    typedef boost::function<scalar_t (point_t const &)> coord_extractor_func;
 
-    scalar_t minY, maxY;
-    boost::tie(minX, maxX) = minmax(
-            make_transform_iterator(first,  bind(&point_t::x, _1)),
-            make_transform_iterator(beyond, bind(&point_t::x, _1)));
+    coord_extractor_func xExtractor = bind(&point_t::x, _1);
+    coord_extractor_func yExtractor = bind(&point_t::y, _1);
 
-    return std::make_pair(point_t(minX, minY), point_t(maxX, maxY));
+    typedef boost::transform_iterator<coord_extractor_func, PointFwdIter> it_t;
+    std::pair<it_t, it_t> x = minmax_element(
+            it_t(first,  xExtractor),
+            it_t(beyond, xExtractor));
+
+    std::pair<it_t, it_t> y = minmax_element(
+            it_t(first,  yExtractor),
+            it_t(beyond, yExtractor));
+
+    return std::make_pair(
+        point_t(*x.first, *y.first),
+        point_t(*x.second, *y.second));
   }
 }
 

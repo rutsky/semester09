@@ -53,7 +53,7 @@ namespace cg
     {
       BOOST_ASSERT(i >= 0 && i < dim);
       // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t * const>(this)[i];
+      return reinterpret_cast<scalar_t const *>(this)[i];
     }
 
     scalar_t       & operator [] ( int i )
@@ -107,6 +107,15 @@ namespace cg
     for (size_t i = 0; i < Dim; ++i)
       result[i] = a[i] / c;
     return result;
+  }
+
+  template< typename Scalar, int Dim >
+  bool operator == ( point_t<Scalar, Dim> const &a, point_t<Scalar, Dim> const &b )
+  {
+    for (size_t i = 0; i < Dim; ++i)
+      if (a[i] != b[i])
+        return false;
+    return true;
   }
 
   typedef point_t<double, 2> point_2;

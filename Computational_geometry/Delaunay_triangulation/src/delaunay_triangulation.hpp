@@ -24,15 +24,18 @@
 #include <list>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 #include <boost/bind.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/function.hpp>
 #include <boost/iterator.hpp>
+#include <boost/optional.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 
 #include "point_predicates.hpp"
+#include "point_io.hpp"
 #include "utils.hpp"
 
 namespace dt
@@ -59,7 +62,7 @@ namespace dt
     struct triangle_t
     {
       // Triangle vertices in CCW order.
-      vertex_handle_t v[3];
+      vertex_handle_t v[3]; // TODO: Use fixed size container, like tuple.
       // Opposite to corresponding vertex triangle (for each triangle vertex).
       triangle_handle_t tr[3];
       // When triangle is subdivided by inserting new vertex or flipping edges
@@ -140,16 +143,16 @@ namespace dt
         return childTr[idx];
       }
 
-      void set_child( triangle_handle_t ch0, triangle_handle_t ch1 )
+      void set_children( triangle_handle_t ch0, triangle_handle_t ch1 )
       {
         BOOST_ASSERT(!has_children());
         childTr[0] = ch0;
         childTr[1] = ch1;
       }
 
-      void set_child( triangle_handle_t ch0,
-                      triangle_handle_t ch1,
-                      triangle_handle_t ch2 )
+      void set_children( triangle_handle_t ch0,
+                         triangle_handle_t ch1,
+                         triangle_handle_t ch2 )
       {
         BOOST_ASSERT(!has_children());
         childTr[0] = ch0;
@@ -273,6 +276,11 @@ namespace dt
     }
 
   protected:
+    point_t const & vertex_point( vertex_handle_t vh ) const
+    {
+      return vertexBuffer_.at(vh);
+    }
+
     triangle_t const & triangle( triangle_handle_t tr ) const
     {
       return triangles_.at(tr);
@@ -301,7 +309,7 @@ namespace dt
     triangles_const_iterator triangles_begin() const
     {
       is_triangle_real_pred isTriangleRealPred =
-         boost::bind(&self_t::isTriangleReal, *this, _1);
+         boost::bind(&self_t::isRealTriangle, *this, _1);
       real_triangles_it realTrianglesItBegin =
           real_triangles_it(isTriangleRealPred,
               triangles_.begin(), triangles_.end());
@@ -316,7 +324,7 @@ namespace dt
     triangles_const_iterator triangles_end() const
     {
       is_triangle_real_pred isTriangleRealPred =
-         boost::bind(&self_t::isTriangleReal, *this, _1);
+         boost::bind(&self_t::isRealTriangle, *this, _1);
       real_triangles_it realTrianglesItEnd =
           real_triangles_it(isTriangleRealPred,
               triangles_.end(), triangles_.end());
@@ -346,59 +354,59 @@ namespace dt
     // Only flip edge that is opposite to vertex with provided index.
     void flip( triangle_handle_t trh, int const idx )
     {
+      BOOST_ASSERT(triangle(trh).vertex(idx) != invalid_vertex_handle);
       BOOST_ASSERT(exact_side_of_oriented_triangle(
               trh, triangle(trh).vertex(idx)) == cg::ON_POSITIVE_SIDE);
 
-      triangle_t &parentTr = triangle(trh);
-      triangle_t &neighTr = parentTr.triangle(idx);
-      int const neighIdx = neighTr.triangle_index(trh);
+      triangle_handle_t neighTrH = triangle(trh).triangle(idx);
+      int const neighIdx = triangle(neighTrH).triangle_index(trh);
 
-      BOOST_ASSERT(!parentTr.has_children());
-      BOOST_ASSERT(!neighTr.has_children());
+      BOOST_ASSERT(!triangle(trh).has_children());
+      BOOST_ASSERT(!triangle(neighTrH).has_children());
 
-      //
-      //            *                                   *
-      //           /|\                                 / \
-      //          / | \                               /   \
-      //         /  |  \                             /     \
-      // trh -> /   |   \                           /  ch0  \
-      //       /    |    \                         /         \
-      //      /     |     \                       /           \
-      //     *      |      *          ->         *-------------*
-      // idx  \     |     /  neighIdx             \           /
-      //       \    |    /                         \   ch1   /
-      //        \   |   /                           \       /
-      //         \  |  /                             \     /
-      //          \ | /                               \   /
-      //           \|/                                 \ /
-      //            *                                   *
-      //
+      //                                                                    //
+      //            *                                   *                   //
+      //           /|\                                 / \                  //
+      //          / | \                               /   \                 //
+      //         /  |  \                             /     \                //
+      // trh -> /   |   \                           /  ch0  \               //
+      //       /    |    \                         /         \              //
+      //      /     |     \                       /           \             //
+      //     *      |      *          ->         *-------------*            //
+      // idx  \     |     /  neighIdx             \           /             //
+      //       \    |    /                         \   ch1   /              //
+      //        \   |   /                           \       /               //
+      //         \  |  /                             \     /                //
+      //          \ | /                               \   /                 //
+      //           \|/                                 \ /                  //
+      //            *                                   *                   //
+      //                                                                    //
       triangle_handle_t const ch0 = triangles_.size() + 0;
       triangle_handle_t const ch1 = triangles_.size() + 1;
       triangles_.push_back(triangle_t( // ch0
-          parentTr.vertex(idx - 1),
-              parentTr.vertex(idx),
-                  neighTr.vertex(neighIdx),
+          triangle(trh).vertex(idx - 1),
+              triangle(trh).vertex(idx),
+                  triangle(neighTrH).vertex(neighIdx),
           ch1,
-              neighTr.triangle(neighIdx - 1),
-                  parentTr.triangle(idx + 1)));
+              triangle(neighTrH).triangle(neighIdx - 1),
+                  triangle(trh).triangle(idx + 1)));
       triangles_.push_back(triangle_t( // ch1
-          parentTr.vertex(idx),
-              parentTr.vertex(idx + 1),
-                  neighTr.vertex(neighIdx),
-          neighTr.triangle(neighIdx + 1),
+          triangle(trh).vertex(idx),
+              triangle(trh).vertex(idx + 1),
+                  triangle(neighTrH).vertex(neighIdx),
+          triangle(neighTrH).triangle(neighIdx + 1),
               ch0,
-                  parentTr.triangle(idx - 1)));
+                  triangle(trh).triangle(idx - 1)));
 
       // Link neighbors.
-      triangle(parentTr.triangle(idx + 1)).replace_neighbor(trh, ch0);
-      triangle(parentTr.triangle(idx - 1)).replace_neighbor(trh, ch1);
-      triangle(neighTr.triangle(neighIdx + 1)).replace_neighbor(neightTrH, ch1);
-      triangle(neighTr.triangle(neighIdx - 1)).replace_neighbor(neightTrH, ch0);
+      triangle(triangle(trh).triangle(idx + 1)).replace_neighbor(trh, ch0);
+      triangle(triangle(trh).triangle(idx - 1)).replace_neighbor(trh, ch1);
+      triangle(triangle(neighTrH).triangle(neighIdx + 1)).replace_neighbor(neighTrH, ch1);
+      triangle(triangle(neighTrH).triangle(neighIdx - 1)).replace_neighbor(neighTrH, ch0);
 
       // Link child triangles to parent.
-      parentTr.set_childs(ch0, ch1);
-      neighTr. set_childs(ch0, ch1);
+      triangle(trh).set_children(ch0, ch1);
+      triangle(neighTrH). set_children(ch0, ch1);
     }
 
     // Flip edge opposite to provided vertex hanlde if needed.
@@ -409,15 +417,26 @@ namespace dt
       BOOST_ASSERT(triangle(trh).vertex_index(vh) >= 0);
       BOOST_ASSERT(!triangle(trh).has_children());
 
-      if (exact_side_of_oriented_triangle(trh, vh) == cg::ON_POSITIVE_SIDE)
+      int const idx = triangle(trh).vertex_index(vh);
+      triangle_handle_t const neighTrH = triangle(trh).triangle(idx);
+      BOOST_ASSERT(neighTrH != invalid_vertex_handle);
+      BOOST_ASSERT(!triangle(neighTrH).has_children());
+
+      int const neighIdx = triangle(neighTrH).triangle_index(trh);
+      BOOST_ASSERT(neighIdx >= 0);
+
+      vertex_handle_t oppositeVH = triangle(neighTrH).vertex(neighIdx);
+      
+      if (exact_side_of_oriented_triangle(trh, oppositeVH) == cg::ON_POSITIVE_SIDE)
       {
         // Point inside triangle - must flip.
-        flip(trh, triangle(trh).vertex_index(vh));
+        flip(trh, idx);
         BOOST_ASSERT(triangle(trh).children_num() == 2);
+        BOOST_ASSERT(triangle(neighTrH).children_num() == 2);
 
         // After flip 2 newly created triangles are childs of current trianle.
-        restoreDelaunay(triangle(trh).childTr[0], vh);
-        restoreDelaunay(triangle(trh).childTr[1], vh);
+        restoreDelaunay(triangle(trh).child_triangle(0), vh);
+        restoreDelaunay(triangle(trh).child_triangle(1), vh);
       }
       else
       {
@@ -434,47 +453,50 @@ namespace dt
       BOOST_ASSERT(!triangle(trh).has_children());
 
       // Create new 3 triangles inside parent triangle.
-      //
-      //                     0
-      //                     *
-      //                    /'\
-      //                   / ' \
-      //                  /  '  \
-      //                 /   '   \
-      //                /    '    \
-      //               /     '     \
-      //              /      '      \
-      //             /       '       \
-      //            /  ch0   '  ch2   \
-      //           /         '         \
-      //          /          * vh       \
-      //         /        ''' '''        \
-      //        /      '''       '''      \
-      //       /    '''             '''    \
-      //      /  '''       ch1         '''  \
-      //     /'''                         '' \
-      //  1 *---------------------------------* 2
-      //
+      //                                                                    //
+      //                     0                                              //
+      //                     *                                              //
+      //                    /'\                                             //
+      //                   / ' \                                            //
+      //                  /  '  \                                           //
+      //                 /   '   \                                          //
+      //                /    '    \                                         //
+      //               /     '     \                                        //
+      //              /      '      \                                       //
+      //             /       '       \                                      //
+      //            /  ch0   '  ch2   \                                     //
+      //           /         '         \                                    //
+      //          /          * vh       \                                   //
+      //         /        ''' '''        \                                  //
+      //        /      '''       '''      \                                 //
+      //       /    '''             '''    \                                //
+      //      /  '''       ch1         '''  \                               //
+      //     /'''                         '' \                              //
+      //  1 *---------------------------------* 2                           //
+      //                                                                    //
       triangle_handle_t const ch0 = triangles_.size() + 0;
       triangle_handle_t const ch1 = triangles_.size() + 1;
       triangle_handle_t const ch2 = triangles_.size() + 2;
       triangles_.push_back(triangle_t(
-          parentTr.vertex(0), parentTr.vertex(1), vh,
-          ch1,                ch2,                parentTr.tr[2]));
+          triangle(trh).vertex(0), triangle(trh).vertex(1), vh,
+          ch1,                ch2,                triangle(trh).triangle(2)));
       triangles_.push_back(triangle_t(
-          parentTr.vertex(1), parentTr.vertex(2), vh,
-          ch2,                ch0,                parentTr.tr[0]));
+          triangle(trh).vertex(1), triangle(trh).vertex(2), vh,
+          ch2,                ch0,                triangle(trh).triangle(0)));
       triangles_.push_back(triangle_t(
-          parentTr.vertex(2), parentTr.vertex(0), vh,
-          ch0,                ch1,                parentTr.tr[1]));
+          triangle(trh).vertex(2), triangle(trh).vertex(0), vh,
+          ch0,                ch1,                triangle(trh).triangle(1)));
 
       // Link neighbors of parent triangle to new triangles.
-      triangle(parentTr.tr[0]).replace_neighbor(trh, ch1);
-      triangle(parentTr.tr[1]).replace_neighbor(trh, ch2);
-      triangle(parentTr.tr[2]).replace_neighbor(trh, ch0);
+      if (triangle(trh).triangle(0) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(0)).replace_neighbor(trh, ch1);
+      if (triangle(trh).triangle(1) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(1)).replace_neighbor(trh, ch2);
+      if (triangle(trh).triangle(2) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(2)).replace_neighbor(trh, ch0);
 
       // Link child triangles to parent.
-      parentTr.set_childs(ch0, ch1, ch2);
+      triangle(trh).set_children(ch0, ch1, ch2);
     }
 
     // Add new vertex to triangle edge.
@@ -484,75 +506,73 @@ namespace dt
       BOOST_ASSERT(exact_side_of_oriented_triangle(
               trh, vh) == cg::ON_ORIENTED_BOUNDARY);
       BOOST_ASSERT(exact_orientation(
-                vertex(triangle(trh).vertex(idx + 1),
-                vertex(triangle(trh).vertex(idx + 2)),
-                vertex(vh)) == cg::COLLINEAR);
+                vertex_point(triangle(trh).vertex(idx + 1)),
+                vertex_point(triangle(trh).vertex(idx + 2)),
+                vertex_point(vh)) == cg::COLLINEAR);
 
-      triangle_t &parentTr = triangle(trh);
-
-      triangle_handle_t const neightTrH = parentTr.tr[idx];
-      triangle_t &neighTr = triangle(neightTrH);
-      int const neighIdx = neighTr.triangle_index(trh);
+      triangle_handle_t const neighTrH = triangle(trh).tr[idx];
+      BOOST_ASSERT(neighTrH != invalid_triangle_handle);
+      int const neighIdx = triangle(neighTrH).triangle_index(trh);
 
       BOOST_ASSERT(!triangle(trh).has_children());
-      BOOST_ASSERT(!triangle(neightTrH).has_children());
+      BOOST_ASSERT(!triangle(neighTrH).has_children());
 
-      // Create new 4 triangles inside parent triangle and it's neighbour.
-      //
-      // neighIdx *-------------------*
-      //           \ ''              / \
-      //            \  ''    ch3    /   \
-      //             \    ''       /     \
-      //              \     ''  vh/  ch0  \
-      //  neightTr ->  \ ch2   ' *         \  <- parentTr (trh)
-      //                \       /  '''      \
-      //                 \     /      ''     \
-      //                  \   /   ch1    ''   \
-      //                   \ /             ''  \
-      //                    *------------------* idx
-      //
+      // Create new 4 triangles inside parent triangle and it's neighbor.
+      //                                                                    //
+      // neighIdx *-------------------*                                     //
+      //           \ ''              / \                                    //
+      //            \  ''    ch3    /   \                                   //
+      //             \    ''       /     \                                  //
+      //              \     ''  vh/  ch0  \                                 //
+      //  neightTr ->  \ ch2   ' *         \  <- triangle(trh) (trh)             //
+      //                \       /  '''      \                               //
+      //                 \     /      ''     \                              //
+      //                  \   /   ch1    ''   \                             //
+      //                   \ /             ''  \                            //
+      //                    *------------------* idx                        //
+      //                                                                    //
       triangle_handle_t const ch0 = triangles_.size() + 0;
       triangle_handle_t const ch1 = triangles_.size() + 1;
       triangle_handle_t const ch2 = triangles_.size() + 2;
       triangle_handle_t const ch3 = triangles_.size() + 3;
       triangles_.push_back(triangle_t( // ch0
-          parentTr.vertex(idx),
-              parentTr.vertex(idx + 1),
+          triangle(trh).vertex(idx),
+              triangle(trh).vertex(idx + 1),
                   vh,
           ch3,
               ch1,
-                  parentTr.triangle(idx - 1)));
+                  triangle(trh).triangle(idx - 1)));
       triangles_.push_back(triangle_t( // ch1
-          parentTr.vertex(idx - 1),
-              parentTr.vertex(idx),
+          triangle(trh).vertex(idx - 1),
+              triangle(trh).vertex(idx),
                   vh,
           ch0,
               ch2,
-                  parentTr.triangle(idx + 1)));
+                  triangle(trh).triangle(idx + 1)));
       triangles_.push_back(triangle_t( // ch2
-          neighTr.vertex(neighIdx),
-              neighTr.vertex(neighIdx + 1),
+          triangle(neighTrH).vertex(neighIdx),
+              triangle(neighTrH).vertex(neighIdx + 1),
                   vh,
           ch1,
               ch3,
-                  neighTr.vertex(neighIdx - 1)));
+                  triangle(neighTrH).vertex(neighIdx - 1)));
       triangles_.push_back(triangle_t( // ch3
-          neighTr.vertex(neighIdx - 1),
-              neighTr.vertex(neighIdx),
+          triangle(neighTrH).vertex(neighIdx - 1),
+              triangle(neighTrH).vertex(neighIdx),
                   vh,
           ch2,
               ch0,
-                  neighTr.vertex(neighIdx + 1)));
+                  triangle(neighTrH).vertex(neighIdx + 1)));
 
       // Link neighbors.
-      triangle(parentTr.triangle(idx + 1)).replace_neighbor(trh, ch1);
-      triangle(parentTr.triangle(idx - 1)).replace_neighbor(trh, ch0);
-      triangle(neighTr.triangle(neighIdx + 1)).replace_neighbor(neightTrH, ch3);
-      triangle(neighTr.triangle(neighIdx - 1)).replace_neighbor(neightTrH, ch2);
+      triangle(triangle(trh).triangle(idx + 1)).replace_neighbor(trh, ch1);
+      triangle(triangle(trh).triangle(idx - 1)).replace_neighbor(trh, ch0);
+      triangle(triangle(neighTrH).triangle(neighIdx + 1)).replace_neighbor(neighTrH, ch3);
+      triangle(triangle(neighTrH).triangle(neighIdx - 1)).replace_neighbor(neighTrH, ch2);
 
       // Link child triangles to parent.
-      parentTr.set_childs(ch0, ch1);
-      neighTr. set_childs(ch2, ch3);
+      triangle(trh).set_children(ch0, ch1);
+      triangle(neighTrH). set_children(ch2, ch3);
     }
 
     void addVertex( vertex_handle_t vh )
@@ -569,9 +589,9 @@ namespace dt
         BOOST_ASSERT(triangle(trh).children_num() == 3);
 
         // Restore Delaunay property.
-        restoreDelaunay(triangle(trh).ch, vh);
-        restoreDelaunay(ch1, vh);
-        restoreDelaunay(ch2, vh);
+        restoreDelaunay(triangle(trh).child_triangle(0), vh);
+        restoreDelaunay(triangle(trh).child_triangle(1), vh);
+        restoreDelaunay(triangle(trh).child_triangle(2), vh);
       }
       else if (loc == loc_edge)
       {
@@ -580,10 +600,10 @@ namespace dt
         // Locate triangle edge on which vertex is lying.
         boost::optional<int> adjTrIdxPtr;
         for (size_t i = 0; i < 3; ++i)
-          if (exact_orientation(
-                vertex(triangle(trh).vertex(i),
-                vertex(triangle(trh).vertex(i + 1)),
-                vertex(vh)) == cg::COLLINEAR))
+          if (cg::exact_orientation(
+                vertex_point(triangle(trh).vertex(i)),
+                vertex_point(triangle(trh).vertex(i + 1)),
+                vertex_point(vh)) == cg::COLLINEAR)
           {
             adjTrIdxPtr = i - 1;
             break;
@@ -614,11 +634,11 @@ namespace dt
     cg::orientation_t exact_side_of_oriented_triangle(
         triangle_handle_t trh, vertex_handle_t vh )
     {
-      return exact_side_of_oriented_triangle(
-          vertex(triangle(tr).v[0]),
-          vertex(triangle(tr).v[1]),
-          vertex(triangle(tr).v[2]),
-          vertex(vh));
+      return cg::exact_side_of_oriented_triangle(
+          vertex_point(triangle(trh).vertex(0)),
+          vertex_point(triangle(trh).vertex(1)),
+          vertex_point(triangle(trh).vertex(2)),
+          vertex_point(vh));
     }
 
     enum location_t
@@ -639,7 +659,7 @@ namespace dt
         triangle_t const &tr = triangle(trh);
 
         // Assert that vertex inside or on boundary of current triangle.
-        BOOST_ASSERT(exact_side_of_oriented_triangle(trh, vh) != ON_NEGATIVE_SIDE);
+        BOOST_ASSERT(exact_side_of_oriented_triangle(trh, vh) != cg::ON_NEGATIVE_SIDE);
 
         if (!tr.has_children())
         {
@@ -649,20 +669,20 @@ namespace dt
 
           cg::orientation_t const orient = 
               exact_side_of_oriented_triangle(trh, vh);
-          if (orient == ON_POSITIVE_SIDE)
+          if (orient == cg::ON_POSITIVE_SIDE)
           {
             return std::make_pair(loc_triangle, trh);
           }
-          else if (orient == ON_ORIENTED_BOUNDARY)
+          else if (orient == cg::ON_ORIENTED_BOUNDARY)
           {
             return std::make_pair(loc_edge, trh);
           }
           else
           {
-            BOOST_ASSERT(
-                    vertex(vh) == vertex(tr.v[0]) ||
-                    vertex(vh) == vertex(tr.v[1]) ||
-                    vertex(vh) == vertex(tr.v[2]));
+            BOOST_ASSERT((
+                    vertex_point(vh) == vertex_point(tr.vertex(0)) ||
+                    vertex_point(vh) == vertex_point(tr.vertex(1)) ||
+                    vertex_point(vh) == vertex_point(tr.vertex(2))));
             return std::make_pair(loc_vertex, trh);
           }
         }
@@ -671,14 +691,14 @@ namespace dt
           // Triangle has children.
           // Determine in which child lies vertex and continue loop.
 
-          boost::optional<vertex_buffer_t> nextVH;
-          for (childIdx = 0; childIdx < tr.children_num(); ++childIdx)
+          boost::optional<vertex_handle_t> nextVH;
+          for (size_t childIdx = 0; childIdx < tr.children_num(); ++childIdx)
           {
             if (exact_side_of_oriented_triangle(tr.child_triangle(childIdx),
-                                                vh) != ON_NEGATIVE_SIDE)
+                                                vh) != cg::ON_NEGATIVE_SIDE)
             {
               // Found child triangle that contains current vertex.
-              nextVH = tr.childTr[childIdx];
+              nextVH = tr.child_triangle(childIdx);
               break;
             }
           }

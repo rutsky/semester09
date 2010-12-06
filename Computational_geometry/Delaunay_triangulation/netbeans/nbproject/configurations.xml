@@ -32,6 +32,7 @@
       <compileType>
         <ccTool>
           <commandLine>-I/usr/include -frounding-math</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
           <linkerLibItems>
@@ -53,6 +54,7 @@
         <ccTool>
           <developmentMode>5</developmentMode>
           <commandLine>-I/usr/include -frounding-math</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
