@@ -1,0 +1,47 @@
+#  This file is part of Delaunay triangulation robust implementation.
+#
+#  Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os.path
+import itertools
+
+Import('env')
+
+#env['Gch'] = env.Gch('precompiled.hpp')[0]
+
+configuration = ARGUMENTS.get('conf', None)
+if configuration not in ['release', 'valgrind']:
+  configuration = 'debug'
+
+# Common build flags.
+env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -frounding-math -lCGAL -lCGAL_Core"))
+
+# Build flags.
+if configuration == 'release':
+    print "Using Release configuration."
+    env.MergeFlags(env.ParseFlags("-O3"))
+elif configuration == 'valgrind':
+    print "Using Valgrind configuration."
+    env.MergeFlags(env.ParseFlags("-O -fno-inline"))
+else:
+    # Debug configuration.
+    print "Using Debug configuration."
+    env.MergeFlags(env.ParseFlags("-O0"))
+
+main_files = Glob("sample*.cpp", strings=True) + ['dispersion.cpp', 'dispersion2.cpp', 'dispersion3.cpp']
+source_files = set(Glob("*.cpp", strings=True)) - set(main_files)
+
+env.Program(target="delaunay", source=['main.cpp'])
