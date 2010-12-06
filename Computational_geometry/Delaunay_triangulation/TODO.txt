@@ -3,3 +3,4 @@
  * Implement exact predicates inexactly but without use of CGAL
 (by using Boost.Interval I suppose).
  * Add tests for different triangulations.
+ * Implement correct testing structure using SCons.
