@@ -357,7 +357,11 @@ namespace dt
   protected:
     static triangle_vertices_indices_t triangle_vertices( triangle_t const &tr )
     {
-      return triangle_vertices_indices_t(tr.v[0], tr.v[1], tr.v[2]);
+      // TODO: Use functions like internalIdxToOutputIdx().
+      return triangle_vertices_indices_t(
+              tr.vertex(0) - 3,
+              tr.vertex(1) - 3,
+              tr.vertex(2) - 3);
     }
 
     static bool isFiniteVertex( vertex_handle_t vh )
