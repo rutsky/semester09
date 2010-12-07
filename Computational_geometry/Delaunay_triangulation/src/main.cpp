@@ -31,6 +31,8 @@ int main()
 {
   typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
 
+  // Reset random counter (for stable testing).
+  std::srand(0);
   triangulation_t triangulation(std::istream_iterator<cg::point_2>(std::cin),
                                 std::istream_iterator<cg::point_2>());
 
@@ -40,11 +42,13 @@ int main()
   std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
             std::back_inserter(triangles));
 
-  // Sort output.
-  // TODO: Needed only for debug.
+  // Sort output (for stable testing).
   std::sort(triangles.begin(), triangles.end());
 
-  std::copy(triangulation.triangles_begin(), triangulation.triangles_end(),
-    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>(
-      std::cout, "\n"));
+  for (triangles_t::const_iterator it = triangles.begin();
+       it != triangles.end();
+       ++it)
+  {
+    std::cout << it->get<0>() << " " << it->get<1>() << " " << it->get<2>() << "\n";
+  }
 }
