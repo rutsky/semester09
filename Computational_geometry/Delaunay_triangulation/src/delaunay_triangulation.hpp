@@ -38,6 +38,9 @@
 #include "point_io.hpp"
 #include "utils.hpp"
 
+// TODO: For determined points shuffling random generator should be passed
+// to triangulation.
+
 namespace dt
 {
   template< class PointType >
@@ -243,6 +246,8 @@ namespace dt
       
       // TODO: Not safe for floating point overflow.
       // TODO: Use something instead of sqrt(2.0) etc.
+      // NOTE: Exact bounding triangle is not really needed, but when it exact
+      // we can be sure that triangle is really bounding.
       
       scalar_t const extraSpace = 10.0;
       scalar_t const boundingSquareSize =
@@ -265,9 +270,17 @@ namespace dt
       // Insert first triangle that contains all points.
       triangles_.push_back(triangle_t(0, 1, 2));
 
-      // Insert input points.
+      // Prepare shuffled indices.
+      std::vector<vertex_handle_t> shuffledIndices;
+      shuffledIndices.reserve(vertexBuffer_.size() - 3);
       for (vertex_handle_t vh = 3; vh < vertexBuffer_.size(); ++vh)
-        addVertex(vh);
+        shuffledIndices.push_back(vh);
+      // TODO: Not determined implementation dependent shuffling.
+      std::random_shuffle(shuffledIndices.begin(), shuffledIndices.end());
+
+      // Insert input points.
+      std::for_each(shuffledIndices.begin(), shuffledIndices.end(),
+        boost::bind(&self_t::addVertex, boost::ref(*this), _1));
     }
 
   public:
@@ -314,7 +327,7 @@ namespace dt
   public:
     typedef extract_triangle_vertices_it triangles_const_iterator;
 
-    triangles_const_iterator triangles_begin() const
+    triangles_const_iterator begin() const
     {
       is_triangle_real_pred isTriangleRealPred =
          boost::bind(&self_t::isRealTriangle, *this, _1);
@@ -329,7 +342,7 @@ namespace dt
       return extractIt;
     }
 
-    triangles_const_iterator triangles_end() const
+    triangles_const_iterator end() const
     {
       is_triangle_real_pred isTriangleRealPred =
          boost::bind(&self_t::isRealTriangle, *this, _1);
@@ -359,7 +372,7 @@ namespace dt
               idx1 != idx2);
 
       // Sort vertices.
-      // TODO: Needed only for testing.
+      // TODO: Needed only for stable testing.
       if (idx0 < idx1 && idx0 < idx2)
       {
         return triangle_vertices_indices_t(idx0, idx1, idx2);
