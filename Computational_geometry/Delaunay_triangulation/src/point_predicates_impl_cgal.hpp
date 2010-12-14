@@ -17,22 +17,21 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POINT_PREDICATES_HPP
-#define POINT_PREDICATES_HPP
+#ifndef POINT_PREDICATES_IMPL_CGAL_HPP
+#define POINT_PREDICATES_IMPL_CGAL_HPP
 
-#include <boost/exception.hpp>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Filtered_predicate.h>
 
 #include "point.hpp"
 #include "orientation.hpp"
+#include "point_utils.hpp"
+
+// In orientation.hpp assumed, that orientation_t constant values equal
+// to correspond CGAL Sign enumeration constants.
 
 namespace cg
 {
-  struct inexact_computations_exception
-    : virtual boost::exception
-    , virtual std::exception
-  {
-  };
-
   /*
    * Returns orientation of (p0, p1, p2) triangle vertices as seen from
    * (0, 0, 1) in right-hand coordinate system.
@@ -41,7 +40,15 @@ namespace cg
   inline
   orientation_t exact_orientation( point_t<Scalar, 2> const &p0,
                                    point_t<Scalar, 2> const &p1,
-                                   point_t<Scalar, 2> const &p2 );
+                                   point_t<Scalar, 2> const &p2 )
+  {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
+
+    return CGAL::SF_Orientation_2<kernel_t>()(
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p2));
+  }
 
   /*
    * Returns:
@@ -60,7 +67,16 @@ namespace cg
       point_t<Scalar, 2> const &p0,
       point_t<Scalar, 2> const &p1,
       point_t<Scalar, 2> const &p2,
-      point_t<Scalar, 2> const &q );
+      point_t<Scalar, 2> const &q )
+  {
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
+
+    return CGAL::Triangle_2<kernel_t>(
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p2)).oriented_side(
+            construct_2d_point<kernel_t::Point_2>(q));
+  }
 
   /*
    * Returns:
@@ -79,53 +95,16 @@ namespace cg
       point_t<Scalar, 2> const &p0,
       point_t<Scalar, 2> const &p1,
       point_t<Scalar, 2> const &p2,
-      point_t<Scalar, 2> const &q );
-
-  //
-  // Derivative functions.
-  //
-  
-  /*
-   * Returns true if p2 lies on the left side of line (p0,p1).
-   */
-  template<class Scalar>
-  inline
-  bool exact_is_left_turn( point_t<Scalar, 2> const &p0,
-                           point_t<Scalar, 2> const &p1,
-                           point_t<Scalar, 2> const &p2 )
+      point_t<Scalar, 2> const &q )
   {
-    return exact_orientation(p0, p1, p2) == or_clockwise;
-  }
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel kernel_t;
 
-  /*
-   * Returns true if p2 lies on the right side of line (p0,p1).
-   */
-  template<class Scalar>
-  inline
-  bool exact_is_right_turn( point_t<Scalar, 2> const &p0,
-                            point_t<Scalar, 2> const &p1,
-                            point_t<Scalar, 2> const &p2 )
-  {
-    return exact_orientation(p0, p1, p2) == or_counterclockwise;
-  }
-
-  /*
-   * Returns true if p2 lies on the line (p0,p1).
-   */
-  template<class Scalar>
-  inline
-  bool exact_is_collinear( point_t<Scalar, 2> const &p0,
-                           point_t<Scalar, 2> const &p1,
-                           point_t<Scalar, 2> const &p2 )
-  {
-    return exact_orientation(p0, p1, p2) == or_collinear;
+    return CGAL::SF_Side_of_oriented_circle_2<kernel_t>()(
+        construct_2d_point<kernel_t::Point_2>(p0),
+        construct_2d_point<kernel_t::Point_2>(p1),
+        construct_2d_point<kernel_t::Point_2>(p2),
+        construct_2d_point<kernel_t::Point_2>(q));
   }
 }
 
-#ifdef    USING_CGAL
-#include "point_predicates_impl_cgal.hpp"
-#else  // USING_CGAL
-#include "point_predicates_impl_interval.hpp"
-#endif // USING_CGAL
-
-#endif // POINT_PREDICATES_HPP
+#endif // POINT_PREDICATES_IMPL_CGAL_HPP

@@ -17,8 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POINT_HPP
-#define POINT_HPP
+#ifndef POINT_OPS_HPP
+#define POINT_OPS_HPP
+
+#include <boost/assert.hpp>
 
 namespace cg
 {
@@ -65,4 +67,4 @@ namespace cg
   };
 }
 
-#endif // POINT_HPP
+#endif // POINT_OPS_HPP
