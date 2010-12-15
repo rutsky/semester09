@@ -22,6 +22,5 @@ Import("env")
 
 sources = Glob("*.pml", strings=True)
 
-env.Command("pan.c", sources, "spin -a main.pml", chdir=True)
-#env.Command("pan", "pan.c", "cc -DSAFETY -o pan pan.c", chdir=True)
-env.Command("pan", "pan.c", "cc -o pan pan.c", chdir=True)
+automata_source_node = env.Command("pan.c", sources, "spin -a main.pml", chdir=True)
+env.Command("pan", automata_source_node, "cc -o pan pan.c", chdir=True)
