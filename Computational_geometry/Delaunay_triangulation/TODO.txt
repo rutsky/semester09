@@ -6,4 +6,5 @@
  * Implement correct testing structure using SCons.
  * Currently multiple valid results are possible, as in simple_4v.in.
  * Add tests for checking Delaunay property.
+ * Use CPPPATH instead of -I...: http://www.scons.org/wiki/FrequentlyAskedQuestions#head-638361e9cba3fec0bc32698d3cc2961c8fc05d73
 
