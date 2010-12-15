@@ -1,0 +1,5 @@
+build/
+
+# SCons stuff
+*.scons*
+*.pyc
