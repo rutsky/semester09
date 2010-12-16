@@ -15,7 +15,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__author__ = "Vladimir Rutsky <altsysrq@gmail.com>"
+__author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
 __all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", "FullDuplexLink"]
