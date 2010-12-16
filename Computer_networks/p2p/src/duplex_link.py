@@ -60,6 +60,9 @@ class ReceivingNode(object):
 class LossFunc(object):
     def __init__(self, skip_ch_prob, modify_ch_prob, new_ch_prob):
         super(LossFunc, self).__init__()
+        self.configure(skip_ch_prob, modify_ch_prob, new_ch_prob)
+
+    def configure(self, skip_ch_prob, modify_ch_prob, new_ch_prob):
         assert 0 <= skip_ch_prob <= 1
         assert 0 <= modify_ch_prob <= 1
         assert 0 <= new_ch_prob <= 1
