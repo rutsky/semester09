@@ -17,5 +17,8 @@
 
 __author__ = "Vladimir Rutsky"
 
+def main():
+    print "Test!"
+
 if __name__ == "__main__":
-    print "Hello World"
+    main()
