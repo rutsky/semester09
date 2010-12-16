@@ -22,11 +22,11 @@ __all__ = ["HalfDuplexReceivingNode", "HalfDuplexSendingNode",
 
 import Queue
 
-class HalfDuplexReceivingNode(object):
+class ReceivingNode(object):
     def __init__(self, *args):
         self._receive_queue = args[0]
         args = args[1:]
-        super(HalfDuplexReceivingNode, self).__init__(*args)
+        super(ReceivingNode, self).__init__(*args)
 
     def read(self, size=0):
         chars = []
@@ -37,18 +37,18 @@ class HalfDuplexReceivingNode(object):
                 break
         return "".join(chars)
 
-class HalfDuplexSendingNode(object):
+class SendingNode(object):
     def __init__(self, *args):
         self._send_queue = args[0]
         args = args[1:]
-        super(HalfDuplexSendingNode, self).__init__(*args)
+        super(SendingNode, self).__init__(*args)
 
     def write(self, string):
         assert isinstance(string, str)
         for ch in string:
             self._send_queue.put(ch)
 
-class FullDuplexNode(HalfDuplexSendingNode, HalfDuplexReceivingNode):
+class FullDuplexNode(SendingNode, ReceivingNode):
     def __init__(self, send_queue, receive_queue):
         super(FullDuplexNode, self).__init__(send_queue, receive_queue)
 
