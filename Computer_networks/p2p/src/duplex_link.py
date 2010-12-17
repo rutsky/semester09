@@ -18,7 +18,8 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", "FullDuplexLink"]
+__all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", "FullDuplexLink",
+    "LossFunc"]
 
 import Queue
 import bisect
