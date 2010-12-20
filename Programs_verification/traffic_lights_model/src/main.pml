@@ -18,7 +18,9 @@
  */
 
 /* Number of intersections */
-#define N_INTERSECTIONS   5
+#define N_INTERSECTIONS          5
+#define N_INTERSECTIONS_PLUS_ONE 6
+
 /* Number of traffic lights */
 #define N_TRAFFIC_LIGHTS  4
 /* Maximum number of cars in signle traffig light queue */
@@ -53,13 +55,18 @@ byte intersectionOwner[N_INTERSECTIONS];
 /* Single traffic light dependent intersections.
  * Last element is INVALID_INT_ID.
  */
-typedef singleDependentIntersections { byte intId[N_INTERSECTIONS + 1] };
+/* TODO: On this line:
+ *   typedef singleDependentIntersections { byte intId[N_INTERSECTIONS + 1] };
+ * compiler complains:
+ *   Error: syntax error saw ''+' = 43'
+ */
+typedef singleDependentIntersections { byte intId[N_INTERSECTIONS_PLUS_ONE] };
 
 /* All traffic lights dependent intersections */
 singleDependentIntersections dependentIntersections[N_TRAFFIC_LIGHTS];
 
 /* Queue of cars for each traffic light */
-chan cars[N_TRAFFIC_LIGHTS] = [CARS_QUEUE_LEN] of { byte };
+chan cars[N_TRAFFIC_LIGHTS] = [CARS_QUEUE_LEN] of { int };
 
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
@@ -67,14 +74,14 @@ mtype tlColor[N_TRAFFIC_LIGHTS];
 /* Main traffic light process */
 proctype TrafficLight( byte tlId )
 {
-  byte car;
+  int carId;
   byte i;
 
   assert(tlId != INVALID_TL_ID);
   assert(tlColor[tlId] == red);
   
   do
-  :: cars[tlId] ? [car] ->
+  :: cars[tlId] ? [carId] ->
     /* Cars in queue */
   
     /* Lock dependent intersections */
@@ -85,16 +92,28 @@ proctype TrafficLight( byte tlId )
       i++;
     :: else ->
       break;
-    }
+    od;
     
     /* Allow passing */
-    tlColor[tlId] = green;
+    atomic 
+    {
+      printf("MSC: Traffic light #%d: GREEN", tlId);
+      tlColor[tlId] = green;
+    };
     
     /* Pass car */
-    cars[tlId] ? car;
+    atomic
+    {
+      cars[tlId] ? carId;
+      printf("MSC: Traffix light #%d: pass car #%d", tlId, carId);
+    };
     
     /* Forbid passing */
-    tlColor[tlId] = red;
+    atomic
+    {
+      printf("MSC: Traffic light #%d: RED", tlId);
+      tlColor[tlId] = red;
+    };
     
     /* Release dependent intersections */
     i = 0;
@@ -104,7 +123,7 @@ proctype TrafficLight( byte tlId )
       i++;
     :: else ->
       break;
-    }
+    od;
     
   :: else -> 
     skip;
@@ -115,7 +134,9 @@ proctype TrafficLight( byte tlId )
 proctype CarsGenerator()
 {
   byte tlId;
-
+  int carId;
+  
+  carId = 0;
   do
   :: true ->
     /* Generate car (probably) */
@@ -135,7 +156,8 @@ proctype CarsGenerator()
       if
       :: true ->
         /* Generate car and exit cycle */
-        cars[tlId] ? 1;
+        cars[tlId] ? carId;
+        carId++;
         break
       :: true ->
         /* Skip car generation for current traffic light */
