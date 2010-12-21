@@ -24,15 +24,18 @@
 /* Number of traffic lights */
 #define N_TRAFFIC_LIGHTS  4
 /* Maximum number of cars in signle traffig light queue */
-#define CARS_QUEUE_LEN   10
+#define CARS_QUEUE_LEN   1
 
 /* Minumum number of cars that will be generated (useful for debug) */
 #define MINIMUM_GENERATED_CARS_NUM 20
 
+/* Maximum number of cars that will be generated (useful for debug) */
+#define MAXIMUM_GENERATED_CARS_NUM 20
+
 #define INVALID_INT_ID 255
 #define INVALID_TL_ID  255
 
-mtype = { red, green };
+mtype = { RED, GREEN };
 
 /* Current owner of intersection resource */
 byte intersectionOwner[N_INTERSECTIONS];
@@ -82,7 +85,7 @@ proctype TrafficLight( byte tlId )
   byte i;
 
   assert(tlId != INVALID_TL_ID);
-  assert(tlColor[tlId] == red);
+  assert(tlColor[tlId] == RED);
   
   do
   :: cars[tlId] ? [carId] ->
@@ -102,7 +105,7 @@ proctype TrafficLight( byte tlId )
     atomic 
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
-      tlColor[tlId] = green;
+      tlColor[tlId] = GREEN;
     };
     
     /* Pass car */
@@ -116,7 +119,7 @@ proctype TrafficLight( byte tlId )
     atomic
     {
       printf("MSC: Traffic light #%d: RED\n", tlId);
-      tlColor[tlId] = red;
+      tlColor[tlId] = RED;
     };
     
     /* Release dependent intersections */
@@ -140,6 +143,13 @@ proctype CarsGenerator()
   carId = 0;
   do
   :: true ->
+    if
+    :: (carId >= MAXIMUM_GENERATED_CARS_NUM) ->
+      break;
+    :: else ->
+      skip;
+    fi;
+  
     /* Generate car (probably) */
   
     tlId = 0;
@@ -257,7 +267,7 @@ init
   tlId = 0;
   do
   :: tlId < N_TRAFFIC_LIGHTS ->
-    tlColor[tlId] = red;
+    tlColor[tlId] = RED;
     tlId++;
   :: else ->
     break;
@@ -276,3 +286,39 @@ init
   /* Start cars generator process */
   run CarsGenerator();
 }
+
+/*
+ * Correctness requirements.
+ */
+
+  /* Note: another copy of diagram above.
+   * 
+   *               N
+   *           2
+   *           |       ^
+   *           |       |
+   *           |     --2-------3
+   *            \   /  |
+   *  W           4    |          E
+   *            /   \  |
+   *           /     --1------>
+   *           |       |
+   *    1 -----3-------0------>
+   *           |       |
+   *           v       |
+   *                   0
+   *               S
+   *
+   */
+
+/* Safety: Intersecting roads traffic light both never has GREEN state */
+                /* [] */
+ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
+                        !(tlColor[0] == GREEN && tlColor[2] == GREEN) &&
+                        !(tlColor[0] == GREEN && tlColor[3] == GREEN) &&
+                        !(tlColor[1] == GREEN && tlColor[3] == GREEN) &&
+                        !(tlColor[2] == GREEN && tlColor[3] == GREEN) }
+
+/* Liveness: If cars wait on traffic light, then in future traffic light
+ * became GREEN */
+//ltl car_will_pass { always }
