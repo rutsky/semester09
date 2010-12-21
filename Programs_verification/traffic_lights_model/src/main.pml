@@ -87,7 +87,7 @@ proctype TrafficLight( byte tlId )
     /* Lock dependent intersections */
     i = 0;
     do
-    :: i < N_TRAFFIC_LIGHTS -> 
+    :: dependentIntersections[tlId].intId[i] != INVALID_INT_ID ->
       lockIntersection(dependentIntersections[tlId].intId[i], tlId);
       i++;
     :: else ->
@@ -97,7 +97,7 @@ proctype TrafficLight( byte tlId )
     /* Allow passing */
     atomic 
     {
-      printf("MSC: Traffic light #%d: GREEN", tlId);
+      printf("MSC: Traffic light #%d: GREEN\n", tlId);
       tlColor[tlId] = green;
     };
     
@@ -105,20 +105,20 @@ proctype TrafficLight( byte tlId )
     atomic
     {
       cars[tlId] ? carId;
-      printf("MSC: Traffix light #%d: pass car #%d", tlId, carId);
+      printf("MSC: Traffix light #%d: pass car #%d\n", tlId, carId);
     };
     
     /* Forbid passing */
     atomic
     {
-      printf("MSC: Traffic light #%d: RED", tlId);
+      printf("MSC: Traffic light #%d: RED\n", tlId);
       tlColor[tlId] = red;
     };
     
     /* Release dependent intersections */
     i = 0;
     do
-    :: i < N_TRAFFIC_LIGHTS -> 
+    :: dependentIntersections[tlId].intId[i] != INVALID_INT_ID ->
       unlockIntersection(dependentIntersections[tlId].intId[i]);
       i++;
     :: else ->
@@ -141,29 +141,23 @@ proctype CarsGenerator()
   :: true ->
     /* Generate car (probably) */
   
-    // TODO: Compiler complains:
-    // Error: syntax error saw 'an identifier' near 'N_TRAFFIC_LIGHTS'
-    //for (tlId : 0..N_TRAFFIC_LIGHTS)
-    for (tlId : 0..10)
-    {
-      if
-      :: tlId >= N_TRAFFIC_LIGHTS ->
-        break;
-      :: else ->
-        skip
-      fi;
-      
+    tlId = 0;
+    do
+    :: (tlId < N_TRAFFIC_LIGHTS) ->
       if
       :: true ->
         /* Generate car and exit cycle */
-        cars[tlId] ? carId;
+        cars[tlId] ! carId;
         carId++;
         break
       :: true ->
         /* Skip car generation for current traffic light */
         skip
-      fi
-    }
+      fi;
+      tlId++;
+    :: else ->
+      break;
+    od;
   :: else ->
     /* Don't generate car */
     skip
