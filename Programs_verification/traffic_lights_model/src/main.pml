@@ -26,6 +26,9 @@
 /* Maximum number of cars in signle traffig light queue */
 #define CARS_QUEUE_LEN   10
 
+/* Minumum number of cars that will be generated (useful for debug) */
+#define MINIMUM_GENERATED_CARS_NUM 20
+
 #define INVALID_INT_ID 255
 #define INVALID_TL_ID  255
 
@@ -36,6 +39,7 @@ byte intersectionOwner[N_INTERSECTIONS];
 
 /* Macro for obtaining intersection resource */
 #define lockIntersection( intId, tlId )               \
+end:                                                  \
   do                                                  \
   :: true -> atomic {                                 \
       if                                              \
@@ -124,9 +128,6 @@ proctype TrafficLight( byte tlId )
     :: else ->
       break;
     od;
-    
-  :: else -> 
-    skip;
   od
 }
 
@@ -135,7 +136,7 @@ proctype CarsGenerator()
 {
   byte tlId;
   int carId;
-  
+
   carId = 0;
   do
   :: true ->
@@ -158,6 +159,19 @@ proctype CarsGenerator()
     :: else ->
       break;
     od;
+
+  :: carId >= MINIMUM_GENERATED_CARS_NUM ->
+    /* Minimum number of cars already genereted.
+     * Nondeterministically stop car generation.
+     */
+    
+    if
+    :: true ->
+      break;
+    :: true ->
+      skip
+    fi
+
   :: else ->
     /* Don't generate car */
     skip
@@ -189,6 +203,8 @@ init
    *           v       |
    *                   0
    *               S
+   *
+   * Looks like metropolitan map, yeah :)
    */
   /* NOTE: Intersections should be specified in incrementing order! */
   dependentIntersections[0].intId[0] = 0;
