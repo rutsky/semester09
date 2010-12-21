@@ -44,18 +44,15 @@
 #define NE 2
 #define ES 3
 
+/* Number of traffic lights */
+#define N_TRAFFIC_LIGHTS  4
+
 /* Number of intersections */
 #define N_INTERSECTIONS 5
 
-/* Number of traffic lights */
-#define N_TRAFFIC_LIGHTS  4
-/* Maximum number of cars in signle traffig light queue */
-#define CARS_QUEUE_LEN   1
-
-#define INVALID_INT_ID 255
 #define INVALID_TL_ID  255
 
-mtype = { RED, GREEN, CAR };
+mtype = { RED, GREEN };
 
 /* Current owner of intersection resource */
 byte intersectionOwner[N_INTERSECTIONS];
@@ -79,8 +76,8 @@ byte intersectionOwner[N_INTERSECTIONS];
   assert(intersectionOwner[intId] == tlId);           \
   intersectionOwner[intId] = INVALID_TL_ID
 
-/* Queue of cars for each traffic light */
-chan cars[N_TRAFFIC_LIGHTS] = [CARS_QUEUE_LEN] of { mtype };
+/* Cars waiting sign for each traffic light */
+bit carsWaiting[N_TRAFFIC_LIGHTS];
 
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
@@ -93,13 +90,15 @@ proctype TrafficLight( byte initTlId )
 
   assert(tlId != INVALID_TL_ID);
   assert(tlColor[tlId] == RED);
-  
+
+endTL:
   do
-  :: cars[tlId] ? [CAR] ->
+  :: carsWaiting[tlId] ->
     /* Cars in queue */
   
     /* Lock dependent intersections */
-    /*
+    /* Note: another copy of diagram above.
+     *
      *               N
      *           2
      *           |       ^
@@ -144,8 +143,8 @@ proctype TrafficLight( byte initTlId )
     /* Pass car */
     atomic
     {
-      printf("MSC: Traffix light #%d: pass car\n", tlId);
-      cars[tlId] ? CAR;
+      printf("MSC: Traffix light #%d: pass cars\n", tlId);
+      carsWaiting[tlId] = false;
     };
     
     /* Forbid passing */
@@ -180,6 +179,7 @@ proctype CarsGenerator()
 {
   byte tlId;
 
+endCG:
   do
   :: true ->
     /* Generate car (probably) */
@@ -188,9 +188,9 @@ proctype CarsGenerator()
     do
     :: (tlId < N_TRAFFIC_LIGHTS) ->
       if
-      :: nfull(cars[tlId]) ->
-        /* Generate car and exit cycle */
-        cars[tlId] ! CAR;
+      :: !carsWaiting[tlId] ->
+        /* Generate car */
+        carsWaiting[tlId] = true;
       :: true ->
         /* Skip car generation for current traffic light */
         skip
@@ -201,7 +201,7 @@ proctype CarsGenerator()
     od;
 
   :: true ->
-    /* Nondeterministically stop car generation */
+    /* Stop car generation */
     break;
   od
 }
@@ -253,7 +253,7 @@ init
  */
 
   /* Note: another copy of diagram above.
-   * 
+   *
    *               N
    *           2
    *           |       ^
@@ -282,4 +282,7 @@ ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-//ltl car_will_pass { always }
+ltl car_will_pass { always (carsWaiting[0] -> always eventually (tlColor[0] == GREEN)) &&
+                           (carsWaiting[1] -> always eventually (tlColor[1] == GREEN)) &&
+                           (carsWaiting[2] -> always eventually (tlColor[2] == GREEN)) &&
+                           (carsWaiting[3] -> always eventually (tlColor[3] == GREEN)) }
