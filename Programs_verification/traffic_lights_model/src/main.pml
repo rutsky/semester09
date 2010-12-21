@@ -26,12 +26,6 @@
 /* Maximum number of cars in signle traffig light queue */
 #define CARS_QUEUE_LEN   1
 
-/* Minumum number of cars that will be generated (useful for debug) */
-#define MINIMUM_GENERATED_CARS_NUM 20
-
-/* Maximum number of cars that will be generated (useful for debug) */
-#define MAXIMUM_GENERATED_CARS_NUM 20
-
 #define INVALID_INT_ID 255
 #define INVALID_TL_ID  255
 
@@ -112,7 +106,7 @@ proctype TrafficLight( byte tlId )
     atomic
     {
       cars[tlId] ? carId;
-      printf("MSC: Traffix light #%d: pass car #%d\n", tlId, carId);
+      printf("MSC: Traffix light #%d: pass car\n", tlId);
     };
     
     /* Forbid passing */
@@ -138,18 +132,9 @@ proctype TrafficLight( byte tlId )
 proctype CarsGenerator()
 {
   byte tlId;
-  int carId;
 
-  carId = 0;
   do
   :: true ->
-    if
-    :: (carId >= MAXIMUM_GENERATED_CARS_NUM) ->
-      break;
-    :: else ->
-      skip;
-    fi;
-  
     /* Generate car (probably) */
   
     tlId = 0;
@@ -158,8 +143,7 @@ proctype CarsGenerator()
       if
       :: true ->
         /* Generate car and exit cycle */
-        cars[tlId] ! carId;
-        carId++;
+        cars[tlId] ! 0;
         break
       :: true ->
         /* Skip car generation for current traffic light */
@@ -170,21 +154,13 @@ proctype CarsGenerator()
       break;
     od;
 
-  :: carId >= MINIMUM_GENERATED_CARS_NUM ->
-    /* Minimum number of cars already genereted.
-     * Nondeterministically stop car generation.
-     */
-    
-    if
-    :: true ->
-      break;
-    :: true ->
-      skip
-    fi
-
-  :: else ->
+  :: true ->
     /* Don't generate car */
     skip
+
+  :: true ->
+    /* Nondeterministically stop car generation */
+    break;
   od
 }
 
@@ -273,18 +249,21 @@ init
     break;
   od;
   
-  /* Start traffic lights processes */
-  tlId = 0;
-  do
-  :: tlId < N_TRAFFIC_LIGHTS ->
-    run TrafficLight(tlId);
-    tlId++;
-  :: else ->
-    break;
-  od;
+  atomic
+  {
+    /* Start traffic lights processes */
+    tlId = 0;
+    do
+    :: tlId < N_TRAFFIC_LIGHTS ->
+      run TrafficLight(tlId);
+      tlId++;
+    :: else ->
+      break;
+    od;
   
-  /* Start cars generator process */
-  run CarsGenerator();
+    /* Start cars generator process */
+    run CarsGenerator();
+  }
 }
 
 /*
