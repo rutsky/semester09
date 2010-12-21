@@ -27,6 +27,6 @@ Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t"])
 
 automata_binary = env.Command("pan", automata_source_node, "cc -o pan pan.c", chdir=True)
 
-env.Builder("run", automata_binary, action="./pan", chdir=True)
+#env.Builder("run", automata_binary, action="./pan", chdir=True)
 
 Default(automata_binary)
