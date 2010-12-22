@@ -1,4 +1,4 @@
+ * Understand spin verification modes and fix warnings about not reached "-end-".
+ * Universal solution for all crossroads (one place configuration).
  * SCons scripts for building model are very poor.
  * Make correct verify script and integrate it with SCons.
- * Universal solution for all crossroads.
- * Understand spin verification modes and fix warnings about not reached "-end-".
