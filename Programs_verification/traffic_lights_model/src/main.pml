@@ -52,31 +52,12 @@
 
 #define INVALID_TL_ID  255
 
-/* Intersection resource object */
-mtype = { INT };
-
-/* Cars waiting sign for each traffic light */
-chan intersectionMutex[N_INTERSECTIONS] = [1] of { mtype };
-
-/* Macro for obtaining intersection resource */
-#define lockIntersection( intId ) \
-  intersectionMutex[intId] ? INT
-
-/* Macro for releasing intersection resource */
-#define unlockIntersection( intId ) \
-  intersectionMutex[intId] ! INT
 
 /* Car object */
 mtype = { CAR };
 
 /* Cars waiting sign for each traffic light */
 chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
-
-/* Traffic lights states */
-mtype = { RED, GREEN };
-
-/* Traffic light state */
-mtype tlColor[N_TRAFFIC_LIGHTS];
 
 /* Cars generator process */
 proctype CarsGenerator()
@@ -114,10 +95,83 @@ endCG:
   od
 }
 
+
+/* Intersection resource and release request */
+mtype = { INT, RELEASE };
+
+/* Intersections lock/release requests queue.
+ * Message contains requestee traffic light identifier.
+ */
+chan intersectionLockRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { byte };
+chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = [N_INTERSECTIONS] of { mtype };
+chan intersectionReleaseRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype };
+
+/* Macro for obtaining intersection resource */
+#define lockIntersection( intId, tlId ) \
+  intersectionLockRequests[intId] ! tlId;
+  intersectionLockGranted[tlId] ? INT;
+
+/* Macro for releasing intersection resource */
+#define unlockIntersection( intId ) \
+  intersectionReleaseRequests[intId] ! RELEASE
+
+/* Traffic light which have priority over others */
+byte priorityTL = 0;
+
+/* Intersection resource manager */
+proctype Intersection( byte initIntId )
+{
+  byte intId, tlId, i, idxToHandle;
+  byte queueLen;
+  byte queue[N_TRAFFIC_LIGHTS];
+
+  intId = initIntId;
+  queueLen = 0;
+
+  do
+  :: queueLen > 0 || len(intersectionLockRequests[intId]) > 0 ->
+    /* Read all requests */
+    do
+    :: intersectionLockRequests[intId] ? queue[queueLen] ->
+      queueLen++;
+    :: else ->
+      break;
+    od;
+    
+    /* Select priority traffic light request */
+    i = 0;
+    do
+    :: i < queueLen ->
+      if
+      :: queue[i] == priorityTL ->
+        idxToHandle = i;
+        break;
+      fi;
+      i++;
+    :: else ->
+      idxToHandle = queueLen - 1;
+      break;
+    od;
+  
+    /* Handle selected request */
+    intersectionLockGranted ! INT;
+    
+    /* Wait for release */
+    intersectionReleaseRequests[intId] ? RELEASE;
+  od;
+}
+
+/* Traffic lights states */
+mtype = { RED, GREEN };
+
+/* Traffic light state */
+mtype tlColor[N_TRAFFIC_LIGHTS];
+
 /* Main traffic light process */
 proctype TrafficLight( byte initTlId )
 {
   byte tlId;
+  
   tlId = initTlId;
 
   assert(tlId != INVALID_TL_ID);
@@ -150,19 +204,19 @@ endTL:
      */
     if
     :: tlId == SN ->
-      lockIntersection(0);
-      lockIntersection(1);
-      lockIntersection(2);
+      lockIntersection(0, tlId);
+      lockIntersection(1, tlId);
+      lockIntersection(2, tlId);
     :: tlId == WE ->
-      lockIntersection(0);
-      lockIntersection(3);
+      lockIntersection(0, tlId);
+      lockIntersection(3, tlId);
     :: tlId == ES ->
-      lockIntersection(2);
-      lockIntersection(3);
-      lockIntersection(4);
+      lockIntersection(2, tlId);
+      lockIntersection(3, tlId);
+      lockIntersection(4, tlId);
     :: tlId == NE ->
-      lockIntersection(1);
-      lockIntersection(4);
+      lockIntersection(1, tlId);
+      lockIntersection(4, tlId);
     fi;
     
     /* Allow passing */
@@ -233,6 +287,16 @@ init
   
   atomic
   {
+    /* Start intersection managers processes */
+    intId = 0;
+    do
+    :: intId < N_INTERSECTIONS ->
+      run Intersection(intId);
+      intId++;
+    :: else ->
+      break;
+    od;
+  
     /* Start traffic lights processes */
     tlId = 0;
     do
