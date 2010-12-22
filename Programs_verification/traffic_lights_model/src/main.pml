@@ -78,6 +78,42 @@ mtype = { RED, GREEN };
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
 
+/* Cars generator process */
+proctype CarsGenerator()
+{
+  byte tlId;
+  bit isExit;
+  
+  isExit = false;
+
+endCG:
+  do
+  :: isExit ->
+    break;
+  :: else ->
+    /* Generate car (probably) */
+  
+    tlId = 0;
+    do
+    :: (tlId < N_TRAFFIC_LIGHTS) ->
+      if
+      :: nfull(carsWaiting[tlId]) ->
+        /* Generate car */
+        carsWaiting[tlId] ! CAR;
+        break;
+      :: true ->
+        /* Skip car generation for current traffic light */
+        skip
+      fi;
+      tlId++;
+    :: else ->
+      /* No cars generated, exiting */
+      isExit = true;
+      break;
+    od;
+  od
+}
+
 /* Main traffic light process */
 proctype TrafficLight( byte initTlId )
 {
@@ -167,42 +203,6 @@ endTL:
       unlockIntersection(1);
       unlockIntersection(4);
     fi
-  od
-}
-
-/* Cars generator process */
-proctype CarsGenerator()
-{
-  byte tlId;
-  bit isExit;
-  
-  isExit = false;
-
-endCG:
-  do
-  :: isExit ->
-    break;
-  :: else ->
-    /* Generate car (probably) */
-  
-    tlId = 0;
-    do
-    :: (tlId < N_TRAFFIC_LIGHTS) ->
-      if
-      :: nfull(carsWaiting[tlId]) ->
-        /* Generate car */
-        carsWaiting[tlId] ! CAR;
-        break;
-      :: true ->
-        /* Skip car generation for current traffic light */
-        skip
-      fi;
-      tlId++;
-    :: else ->
-      /* No cars generated, exiting */
-      isExit = true;
-      break;
-    od;
   od
 }
 
