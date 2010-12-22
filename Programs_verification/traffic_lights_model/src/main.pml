@@ -78,7 +78,7 @@ endCG:
     do
     :: (tlId < N_TRAFFIC_LIGHTS) ->
       if
-      :: nfull(carsWaiting[tlId]) ->
+      :: true ->
         /* Generate car */
         carsWaiting[tlId] ! CAR;
         break;
@@ -96,7 +96,7 @@ endCG:
 }
 
 /* Manager messages */
-mtype = { LOCK_BY, INT, RELEASE };
+mtype = { LOCK, INT, RELEASE };
 
 /* Intersections lock/release requests queue.
  * Message contains requestee traffic light identifier.
@@ -107,7 +107,7 @@ chan intersectionReleaseRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtyp
 
 /* Macro for obtaining intersection resource */
 #define lockIntersection( intId, tlId )   \
-  intersectionLockRequests[intId] ! LOCK_BY(tlId); \
+  intersectionLockRequests[intId] ! LOCK(tlId); \
   intersectionLockGranted[tlId] ? INT
 
 /* Macro for releasing intersection resource */
@@ -132,8 +132,8 @@ endInt:
   :: (queueLen > 0 || len(intersectionLockRequests[intId]) > 0) ->
     /* Read all requests */
     do
-    :: intersectionLockRequests[intId] ? [LOCK_BY(tlId)] ->
-      intersectionLockRequests[intId] ? LOCK_BY(tlId);
+    :: intersectionLockRequests[intId] ? [LOCK(tlId)] ->
+      intersectionLockRequests[intId] ? LOCK(tlId);
       queue[queueLen] = tlId;
       queueLen++;
     :: else ->
@@ -171,7 +171,7 @@ endInt:
       i++;
     :: else ->
       break;
-    od
+    od;
   od;
 }
 
