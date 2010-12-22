@@ -95,20 +95,19 @@ endCG:
   od
 }
 
-
-/* Intersection resource and release request */
-mtype = { INT, RELEASE };
+/* Manager messages */
+mtype = { LOCK_BY, INT, RELEASE };
 
 /* Intersections lock/release requests queue.
  * Message contains requestee traffic light identifier.
  */
-chan intersectionLockRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { byte };
+chan intersectionLockRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype, byte };
 chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = [N_INTERSECTIONS] of { mtype };
 chan intersectionReleaseRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype };
 
 /* Macro for obtaining intersection resource */
 #define lockIntersection( intId, tlId )   \
-  intersectionLockRequests[intId] ! tlId; \
+  intersectionLockRequests[intId] ! LOCK_BY(tlId); \
   intersectionLockGranted[tlId] ? INT
 
 /* Macro for releasing intersection resource */
@@ -128,12 +127,13 @@ proctype Intersection( byte initIntId )
   intId = initIntId;
   queueLen = 0;
 
+endInt:
   do
   :: (queueLen > 0 || len(intersectionLockRequests[intId]) > 0) ->
     /* Read all requests */
     do
-    :: intersectionLockRequests[intId] ? [tlId] ->
-      intersectionLockRequests[intId] ? tlId;
+    :: intersectionLockRequests[intId] ? [LOCK_BY(tlId)] ->
+      intersectionLockRequests[intId] ? LOCK_BY(tlId);
       queue[queueLen] = tlId;
       queueLen++;
     :: else ->
@@ -286,16 +286,6 @@ endTL:
 init
 {
   byte tlId, intId;
-  
-  /* Initialize intersection resources */
-  intId = 0;
-  do
-  :: intId < N_INTERSECTIONS ->
-    unlockIntersection(intId);
-    intId++;
-  :: else ->
-    break;
-  od;
   
   /* Reset traffic lights colors */
   tlId = 0;
