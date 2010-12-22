@@ -45,39 +45,102 @@
 #define ES 3
 
 /* Number of traffic lights */
-#define N_TRAFFIC_LIGHTS  4
+#define N_TRAFFIC_LIGHTS 4
 
 /* Number of intersections */
-#define N_INTERSECTIONS 5
+#define N_INTERSECTIONS  5
 
 #define INVALID_TL_ID  255
 
-mtype = { RED, GREEN };
+/*** cut here ***/
 
-/* Current owner of intersection resource */
-byte intersectionOwner[N_INTERSECTIONS];
-
-/* Macro for obtaining intersection resource */
-#define lockIntersection( intId, tlId )               \
-  do                                                  \
-  :: true -> atomic {                                 \
-      if                                              \
-      :: intersectionOwner[intId] == INVALID_TL_ID -> \
-        intersectionOwner[intId] = tlId;              \
-        break                                         \
-      :: else ->                                      \
-        skip                                          \
-      fi                                              \
-    }                                                 \
-  od
-
-/* Macro for releasing intersection resource */
-#define unlockIntersection( intId, tlId )             \
-  assert(intersectionOwner[intId] == tlId);           \
-  intersectionOwner[intId] = INVALID_TL_ID
+/* Car object */
+mtype = { CAR };
 
 /* Cars waiting sign for each traffic light */
-bit carsWaiting[N_TRAFFIC_LIGHTS];
+chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
+
+/* Cars generator process */
+proctype CarsGenerator()
+{
+  byte tlId;
+  bit isExit;
+  
+  isExit = false;
+
+endCG:
+  do
+  :: isExit ->
+    break;
+  :: else ->
+    /* Generate car (probably) */
+  
+    tlId = 0;
+    do
+    :: (tlId < N_TRAFFIC_LIGHTS) ->
+      if
+      :: true ->
+        /* Generate car */
+        carsWaiting[tlId] ! CAR;
+        break;
+      :: true
+        /* Skip car generation for current traffic light */
+      fi;
+      tlId++;
+    :: else ->
+      /* No cars generated, exiting */
+      isExit = true;
+      break;
+    od;
+  od
+}
+
+/*** cut here ***/
+
+/* Manager messages */
+mtype = { LOCK, INT, RELEASE };
+
+/* Intersections lock/release requests queue.
+ * Message contains requestee traffic light identifier.
+ */
+chan intersectionLockRequests[N_INTERSECTIONS] = 
+  [N_TRAFFIC_LIGHTS] of { mtype, byte };
+chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = 
+  [0] of { mtype };
+chan intersectionReleaseRequests[N_INTERSECTIONS] = 
+  [0] of { mtype };
+
+/* Macro for obtaining intersection resource */
+#define lockIntersection( intId, tlId )   \
+  intersectionLockRequests[intId] ! LOCK(tlId); \
+  intersectionLockGranted[tlId] ? INT
+
+/* Macro for releasing intersection resource */
+#define unlockIntersection( intId ) \
+  intersectionReleaseRequests[intId] ! RELEASE
+
+/* Intersection resource manager */
+proctype Intersection( byte initIntId )
+{
+  byte intId, tlId;
+
+  intId = initIntId;
+
+endInt:
+  do
+  :: intersectionLockRequests[intId] ? LOCK(tlId) ->
+    /* Handle request */
+    intersectionLockGranted[tlId] ! INT;
+
+    /* Wait for release */
+    intersectionReleaseRequests[intId] ? RELEASE;
+  od;
+}
+
+/*** cut here ***/
+
+/* Traffic lights states */
+mtype = { RED, GREEN };
 
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
@@ -86,6 +149,7 @@ mtype tlColor[N_TRAFFIC_LIGHTS];
 proctype TrafficLight( byte initTlId )
 {
   byte tlId;
+  
   tlId = initTlId;
 
   assert(tlId != INVALID_TL_ID);
@@ -93,7 +157,7 @@ proctype TrafficLight( byte initTlId )
 
 endTL:
   do
-  :: carsWaiting[tlId] ->
+  :: carsWaiting[tlId] ? [CAR] ->
     /* Cars in queue */
   
     /* Lock dependent intersections */
@@ -138,13 +202,11 @@ endTL:
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
       tlColor[tlId] = GREEN;
-    };
-    
-    /* Pass car */
-    atomic
-    {
+      
+      /* Pass car */
+      /* Note: atomic for easier claim construction */
       printf("MSC: Traffix light #%d: pass cars\n", tlId);
-      carsWaiting[tlId] = false;
+      carsWaiting[tlId] ? CAR;
     };
     
     /* Forbid passing */
@@ -157,69 +219,29 @@ endTL:
     /* Release dependent intersections */
     if
     :: tlId == SN ->
-      unlockIntersection(0, tlId);
-      unlockIntersection(1, tlId);
-      unlockIntersection(2, tlId);
+      unlockIntersection(0);
+      unlockIntersection(1);
+      unlockIntersection(2);
     :: tlId == WE ->
-      unlockIntersection(0, tlId);
-      unlockIntersection(3, tlId);
+      unlockIntersection(0);
+      unlockIntersection(3);
     :: tlId == ES ->
-      unlockIntersection(2, tlId);
-      unlockIntersection(3, tlId);
-      unlockIntersection(4, tlId);
+      unlockIntersection(2);
+      unlockIntersection(3);
+      unlockIntersection(4);
     :: tlId == NE ->
-      unlockIntersection(1, tlId);
-      unlockIntersection(4, tlId);
-    fi
-  od
+      unlockIntersection(1);
+      unlockIntersection(4);
+    fi;
+  od;
 }
 
-/* Cars generator process */
-proctype CarsGenerator()
-{
-  byte tlId;
-
-endCG:
-  do
-  :: true ->
-    /* Generate car (probably) */
-  
-    tlId = 0;
-    do
-    :: (tlId < N_TRAFFIC_LIGHTS) ->
-      if
-      :: !carsWaiting[tlId] ->
-        /* Generate car */
-        carsWaiting[tlId] = true;
-      :: true ->
-        /* Skip car generation for current traffic light */
-        skip
-      fi;
-      tlId++;
-    :: else ->
-      break;
-    od;
-
-  :: true ->
-    /* Stop car generation */
-    break;
-  od
-}
+/*** cut here ***/
 
 /* The main model function */
 init
 {
-  byte tlId, intId, intIdx;
-  
-  /* Reset intersection owners */
-  intId = 0;
-  do
-  :: intId < N_INTERSECTIONS ->
-    intersectionOwner[intId] = INVALID_TL_ID;
-    intId++;
-  :: else ->
-    break;
-  od;
+  byte tlId, intId;
   
   /* Reset traffic lights colors */
   tlId = 0;
@@ -233,6 +255,16 @@ init
   
   atomic
   {
+    /* Start intersection managers processes */
+    intId = 0;
+    do
+    :: intId < N_INTERSECTIONS ->
+      run Intersection(intId);
+      intId++;
+    :: else ->
+      break;
+    od;
+  
     /* Start traffic lights processes */
     tlId = 0;
     do
@@ -247,6 +279,8 @@ init
     run CarsGenerator();
   }
 }
+
+/*** cut here ***/
 
 /*
  * Correctness requirements.
@@ -272,17 +306,34 @@ init
    *
    */
 
+/*
+ * always      <=>  []
+ * eventually  <=>  <>
+ */
+
 /* Safety: Intersecting roads traffic light both never has GREEN state */
-                /* [] */
-ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
-                        !(tlColor[0] == GREEN && tlColor[2] == GREEN) &&
-                        !(tlColor[0] == GREEN && tlColor[3] == GREEN) &&
-                        !(tlColor[1] == GREEN && tlColor[3] == GREEN) &&
-                        !(tlColor[2] == GREEN && tlColor[3] == GREEN) }
+ltl safe_green_01 { 
+  always (!(tlColor[0] == GREEN && tlColor[1] == GREEN)) }
+ltl safe_green_02 { 
+  always (!(tlColor[0] == GREEN && tlColor[2] == GREEN)) }
+ltl safe_green_03 { 
+  always (!(tlColor[0] == GREEN && tlColor[3] == GREEN)) }
+ltl safe_green_13 { 
+  always (!(tlColor[1] == GREEN && tlColor[3] == GREEN)) }
+ltl safe_green_23 { 
+  always (!(tlColor[2] == GREEN && tlColor[3] == GREEN)) }
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-ltl car_will_pass { always (carsWaiting[0] -> always eventually (tlColor[0] == GREEN)) &&
-                           (carsWaiting[1] -> always eventually (tlColor[1] == GREEN)) &&
-                           (carsWaiting[2] -> always eventually (tlColor[2] == GREEN)) &&
-                           (carsWaiting[3] -> always eventually (tlColor[3] == GREEN)) }
+ltl car_will_pass_0 {
+  always ((len(carsWaiting[0]) > 0) ->
+              eventually (tlColor[0] == GREEN)) }
+ltl car_will_pass_1 {
+  always ((len(carsWaiting[1]) > 0) ->
+              eventually (tlColor[1] == GREEN)) }
+ltl car_will_pass_2 {
+  always ((len(carsWaiting[2]) > 0) ->
+              eventually (tlColor[2] == GREEN)) }
+ltl car_will_pass_3 {
+  always ((len(carsWaiting[3]) > 0) ->
+              eventually (tlColor[3] == GREEN)) }

@@ -1,3 +1,4 @@
+ * Understand spin verification modes and fix warnings about not reached "-end-".
+ * Universal solution for all crossroads (one place configuration).
  * SCons scripts for building model are very poor.
- * Do all interprocess communications through channels (locking of intersections).
-
+ * Make correct verify script and integrate it with SCons.
