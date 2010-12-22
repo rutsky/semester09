@@ -52,34 +52,28 @@
 
 #define INVALID_TL_ID  255
 
-mtype = { RED, GREEN };
+/* Intersection resource object */
+mtype = { INT };
 
-/* Current owner of intersection resource */
-byte intersectionOwner[N_INTERSECTIONS];
+/* Cars waiting sign for each traffic light */
+chan intersectionMutex[N_INTERSECTIONS] = [1] of { mtype };
 
 /* Macro for obtaining intersection resource */
-#define lockIntersection( intId, tlId )               \
-  do                                                  \
-  :: true -> atomic {                                 \
-      if                                              \
-      :: intersectionOwner[intId] == INVALID_TL_ID -> \
-        intersectionOwner[intId] = tlId;              \
-        break                                         \
-      :: else ->                                      \
-        skip                                          \
-      fi                                              \
-    }                                                 \
-  od
+#define lockIntersection( intId ) \
+  intersectionMutex[intId] ? INT
 
 /* Macro for releasing intersection resource */
-#define unlockIntersection( intId, tlId )             \
-  assert(intersectionOwner[intId] == tlId);           \
-  intersectionOwner[intId] = INVALID_TL_ID
+#define unlockIntersection( intId ) \
+  intersectionMutex[intId] ! INT
 
-mtype = { CAR }
+/* Car object */
+mtype = { CAR };
 
 /* Cars waiting sign for each traffic light */
 chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
+
+/* Traffic lights states */
+mtype = { RED, GREEN };
 
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
@@ -120,19 +114,19 @@ endTL:
      */
     if
     :: tlId == SN ->
-      lockIntersection(0, tlId);
-      lockIntersection(1, tlId);
-      lockIntersection(2, tlId);
+      lockIntersection(0);
+      lockIntersection(1);
+      lockIntersection(2);
     :: tlId == WE ->
-      lockIntersection(0, tlId);
-      lockIntersection(3, tlId);
+      lockIntersection(0);
+      lockIntersection(3);
     :: tlId == ES ->
-      lockIntersection(2, tlId);
-      lockIntersection(3, tlId);
-      lockIntersection(4, tlId);
+      lockIntersection(2);
+      lockIntersection(3);
+      lockIntersection(4);
     :: tlId == NE ->
-      lockIntersection(1, tlId);
-      lockIntersection(4, tlId);
+      lockIntersection(1);
+      lockIntersection(4);
     fi;
     
     /* Allow passing */
@@ -159,19 +153,19 @@ endTL:
     /* Release dependent intersections */
     if
     :: tlId == SN ->
-      unlockIntersection(0, tlId);
-      unlockIntersection(1, tlId);
-      unlockIntersection(2, tlId);
+      unlockIntersection(0);
+      unlockIntersection(1);
+      unlockIntersection(2);
     :: tlId == WE ->
-      unlockIntersection(0, tlId);
-      unlockIntersection(3, tlId);
+      unlockIntersection(0);
+      unlockIntersection(3);
     :: tlId == ES ->
-      unlockIntersection(2, tlId);
-      unlockIntersection(3, tlId);
-      unlockIntersection(4, tlId);
+      unlockIntersection(2);
+      unlockIntersection(3);
+      unlockIntersection(4);
     :: tlId == NE ->
-      unlockIntersection(1, tlId);
-      unlockIntersection(4, tlId);
+      unlockIntersection(1);
+      unlockIntersection(4);
     fi
   od
 }
@@ -215,13 +209,13 @@ endCG:
 /* The main model function */
 init
 {
-  byte tlId, intId, intIdx;
+  byte tlId, intId;
   
-  /* Reset intersection owners */
+  /* Initialize intersection resources */
   intId = 0;
   do
   :: intId < N_INTERSECTIONS ->
-    intersectionOwner[intId] = INVALID_TL_ID;
+    unlockIntersection(intId);
     intId++;
   :: else ->
     break;
@@ -288,7 +282,6 @@ ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-// TODO: Try nempty(chan) instead of (len(chan) > 0).
 ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> always eventually (tlColor[0] == GREEN)) &&
                            ((len(carsWaiting[1]) > 0) -> always eventually (tlColor[1] == GREEN)) &&
                            ((len(carsWaiting[2]) > 0) -> always eventually (tlColor[2] == GREEN)) &&
