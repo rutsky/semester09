@@ -107,9 +107,9 @@ chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = [N_INTERSECTIONS] of { mtype };
 chan intersectionReleaseRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype };
 
 /* Macro for obtaining intersection resource */
-#define lockIntersection( intId, tlId ) \
-  intersectionLockRequests[intId] ! tlId;
-  intersectionLockGranted[tlId] ? INT;
+#define lockIntersection( intId, tlId )   \
+  intersectionLockRequests[intId] ! tlId; \
+  intersectionLockGranted[tlId] ? INT
 
 /* Macro for releasing intersection resource */
 #define unlockIntersection( intId ) \
@@ -129,10 +129,12 @@ proctype Intersection( byte initIntId )
   queueLen = 0;
 
   do
-  :: queueLen > 0 || len(intersectionLockRequests[intId]) > 0 ->
+  :: (queueLen > 0 || len(intersectionLockRequests[intId]) > 0) ->
     /* Read all requests */
     do
-    :: intersectionLockRequests[intId] ? queue[queueLen] ->
+    :: intersectionLockRequests[intId] ? [tlId] ->
+      intersectionLockRequests[intId] ? tlId;
+      queue[queueLen] = tlId;
       queueLen++;
     :: else ->
       break;
@@ -152,12 +154,24 @@ proctype Intersection( byte initIntId )
       idxToHandle = queueLen - 1;
       break;
     od;
-  
+    
     /* Handle selected request */
-    intersectionLockGranted ! INT;
+    tlId = queue[idxToHandle];
+    intersectionLockGranted[tlId] ! INT;
     
     /* Wait for release */
     intersectionReleaseRequests[intId] ? RELEASE;
+    
+    /* Remove handled traffic light from queue */
+    i = idxToHandle;
+    queueLen--;
+    do
+    :: i < queueLen ->
+      queue[i] = queue[i + 1];
+      i++;
+    :: else ->
+      break;
+    od
   od;
 }
 
@@ -256,8 +270,16 @@ endTL:
     :: tlId == NE ->
       unlockIntersection(1);
       unlockIntersection(4);
+    fi;
+    
+    /* Give priority to next traffic light */
+    if 
+    :: tlId == priorityTL ->
+      priorityTL = (priorityTL + 1) % N_TRAFFIC_LIGHTS;
+    :: else ->
+      skip
     fi
-  od
+  od;
 }
 
 /* The main model function */
