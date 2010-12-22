@@ -120,59 +120,18 @@ byte priorityTL = 0;
 /* Intersection resource manager */
 proctype Intersection( byte initIntId )
 {
-  byte intId, tlId, i, tlIdToHandle;
-  byte queueLen;
-  bit queue[N_TRAFFIC_LIGHTS];
+  byte intId, tlId;
 
   intId = initIntId;
-  queueLen = 0;
 
 endInt:
   do
-  :: (queueLen > 0 || len(intersectionLockRequests[intId]) > 0) ->
-    /* Read all requests */
-    do
-    :: intersectionLockRequests[intId] ? [LOCK(tlId)] ->
-      intersectionLockRequests[intId] ? LOCK(tlId);
-      assert(!queue[tlId]);
-      queue[tlId] = true;
-      queueLen++;
-    :: else ->
-      break;
-    od;
-    
-    /* Select priority traffic light request */
-    atomic {
-    if
-    :: queue[priorityTL] ->
-      tlIdToHandle = priorityTL;
-    :: else ->
-      i = 0;
-      do
-      :: i < N_TRAFFIC_LIGHTS ->
-        if
-        :: queue[i] -> 
-          tlIdToHandle = i;
-          break;
-        :: else ->
-          i++;
-        fi;
-      :: else ->
-        assert(false);
-        break;
-      od;
-    fi;
-    }
-    
+  :: intersectionLockRequests[intId] ? LOCK(tlId) ->
     /* Handle selected request */
-    intersectionLockGranted[tlIdToHandle] ! INT;
-    
+    intersectionLockGranted[tlId] ! INT;
+
     /* Wait for release */
     intersectionReleaseRequests[intId] ? RELEASE;
-    
-    /* Remove handled traffic light from queue */
-    queue[tlIdToHandle] = false;
-    queueLen--;
   od;
 }
 
