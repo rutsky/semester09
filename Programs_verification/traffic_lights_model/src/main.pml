@@ -102,8 +102,8 @@ mtype = { LOCK, INT, RELEASE };
  * Message contains requestee traffic light identifier.
  */
 chan intersectionLockRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype, byte };
-chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = [N_INTERSECTIONS] of { mtype };
-chan intersectionReleaseRequests[N_INTERSECTIONS] = [N_TRAFFIC_LIGHTS] of { mtype };
+chan intersectionLockGranted[N_TRAFFIC_LIGHTS] = [0] of { mtype };
+chan intersectionReleaseRequests[N_INTERSECTIONS] = [0] of { mtype };
 
 /* Macro for obtaining intersection resource */
 #define lockIntersection( intId, tlId )   \
@@ -142,6 +142,7 @@ endInt:
     od;
     
     /* Select priority traffic light request */
+    atomic {
     if
     :: queue[priorityTL] ->
       tlIdToHandle = priorityTL;
@@ -161,6 +162,7 @@ endInt:
         break;
       od;
     fi;
+    }
     
     /* Handle selected request */
     intersectionLockGranted[tlIdToHandle] ! INT;
