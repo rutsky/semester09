@@ -81,6 +81,7 @@ endCG:
       if
       :: true ->
         /* Generate car */
+      progressNewCar:
         carsWaiting[tlId] ! CAR;
         break;
       :: true
@@ -130,6 +131,7 @@ endInt:
   do
   :: intersectionLockRequests[intId] ? LOCK(tlId) ->
     /* Handle request */
+  progressGiveIntersection:
     intersectionLockGranted[tlId] ! INT;
 
     /* Wait for release */
@@ -197,7 +199,14 @@ endTL:
       lockIntersection(4, tlId);
     fi;
     
+    do
+    :: false;
+    od;
+    
+    
     /* Allow passing */
+  progressPassCar:
+    assert(false);
     atomic 
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
@@ -205,8 +214,8 @@ endTL:
       
       /* Pass car */
       /* Note: atomic for easier claim construction */
-      printf("MSC: Traffix light #%d: pass cars\n", tlId);
       carsWaiting[tlId] ? CAR;
+      printf("MSC: Traffix light #%d: pass cars\n", tlId);
     };
     
     /* Forbid passing */
