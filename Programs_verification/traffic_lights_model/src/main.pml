@@ -312,6 +312,9 @@ init
  */
 
 /* Safety: Intersecting roads traffic light both never has GREEN state */
+/*
+// []
+
 ltl safe_green_01 { 
   always (!(tlColor[0] == GREEN && tlColor[1] == GREEN)) }
 ltl safe_green_02 { 
@@ -322,9 +325,11 @@ ltl safe_green_13 {
   always (!(tlColor[1] == GREEN && tlColor[3] == GREEN)) }
 ltl safe_green_23 { 
   always (!(tlColor[2] == GREEN && tlColor[3] == GREEN)) }
+ */
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
+/*
 ltl car_will_pass_0 {
   always ((len(carsWaiting[0]) > 0) ->
               eventually (tlColor[0] == GREEN)) }
@@ -337,3 +342,4 @@ ltl car_will_pass_2 {
 ltl car_will_pass_3 {
   always ((len(carsWaiting[3]) > 0) ->
               eventually (tlColor[3] == GREEN)) }
+ */

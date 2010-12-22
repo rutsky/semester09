@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cp main.pml pan_in
+
 spin -a main.pml
 
 # Safety

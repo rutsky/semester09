@@ -22,11 +22,12 @@ Import("env")
 
 sources = Glob("*.pml", strings=True)
 
-automata_source_node = env.Command("pan.c", sources, "spin -a main.pml", chdir=True)
-Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t"])
+automata_source_node = env.Command("pan.c", sources, "spin -a -v main.pml", chdir=True)
+Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp"])
 
-automata_binary = env.Command("pan", automata_source_node, "cc -o pan pan.c", chdir=True)
+verify_safety = env.Command("verify_safety", automata_source_node,
+  "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DSAFETY -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
+  "time -v ./pan -v -X -m2000000 -w19  -A -E -c1", chdir=True)
+Clean(verify_safety, ["pan"])
 
-#env.Builder("run", automata_binary, action="./pan", chdir=True)
-
-Default(automata_binary)
+Default(automata_source_node)

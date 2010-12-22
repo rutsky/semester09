@@ -20,4 +20,5 @@ import os
 env = Environment(tools=["default"], ENV={'PATH' : os.environ['PATH']})
 Export('env')
 
-SConscript("src/SConscript", variant_dir="build/src")
+#SConscript("src/SConscript", variant_dir="build/src")
+SConscript("src/SConscript")
