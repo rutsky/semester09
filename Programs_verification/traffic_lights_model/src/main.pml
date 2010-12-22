@@ -280,6 +280,8 @@ init
   }
 }
 
+/*** cut here ***/
+
 /*
  * Correctness requirements.
  */
@@ -314,7 +316,7 @@ ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> always eventually (tlColor[0] == GREEN)) &&
-                           ((len(carsWaiting[1]) > 0) -> always eventually (tlColor[1] == GREEN)) &&
-                           ((len(carsWaiting[2]) > 0) -> always eventually (tlColor[2] == GREEN)) &&
-                           ((len(carsWaiting[3]) > 0) -> always eventually (tlColor[3] == GREEN)) }
+ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> eventually (tlColor[0] == GREEN)) &&
+                           ((len(carsWaiting[1]) > 0) -> eventually (tlColor[1] == GREEN)) &&
+                           ((len(carsWaiting[2]) > 0) -> eventually (tlColor[2] == GREEN)) &&
+                           ((len(carsWaiting[3]) > 0) -> eventually (tlColor[3] == GREEN)) }
