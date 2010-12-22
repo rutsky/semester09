@@ -27,7 +27,7 @@ Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp"])
 
 verify_safety = env.Command("verify_safety", automata_source_node,
   "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DSAFETY -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
-  "time -v ./pan -v -X -m2000000 -w19  -A -E -c1", chdir=True)
+  "time -v ./pan -v -X -m2000000 -w19  -A -E -c1 -b", chdir=True)
 Clean(verify_safety, ["pan"])
 
 Default(automata_source_node)
