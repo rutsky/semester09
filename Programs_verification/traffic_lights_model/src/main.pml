@@ -76,8 +76,10 @@ byte intersectionOwner[N_INTERSECTIONS];
   assert(intersectionOwner[intId] == tlId);           \
   intersectionOwner[intId] = INVALID_TL_ID
 
+mtype = { CAR }
+
 /* Cars waiting sign for each traffic light */
-bit carsWaiting[N_TRAFFIC_LIGHTS];
+chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
 
 /* Traffic light state */
 mtype tlColor[N_TRAFFIC_LIGHTS];
@@ -93,7 +95,7 @@ proctype TrafficLight( byte initTlId )
 
 endTL:
   do
-  :: carsWaiting[tlId] ->
+  :: carsWaiting[tlId] ? [CAR] ->
     /* Cars in queue */
   
     /* Lock dependent intersections */
@@ -144,7 +146,7 @@ endTL:
     atomic
     {
       printf("MSC: Traffix light #%d: pass cars\n", tlId);
-      carsWaiting[tlId] = false;
+      carsWaiting[tlId] ? CAR;
     };
     
     /* Forbid passing */
@@ -193,9 +195,9 @@ endCG:
     do
     :: (tlId < N_TRAFFIC_LIGHTS) ->
       if
-      :: !carsWaiting[tlId] ->
+      :: nfull(carsWaiting[tlId]) ->
         /* Generate car */
-        carsWaiting[tlId] = true;
+        carsWaiting[tlId] ! CAR;
         break;
       :: true ->
         /* Skip car generation for current traffic light */
@@ -286,7 +288,7 @@ ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-ltl car_will_pass { always (carsWaiting[0] -> always eventually (tlColor[0] == GREEN)) &&
-                           (carsWaiting[1] -> always eventually (tlColor[1] == GREEN)) &&
-                           (carsWaiting[2] -> always eventually (tlColor[2] == GREEN)) &&
-                           (carsWaiting[3] -> always eventually (tlColor[3] == GREEN)) }
+ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> always eventually (tlColor[0] == GREEN)) &&
+                           ((len(carsWaiting[1]) > 0) -> always eventually (tlColor[1] == GREEN)) &&
+                           ((len(carsWaiting[2]) > 0) -> always eventually (tlColor[2] == GREEN)) &&
+                           ((len(carsWaiting[3]) > 0) -> always eventually (tlColor[3] == GREEN)) }
