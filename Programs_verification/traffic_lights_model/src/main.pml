@@ -178,10 +178,15 @@ endTL:
 proctype CarsGenerator()
 {
   byte tlId;
+  bit isExit;
+  
+  isExit = false;
 
 endCG:
   do
-  :: true ->
+  :: isExit ->
+    break;
+  :: else ->
     /* Generate car (probably) */
   
     tlId = 0;
@@ -191,18 +196,17 @@ endCG:
       :: !carsWaiting[tlId] ->
         /* Generate car */
         carsWaiting[tlId] = true;
+        break;
       :: true ->
         /* Skip car generation for current traffic light */
         skip
       fi;
       tlId++;
     :: else ->
+      /* No cars generated, exiting */
+      isExit = true;
       break;
     od;
-
-  :: true ->
-    /* Stop car generation */
-    break;
   od
 }
 
