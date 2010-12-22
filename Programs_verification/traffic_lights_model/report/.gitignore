@@ -1,0 +1,7 @@
+# LaTeX
+*.log
+*.aux
+*.bbl
+*.blg
+*.fls
+*.out
