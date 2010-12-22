@@ -288,6 +288,7 @@ ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
+// TODO: Try nempty(chan) instead of (len(chan) > 0).
 ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> always eventually (tlColor[0] == GREEN)) &&
                            ((len(carsWaiting[1]) > 0) -> always eventually (tlColor[1] == GREEN)) &&
                            ((len(carsWaiting[2]) > 0) -> always eventually (tlColor[2] == GREEN)) &&
