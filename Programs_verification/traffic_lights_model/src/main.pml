@@ -83,9 +83,8 @@ endCG:
         /* Generate car */
         carsWaiting[tlId] ! CAR;
         break;
-      :: true ->
+      :: true
         /* Skip car generation for current traffic light */
-        skip
       fi;
       tlId++;
     :: else ->
@@ -200,11 +199,9 @@ endTL:
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
       tlColor[tlId] = GREEN;
-    };
-    
-    /* Pass car */
-    atomic
-    {
+      
+      /* Pass car */
+      /* Note: atomic for easier claim construction */
       printf("MSC: Traffix light #%d: pass cars\n", tlId);
       carsWaiting[tlId] ? CAR;
     };
@@ -306,17 +303,21 @@ init
    *
    */
 
+/*
+ * always      <=>  []
+ * eventually  <=>  <>
+ */
+
 /* Safety: Intersecting roads traffic light both never has GREEN state */
-                /* [] */
-ltl safe_green { always !(tlColor[0] == GREEN && tlColor[1] == GREEN) &&
-                        !(tlColor[0] == GREEN && tlColor[2] == GREEN) &&
-                        !(tlColor[0] == GREEN && tlColor[3] == GREEN) &&
-                        !(tlColor[1] == GREEN && tlColor[3] == GREEN) &&
-                        !(tlColor[2] == GREEN && tlColor[3] == GREEN) }
+ltl safe_green_01 { always (!(tlColor[0] == GREEN && tlColor[1] == GREEN)) }
+ltl safe_green_02 { always (!(tlColor[0] == GREEN && tlColor[2] == GREEN)) }
+ltl safe_green_03 { always (!(tlColor[0] == GREEN && tlColor[3] == GREEN)) }
+ltl safe_green_13 { always (!(tlColor[1] == GREEN && tlColor[3] == GREEN)) }
+ltl safe_green_23 { always (!(tlColor[2] == GREEN && tlColor[3] == GREEN)) }
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-ltl car_will_pass { always ((len(carsWaiting[0]) > 0) -> eventually (tlColor[0] == GREEN)) &&
-                           ((len(carsWaiting[1]) > 0) -> eventually (tlColor[1] == GREEN)) &&
-                           ((len(carsWaiting[2]) > 0) -> eventually (tlColor[2] == GREEN)) &&
-                           ((len(carsWaiting[3]) > 0) -> eventually (tlColor[3] == GREEN)) }
+ltl car_will_pass_0 { always ((len(carsWaiting[0]) > 0) -> eventually (tlColor[0] == GREEN)) }
+ltl car_will_pass_1 { always ((len(carsWaiting[1]) > 0) -> eventually (tlColor[1] == GREEN)) }
+ltl car_will_pass_2 { always ((len(carsWaiting[2]) > 0) -> eventually (tlColor[2] == GREEN)) }
+ltl car_will_pass_3 { always ((len(carsWaiting[3]) > 0) -> eventually (tlColor[3] == GREEN)) }
