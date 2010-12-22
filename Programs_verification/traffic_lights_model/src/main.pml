@@ -52,6 +52,7 @@
 
 #define INVALID_TL_ID  255
 
+/*** cut here ***/
 
 /* Car object */
 mtype = { CAR };
@@ -95,6 +96,8 @@ endCG:
   od
 }
 
+/*** cut here ***/
+
 /* Manager messages */
 mtype = { LOCK, INT, RELEASE };
 
@@ -114,9 +117,6 @@ chan intersectionReleaseRequests[N_INTERSECTIONS] = [0] of { mtype };
 #define unlockIntersection( intId ) \
   intersectionReleaseRequests[intId] ! RELEASE
 
-/* Traffic light which have priority over others */
-byte priorityTL = 0;
-
 /* Intersection resource manager */
 proctype Intersection( byte initIntId )
 {
@@ -127,13 +127,15 @@ proctype Intersection( byte initIntId )
 endInt:
   do
   :: intersectionLockRequests[intId] ? LOCK(tlId) ->
-    /* Handle selected request */
+    /* Handle request */
     intersectionLockGranted[tlId] ! INT;
 
     /* Wait for release */
     intersectionReleaseRequests[intId] ? RELEASE;
   od;
 }
+
+/*** cut here ***/
 
 /* Traffic lights states */
 mtype = { RED, GREEN };
@@ -231,16 +233,10 @@ endTL:
       unlockIntersection(1);
       unlockIntersection(4);
     fi;
-    
-    /* Give priority to next traffic light */
-    if 
-    :: tlId == priorityTL ->
-      priorityTL = (priorityTL + 1) % N_TRAFFIC_LIGHTS;
-    :: else ->
-      skip
-    fi
   od;
 }
+
+/*** cut here ***/
 
 /* The main model function */
 init
