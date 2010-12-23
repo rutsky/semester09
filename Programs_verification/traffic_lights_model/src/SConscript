@@ -33,7 +33,7 @@ verify_basic_safety = env.Command("verify_basic_safety", sources,
 Clean(verify_basic_safety, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp", "pan"])
 
 safety_claim = env.Command("safety.ltl", [],
-    "spin -f '[] (!accident_01 && !accident_02 && !accident_03 && !accident_13 && !accident_23)' > safety.ltl",
+    "spin -f '! ([] (!accident_01 && !accident_02 && !accident_03 && !accident_13 && !accident_23))' > safety.ltl",
     chdir=True)
 
 verify_safety = env.Command("verify_safety", safety_claim,

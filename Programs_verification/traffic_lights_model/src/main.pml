@@ -64,15 +64,10 @@ chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
 proctype CarsGenerator()
 {
   byte tlId;
-  bit isExit;
-  
-  isExit = false;
 
 endCG:
   do
-  :: isExit ->
-    break;
-  :: else ->
+  :: true ->
     /* Generate car (probably) */
   
     tlId = 0;
@@ -81,7 +76,6 @@ endCG:
       if
       :: true ->
         /* Generate car */
-      progressNewCar:
         carsWaiting[tlId] ! CAR;
         break;
       :: true
@@ -89,8 +83,8 @@ endCG:
       fi;
       tlId++;
     :: else ->
-      /* No cars generated, exiting */
-      isExit = true;
+      /* No cars generated, generate for zero traffic light */
+      carsWaiting[0] ! CAR;
       break;
     od;
   od
