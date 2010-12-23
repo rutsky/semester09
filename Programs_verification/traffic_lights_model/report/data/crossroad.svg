@@ -209,8 +209,8 @@
      inkscape:cx="291.96756"
      inkscape:cy="285.65306"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     showgrid="false"
+     inkscape:current-layer="layer2"
+     showgrid="true"
      units="cm"
      showguides="false"
      inkscape:guide-bbox="true"
@@ -287,6 +287,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -512,46 +513,46 @@
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;display:inline;font-family:Bitstream Vera Sans"
-       x="289.35132"
-       y="-70.420303"
+       x="287.35132"
+       y="-76.420303"
        id="text3110"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3112"
-         x="289.35132"
-         y="-70.420303">N</tspan></text>
+         x="287.35132"
+         y="-76.420303">N</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;display:inline;font-family:Bitstream Vera Sans"
        x="290.20847"
-       y="381.86542"
+       y="385.86542"
        id="text3114"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3116"
          x="290.20847"
-         y="381.86542">S</tspan></text>
+         y="385.86542">S</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;display:inline;font-family:Bitstream Vera Sans"
        x="520.4942"
-       y="179.00821"
+       y="147.00821"
        id="text3118"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3120"
          x="520.4942"
-         y="179.00821">E</tspan></text>
+         y="147.00821">E</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;display:inline;font-family:Bitstream Vera Sans"
        x="33.351326"
-       y="173.8654"
+       y="145.8654"
        id="text3126"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3128"
          x="33.351326"
-         y="173.8654">W</tspan></text>
+         y="145.8654">W</tspan></text>
   </g>
 </svg>
