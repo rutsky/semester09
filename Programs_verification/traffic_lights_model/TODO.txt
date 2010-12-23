@@ -1,3 +1,4 @@
+ * Do not use channels into atomic! Liveness claim should be changed accordingly.
  * Understand spin verification modes and fix warnings about not reached "-end-".
  * Universal solution for all crossroads (one place configuration).
  * SCons scripts for building model are very poor.
