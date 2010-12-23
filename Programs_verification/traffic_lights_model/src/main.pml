@@ -60,7 +60,19 @@ mtype = { CAR };
 /* Cars waiting sign for each traffic light */
 chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
 
+proctype LineTrafficGenerator( byte initTlId )
+{
+  byte tlId;
+  
+  tlId = initTlId;
+  
+  do
+  :: carsWaiting[tlId] ! CAR;
+  od
+}
+
 /* Cars generator process */
+#if 0
 proctype CarsGenerator()
 {
   byte tlId;
@@ -78,16 +90,19 @@ endCG:
       :: nfull(carsWaiting[tlId]) ->
         /* Generate car */
         carsWaiting[tlId] ! CAR;
+        /*break;*/
       :: true
         /* Skip car generation for current traffic light */
       fi;
       tlId++;
     :: else ->
-      /* No cars generated */
+      /* No cars generated, generate for zero traffic light */
+      /*carsWaiting[0] ! CAR;*/
       break;
     od;
   od
 }
+#endif
 
 /*** cut here ***/
 
@@ -272,7 +287,15 @@ init
     od;
   
     /* Start cars generator process */
-    run CarsGenerator();
+    /*run CarsGenerator();*/
+    tlId = 0;
+    do
+    :: tlId < N_TRAFFIC_LIGHTS ->
+      run LineTrafficGenerator(tlId);
+      tlId++;
+    :: else ->
+      break;
+    od;
   }
 }
 
