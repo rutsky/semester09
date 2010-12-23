@@ -32,21 +32,85 @@ verify_basic_safety = env.Command("verify_basic_safety", sources,
     "time -v ./pan -v -m2000000 -w19 -c1 -b -v", chdir=True)
 Clean(verify_basic_safety, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp", "pan"])
 
-safety_01 = env.Command("safety_01.ltl", [],
-    "spin -f '! ([] (!accident_01))' > safety_01.ltl",
-    chdir=True)
-
-verify_safety_01 = env.Command("verify_safety_01", safety_01,
-    "spin -a -N safety_01.ltl -v main.pml && "
-    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
-    "echo && "
-    "time -v ./pan -v -m2000000 -w19 -a -c1", chdir=True)
-Clean(verify_safety_01, ["pan"])
-
 verify_liveness_progress = env.Command("verify_liveness_progress", automata_source_node,
     "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNP -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
     "echo && "
     "time -v ./pan -v -m2000000 -w19  -l -c1", chdir=True)
 Clean(verify_liveness_progress, ["pan"])
 
+safety_claims = {
+    'safety_01': '[] (!accident_01)',
+    'safety_02': '[] (!accident_02)',
+    'safety_03': '[] (!accident_03)',
+    'safety_13': '[] (!accident_13)',
+    'safety_23': '[] (!accident_23)',
+    }
+
+safety_verify_cmds = []
+for claim_name, claim in safety_claims.iteritems():
+    claim_gen_cmd = env.Command("{0}.ltl".format(claim_name), [],
+        "spin -f '! ({0})' > {1}.ltl".format(claim, claim_name),
+        chdir=True)
+    
+    verify_cmd = env.Command("verify_{0}".format(claim_name), claim_gen_cmd,
+        "spin -a -N {0}.ltl -v main.pml && "
+        "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
+        "echo && "
+        "time -v ./pan -v -m2000000 -w19 -a -c1".format(claim_name), chdir=True)
+    Clean(verify_cmd, ["pan"])
+    
+    safety_verify_cmds.append(verify_cmd)
+
+claim_gen_cmd = env.Command("verify_safety_all", safety_verify_cmds,
+        "", chdir=True)
+
+#safety_01 = env.Command("safety_01.ltl", [],
+#    "spin -f '! ([] (!accident_01))' > safety_01.ltl",
+#    chdir=True)
+#
+#verify_safety_01 = env.Command("verify_safety_01", safety_01,
+#    "spin -a -N safety_01.ltl -v main.pml && "
+#    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
+#    "echo && "
+#    "time -v ./pan -v -m2000000 -w19 -a -c1", chdir=True)
+#Clean(verify_safety_01, ["pan"])
+
+liveness_claims = {
+    'liveness_0': '[] (car_waiting_0 -> <> tl_green_0)',
+    'liveness_1': '[] (car_waiting_1 -> <> tl_green_1)',
+    'liveness_2': '[] (car_waiting_2 -> <> tl_green_2)',
+    'liveness_3': '[] (car_waiting_3 -> <> tl_green_3)',
+    }
+
+liveness_verify_cmds = []
+for claim_name, claim in safety_claims.iteritems():
+    claim_gen_cmd = env.Command("{0}.ltl".format(claim_name), [],
+        "spin -f '! ({0})' > {1}.ltl".format(claim, claim_name),
+        chdir=True)
+    
+    verify_cmd = env.Command("verify_{0}".format(claim_name), claim_gen_cmd,
+        "spin -a -N {0}.ltl -v main.pml && "
+        "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNOREDUCE -DNFAIR=5 pan.c && "
+        "echo && "
+        "time -v ./pan -v -m2000000 -w19 -a -f -n -c1".format(claim_name), chdir=True)
+    Clean(verify_cmd, ["pan"])
+    
+    liveness_verify_cmds.append(verify_cmd)
+
+claim_gen_cmd = env.Command("verify_liveness_all", liveness_verify_cmds,
+        "", chdir=True)
+
+#liveness_0 = env.Command("liveness_0.ltl", [],
+#    "spin -f '! ([] (car_waiting_0 -> <> tl_green_0))' > liveness_0.ltl",
+#    chdir=True)
+#
+#verify_liveness_0 = env.Command("verify_liveness_0", liveness_0,
+#    "spin -a -N liveness_0.ltl -v main.pml && "
+#    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNOREDUCE -DNFAIR=5 pan.c && "
+#    "echo && "
+#    "time -v ./pan -v -m1000000 -w19 -a -f -n -c1", chdir=True)
+#Clean(verify_liveness_0, ["pan"])
+
 Default(automata_source_node)
+
+print "BUILD_TARGETS is", map(str, BUILD_TARGETS)

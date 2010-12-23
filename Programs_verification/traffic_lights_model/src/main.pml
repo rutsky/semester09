@@ -351,8 +351,11 @@ init
 
 /* Safety: Intersecting roads traffic light both never has GREEN state */
 /*
- * [] (!accident_01 && !accident_02 && !accident_03 && !accident_13 &&
- *     !accident_23)
+ * [] (!accident_01)
+ * [] (!accident_02)
+ * [] (!accident_03)
+ * [] (!accident_13)
+ * [] (!accident_23)
  */
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
