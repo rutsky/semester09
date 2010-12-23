@@ -199,14 +199,8 @@ endTL:
       lockIntersection(4, tlId);
     fi;
     
-    do
-    :: false;
-    od;
-    
-    
     /* Allow passing */
   progressPassCar:
-    assert(false);
     atomic 
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
@@ -320,7 +314,40 @@ init
  * eventually  <=>  <>
  */
 
+/* Car crash accident definition */
+#define accident_01 (tlColor[0] == GREEN && tlColor[1] == GREEN)
+#define accident_02 (tlColor[0] == GREEN && tlColor[2] == GREEN)
+#define accident_03 (tlColor[0] == GREEN && tlColor[3] == GREEN)
+#define accident_13 (tlColor[1] == GREEN && tlColor[3] == GREEN)
+#define accident_23 (tlColor[2] == GREEN && tlColor[3] == GREEN)
+
+/* Car waiting at traffic light definition */
+#define car_waiting_0 (len(carsWaiting[0]) > 0)
+#define car_waiting_1 (len(carsWaiting[1]) > 0)
+#define car_waiting_2 (len(carsWaiting[2]) > 0)
+#define car_waiting_3 (len(carsWaiting[3]) > 0)
+
+/* Traffic light is green definition */
+#define tl_green_0 (tlColor[0] == GREEN)
+#define tl_green_1 (tlColor[1] == GREEN)
+#define tl_green_2 (tlColor[2] == GREEN)
+#define tl_green_3 (tlColor[3] == GREEN)
+
 /* Safety: Intersecting roads traffic light both never has GREEN state */
+/*
+ * [] (!accident_01 && !accident_02 && !accident_03 && !accident_13 &&
+ *     !accident_23)
+ */
+
+/* Liveness: If cars wait on traffic light, then in future traffic light
+ * became GREEN */
+/*
+ * [] (car_waiting_0 -> <> tl_green_0)
+ * [] (car_waiting_1 -> <> tl_green_1)
+ * [] (car_waiting_2 -> <> tl_green_2)
+ * [] (car_waiting_3 -> <> tl_green_3)
+ */
+
 /*
 // []
 

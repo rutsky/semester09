@@ -1,0 +1,7 @@
+never {    /* [] (!accident_01 && !accident_02 && !accident_03 && !accident_13 && !accident_23) */
+accept_init:
+T0_init:
+	if
+	:: (! ((accident_01)) && ! ((accident_02)) && ! ((accident_03)) && ! ((accident_13)) && ! ((accident_23))) -> goto T0_init
+	fi;
+}

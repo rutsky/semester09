@@ -25,16 +25,28 @@ sources = Glob("*.pml", strings=True)
 automata_source_node = env.Command("pan.c", sources, "spin -a -v main.pml", chdir=True)
 Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp"])
 
-verify_safety = env.Command("verify_safety", automata_source_node,
+verify_basic_safety = env.Command("verify_basic_safety", sources,
+    "spin -a -v main.pml && "
     "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DSAFETY -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
     "echo && "
-    "time -v ./pan -v -X -m2000000 -w19 -c1 -b", chdir=True)
+    "time -v ./pan -v -m2000000 -w19 -c1 -b -v", chdir=True)
+Clean(verify_basic_safety, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp", "pan"])
+
+safety_claim = env.Command("safety.ltl", [],
+    "spin -f '[] (!accident_01 && !accident_02 && !accident_03 && !accident_13 && !accident_23)' > safety.ltl",
+    chdir=True)
+
+verify_safety = env.Command("verify_safety", safety_claim,
+    "spin -a -N safety.ltl -v main.pml && "
+    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNFAIR=4 -DNOREDUCE pan.c && "
+    "echo && "
+    "time -v ./pan -v -m2000000 -w19 -a -c1 -b -v -f", chdir=True)
 Clean(verify_safety, ["pan"])
 
 verify_liveness_progress = env.Command("verify_liveness_progress", automata_source_node,
     "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNP -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
     "echo && "
-    "time -v ./pan -v -X -m2000000 -w19  -l -c1", chdir=True)
+    "time -v ./pan -v -m2000000 -w19  -l -c1", chdir=True)
 Clean(verify_safety, ["pan"])
 
 Default(automata_source_node)
