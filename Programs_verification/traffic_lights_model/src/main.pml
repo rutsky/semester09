@@ -70,6 +70,7 @@ endCG:
   :: true ->
     /* Generate car */
   
+  progressCarGeneration:
     tlId = 0;
     do
     :: (tlId < N_TRAFFIC_LIGHTS) ->
@@ -125,10 +126,10 @@ endInt:
   do
   :: intersectionLockRequests[intId] ? LOCK(tlId) ->
     /* Handle request */
-  progressGiveIntersection:
     intersectionLockGranted[tlId] ! INT;
 
     /* Wait for release */
+  progressGiveIntersection:
     intersectionReleaseRequests[intId] ? RELEASE;
   od;
 }
@@ -216,19 +217,19 @@ endTL:
     /* Release dependent intersections */
     if
     :: tlId == SN ->
-      unlockIntersection(0);
-      unlockIntersection(1);
       unlockIntersection(2);
+      unlockIntersection(1);
+      unlockIntersection(0);
     :: tlId == WE ->
+      unlockIntersection(3);
       unlockIntersection(0);
-      unlockIntersection(3);
     :: tlId == ES ->
-      unlockIntersection(2);
+      unlockIntersection(4);
       unlockIntersection(3);
-      unlockIntersection(4);
+      unlockIntersection(2);
     :: tlId == NE ->
-      unlockIntersection(1);
       unlockIntersection(4);
+      unlockIntersection(1);
     fi;
   od;
 }
