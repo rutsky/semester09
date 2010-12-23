@@ -73,17 +73,6 @@ for claim_name, claim in safety_claims.iteritems():
 verify_safety_all = env.Command("verify_safety_all", safety_verify_cmds,
     "", chdir=True)
 
-#safety_01 = env.Command("safety_01.ltl", [],
-#    "spin -f '! ([] (!accident_01))' > safety_01.ltl",
-#    chdir=True)
-#
-#verify_safety_01 = env.Command("verify_safety_01", safety_01,
-#    "spin -a -N safety_01.ltl -v main.pml && "
-#    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
-#    "echo && "
-#    "time -v ./pan -v -m2000000 -w19 -a -c1", chdir=True)
-#Clean(verify_safety_01, ["pan"])
-
 liveness_claims = {
     'liveness_0': '[] (car_waiting_0 -> <> tl_green_0)',
     'liveness_1': '[] (car_waiting_1 -> <> tl_green_1)',
@@ -116,17 +105,4 @@ verify_all = env.Command("verify_all",
     [verify_basic_safety, verify_liveness_progress, verify_safety_all, verify_liveness_all],
     "", chdir=True)
 
-#liveness_0 = env.Command("liveness_0.ltl", [],
-#    "spin -f '! ([] (car_waiting_0 -> <> tl_green_0))' > liveness_0.ltl",
-#    chdir=True)
-#
-#verify_liveness_0 = env.Command("verify_liveness_0", liveness_0,
-#    "spin -a -N liveness_0.ltl -v main.pml && "
-#    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNOREDUCE -DNFAIR=5 pan.c && "
-#    "echo && "
-#    "time -v ./pan -v -m1000000 -w19 -a -f -n -c1", chdir=True)
-#Clean(verify_liveness_0, ["pan"])
-
 Default(automata_source_node)
-
-print "BUILD_TARGETS is", map(str, BUILD_TARGETS)
