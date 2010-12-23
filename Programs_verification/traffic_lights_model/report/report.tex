@@ -97,11 +97,19 @@
 \section{Решение}
 
 \subsection{Моделирование внешней среды}
-Внешняя среда в данной задаче моделируется процессами \textit{LineTrafficGenerator}:
+Внешняя среда в данной задаче моделируется процессами \textit{LineTrafficGenerator}, 
+см.~код~\ref{src-traffic-generator}.
+В качестве датчиков, фиксирующих присутствие автомобилей, 
+выступает массив каналов \textit{carsWaiting}~--- по одному каналу на каждый светофор.
 
-\lstinputlisting[language=Promela]{data/car_generators.pml_}
+Автомобили генерируются недетерминированно. 
+Для каждого направления создаётся новый процесс \textit{LineTrafficGenerator},
+отвечающий за генерацию машин, движущихся через соответствующий светофор.
 
-В качестве датчика 
+\lstinputlisting[language=Promela,numbers=left,%
+firstline=55,firstnumber=55,lastline=71,%
+caption={Моделирование внешней среды},%
+label=src-traffic-generator]{data/main.pml}
 
 \subsection{Моделирование пересечений полос движения}
 \textit{Intersection}.
