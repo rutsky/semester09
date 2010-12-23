@@ -22,11 +22,87 @@ Import("env")
 
 sources = Glob("*.pml", strings=True)
 
-automata_source_node = env.Command("pan.c", sources, "spin -a main.pml", chdir=True)
-Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t"])
+automata_source_node = env.Command("pan.c", sources, "spin -a -v main.pml", chdir=True)
+Clean(automata_source_node, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp"])
 
-automata_binary = env.Command("pan", automata_source_node, "cc -o pan pan.c", chdir=True)
+verify_basic_safety = env.Command("verify_basic_safety", sources,
+    "spin -a -v main.pml && "
+    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DSAFETY -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
+    "echo '====================' && "
+    "echo '  Verifying safety  ' && "
+    "echo '====================' && "
+    "time -v ./pan -v -m2000000 -w19 -c1 -b -v && "
+    "echo === DONE ===", chdir=True)
+Clean(verify_basic_safety, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp", "pan"])
 
-#env.Builder("run", automata_binary, action="./pan", chdir=True)
+verify_liveness_progress = env.Command("verify_liveness_progress", automata_source_node,
+    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNP -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
+    "echo '================================' && "
+    "echo '  Verifying liveness/progresss  ' && "
+    "echo '================================' && "
+    "time -v ./pan -v -m2000000 -w19  -l -c1 && "
+    "echo === DONE ===", chdir=True)
+Clean(verify_liveness_progress, ["pan"])
 
-Default(automata_binary)
+safety_claims = {
+    'safety_01': '[] (!accident_01)',
+    'safety_02': '[] (!accident_02)',
+    'safety_03': '[] (!accident_03)',
+    'safety_13': '[] (!accident_13)',
+    'safety_23': '[] (!accident_23)',
+    }
+
+safety_verify_cmds = []
+for claim_name, claim in safety_claims.iteritems():
+    claim_gen_cmd = env.Command("{0}.ltl".format(claim_name), [],
+        "spin -f '! ({0})' > {1}.ltl".format(claim, claim_name),
+        chdir=True)
+    
+    verify_cmd = env.Command("verify_{0}".format(claim_name), claim_gen_cmd,
+        "spin -a -N {0}.ltl -v main.pml && "
+        "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
+        "echo '========================' && "
+        "echo '  Verifying {0}         ' && "
+        "echo '========================' && "
+        "time -v ./pan -v -m2000000 -w19 -a -c1 && "
+        "echo === DONE ===".format(claim_name), chdir=True)
+    Clean(verify_cmd, ["pan"])
+    
+    safety_verify_cmds.append(verify_cmd)
+
+verify_safety_all = env.Command("verify_safety_all", safety_verify_cmds,
+    "", chdir=True)
+
+liveness_claims = {
+    'liveness_0': '[] (car_waiting_0 -> <> tl_green_0)',
+    'liveness_1': '[] (car_waiting_1 -> <> tl_green_1)',
+    'liveness_2': '[] (car_waiting_2 -> <> tl_green_2)',
+    'liveness_3': '[] (car_waiting_3 -> <> tl_green_3)',
+    }
+
+liveness_verify_cmds = []
+for claim_name, claim in liveness_claims.iteritems():
+    claim_gen_cmd = env.Command("{0}.ltl".format(claim_name), [],
+        "spin -f '! ({0})' > {1}.ltl".format(claim, claim_name),
+        chdir=True)
+    
+    verify_cmd = env.Command("verify_{0}".format(claim_name), claim_gen_cmd,
+        "spin -a -N {0}.ltl -v main.pml && "
+        "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNOREDUCE -DNFAIR=5 pan.c && "
+        "echo '========================' && "
+        "echo '  Verifying {0}         ' && "
+        "echo '========================' && "
+        "time -v ./pan -v -m2000000 -w19 -a -f -n -c1 && "
+        "echo === DONE ===".format(claim_name), chdir=True)
+    Clean(verify_cmd, ["pan"])
+    
+    liveness_verify_cmds.append(verify_cmd)
+
+verify_liveness_all = env.Command("verify_liveness_all", liveness_verify_cmds,
+        "", chdir=True)
+        
+verify_all = env.Command("verify_all", 
+    [verify_basic_safety, verify_liveness_progress, verify_safety_all, verify_liveness_all],
+    "", chdir=True)
+
+Default(automata_source_node)

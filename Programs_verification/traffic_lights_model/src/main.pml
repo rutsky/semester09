@@ -60,38 +60,14 @@ mtype = { CAR };
 /* Cars waiting sign for each traffic light */
 chan carsWaiting[N_TRAFFIC_LIGHTS] = [1] of { mtype };
 
-/* Cars generator process */
-proctype CarsGenerator()
+proctype LineTrafficGenerator( byte initTlId )
 {
   byte tlId;
-  bit isExit;
   
-  isExit = false;
-
-endCG:
+  tlId = initTlId;
+  
   do
-  :: isExit ->
-    break;
-  :: else ->
-    /* Generate car (probably) */
-  
-    tlId = 0;
-    do
-    :: (tlId < N_TRAFFIC_LIGHTS) ->
-      if
-      :: true ->
-        /* Generate car */
-        carsWaiting[tlId] ! CAR;
-        break;
-      :: true
-        /* Skip car generation for current traffic light */
-      fi;
-      tlId++;
-    :: else ->
-      /* No cars generated, exiting */
-      isExit = true;
-      break;
-    od;
+  :: carsWaiting[tlId] ! CAR;
   od
 }
 
@@ -133,6 +109,7 @@ endInt:
     intersectionLockGranted[tlId] ! INT;
 
     /* Wait for release */
+  progressGiveIntersection:
     intersectionReleaseRequests[intId] ? RELEASE;
   od;
 }
@@ -198,6 +175,7 @@ endTL:
     fi;
     
     /* Allow passing */
+  progressPassCar:
     atomic 
     {
       printf("MSC: Traffic light #%d: GREEN\n", tlId);
@@ -205,8 +183,8 @@ endTL:
       
       /* Pass car */
       /* Note: atomic for easier claim construction */
-      printf("MSC: Traffix light #%d: pass cars\n", tlId);
       carsWaiting[tlId] ? CAR;
+      printf("MSC: Traffix light #%d: pass cars\n", tlId);
     };
     
     /* Forbid passing */
@@ -219,19 +197,19 @@ endTL:
     /* Release dependent intersections */
     if
     :: tlId == SN ->
-      unlockIntersection(0);
-      unlockIntersection(1);
       unlockIntersection(2);
+      unlockIntersection(1);
+      unlockIntersection(0);
     :: tlId == WE ->
+      unlockIntersection(3);
       unlockIntersection(0);
-      unlockIntersection(3);
     :: tlId == ES ->
-      unlockIntersection(2);
+      unlockIntersection(4);
       unlockIntersection(3);
-      unlockIntersection(4);
+      unlockIntersection(2);
     :: tlId == NE ->
-      unlockIntersection(1);
       unlockIntersection(4);
+      unlockIntersection(1);
     fi;
   od;
 }
@@ -276,7 +254,15 @@ init
     od;
   
     /* Start cars generator process */
-    run CarsGenerator();
+    /*run CarsGenerator();*/
+    tlId = 0;
+    do
+    :: tlId < N_TRAFFIC_LIGHTS ->
+      run LineTrafficGenerator(tlId);
+      tlId++;
+    :: else ->
+      break;
+    od;
   }
 }
 
@@ -311,29 +297,39 @@ init
  * eventually  <=>  <>
  */
 
+/* Car crash accident definition */
+#define accident_01 (tlColor[0] == GREEN && tlColor[1] == GREEN)
+#define accident_02 (tlColor[0] == GREEN && tlColor[2] == GREEN)
+#define accident_03 (tlColor[0] == GREEN && tlColor[3] == GREEN)
+#define accident_13 (tlColor[1] == GREEN && tlColor[3] == GREEN)
+#define accident_23 (tlColor[2] == GREEN && tlColor[3] == GREEN)
+
+/* Car waiting at traffic light definition */
+#define car_waiting_0 (len(carsWaiting[0]) > 0)
+#define car_waiting_1 (len(carsWaiting[1]) > 0)
+#define car_waiting_2 (len(carsWaiting[2]) > 0)
+#define car_waiting_3 (len(carsWaiting[3]) > 0)
+
+/* Traffic light is green definition */
+#define tl_green_0 (tlColor[0] == GREEN)
+#define tl_green_1 (tlColor[1] == GREEN)
+#define tl_green_2 (tlColor[2] == GREEN)
+#define tl_green_3 (tlColor[3] == GREEN)
+
 /* Safety: Intersecting roads traffic light both never has GREEN state */
-ltl safe_green_01 { 
-  always (!(tlColor[0] == GREEN && tlColor[1] == GREEN)) }
-ltl safe_green_02 { 
-  always (!(tlColor[0] == GREEN && tlColor[2] == GREEN)) }
-ltl safe_green_03 { 
-  always (!(tlColor[0] == GREEN && tlColor[3] == GREEN)) }
-ltl safe_green_13 { 
-  always (!(tlColor[1] == GREEN && tlColor[3] == GREEN)) }
-ltl safe_green_23 { 
-  always (!(tlColor[2] == GREEN && tlColor[3] == GREEN)) }
+/*
+ * [] (!accident_01)
+ * [] (!accident_02)
+ * [] (!accident_03)
+ * [] (!accident_13)
+ * [] (!accident_23)
+ */
 
 /* Liveness: If cars wait on traffic light, then in future traffic light
  * became GREEN */
-ltl car_will_pass_0 {
-  always ((len(carsWaiting[0]) > 0) ->
-              eventually (tlColor[0] == GREEN)) }
-ltl car_will_pass_1 {
-  always ((len(carsWaiting[1]) > 0) ->
-              eventually (tlColor[1] == GREEN)) }
-ltl car_will_pass_2 {
-  always ((len(carsWaiting[2]) > 0) ->
-              eventually (tlColor[2] == GREEN)) }
-ltl car_will_pass_3 {
-  always ((len(carsWaiting[3]) > 0) ->
-              eventually (tlColor[3] == GREEN)) }
+/*
+ * [] (car_waiting_0 -> <> tl_green_0)
+ * [] (car_waiting_1 -> <> tl_green_1)
+ * [] (car_waiting_2 -> <> tl_green_2)
+ * [] (car_waiting_3 -> <> tl_green_3)
+ */
