@@ -5,6 +5,3 @@
 *.blg
 *.fls
 *.out
-
-# Preprocessed sources.
-data/*.pml_

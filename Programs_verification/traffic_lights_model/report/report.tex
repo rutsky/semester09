@@ -107,18 +107,20 @@
 отвечающий за генерацию машин, движущихся через соответствующий светофор.
 
 \lstinputlisting[language=Promela,numbers=left,%
-firstline=55,firstnumber=55,lastline=71,%
+firstline=53,firstnumber=53,lastline=69,%
 caption={Моделирование внешней среды},%
 label=src-traffic-generator]{data/main.pml}
 
+\subsection{Моделирование светофоров}
+Каждый светофор моделируется процессом \textit{TrafficLight}, см. 
+
+\lstinputlisting[language=Promela]{data/traffic_lights.pml_}
+
 \subsection{Моделирование пересечений полос движения}
+
 \textit{Intersection}.
 
 \lstinputlisting[language=Promela]{data/intersections.pml_}
-
-\subsection{Моделирование светофоров}
-
-\lstinputlisting[language=Promela]{data/traffic_lights.pml_}
 
 
 \section{Верификация алгоритма}
