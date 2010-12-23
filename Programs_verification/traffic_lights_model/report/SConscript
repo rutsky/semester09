@@ -18,5 +18,6 @@ import os
 
 Import('env')
 env['ENV']['HOME'] = os.environ['HOME']
+
 pdfOutput = env.PDF(target='report.pdf', source='report.tex')
 #Depends(pdfOutput,Split('presentation.tex bibliography.bib'))

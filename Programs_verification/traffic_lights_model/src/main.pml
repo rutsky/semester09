@@ -50,10 +50,6 @@
 /* Number of intersections */
 #define N_INTERSECTIONS  5
 
-#define INVALID_TL_ID  255
-
-/*** cut here ***/
-
 /* Car object */
 mtype = { CAR };
 
@@ -70,8 +66,6 @@ proctype LineTrafficGenerator( byte initTlId )
   :: carsWaiting[tlId] ! CAR;
   od
 }
-
-/*** cut here ***/
 
 /* Manager messages */
 mtype = { LOCK, INT, RELEASE };
@@ -114,8 +108,6 @@ endInt:
   od;
 }
 
-/*** cut here ***/
-
 /* Traffic lights states */
 mtype = { RED, GREEN };
 
@@ -129,7 +121,6 @@ proctype TrafficLight( byte initTlId )
   
   tlId = initTlId;
 
-  assert(tlId != INVALID_TL_ID);
   assert(tlColor[tlId] == RED);
 
 endTL:
@@ -138,25 +129,6 @@ endTL:
     /* Cars in queue */
   
     /* Lock dependent intersections */
-    /* Note: another copy of diagram above.
-     *
-     *               N
-     *           2
-     *           |       ^
-     *           |       |
-     *           |     --2-------3
-     *            \   /  |
-     *  W           4    |          E
-     *            /   \  |
-     *           /     --1------>
-     *           |       |
-     *    1 -----3-------0------>
-     *           |       |
-     *           v       |
-     *                   0
-     *               S
-     *
-     */
     if
     :: tlId == SN ->
       lockIntersection(0, tlId);
@@ -214,8 +186,6 @@ endTL:
   od;
 }
 
-/*** cut here ***/
-
 /* The main model function */
 init
 {
@@ -266,35 +236,8 @@ init
   }
 }
 
-/*** cut here ***/
-
 /*
  * Correctness requirements.
- */
-
-  /* Note: another copy of diagram above.
-   *
-   *               N
-   *           2
-   *           |       ^
-   *           |       |
-   *           |     --2-------3
-   *            \   /  |
-   *  W           4    |          E
-   *            /   \  |
-   *           /     --1------>
-   *           |       |
-   *    1 -----3-------0------>
-   *           |       |
-   *           v       |
-   *                   0
-   *               S
-   *
-   */
-
-/*
- * always      <=>  []
- * eventually  <=>  <>
  */
 
 /* Car crash accident definition */
