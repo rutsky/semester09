@@ -81,7 +81,7 @@ liveness_claims = {
     }
 
 liveness_verify_cmds = []
-for claim_name, claim in safety_claims.iteritems():
+for claim_name, claim in liveness_claims.iteritems():
     claim_gen_cmd = env.Command("{0}.ltl".format(claim_name), [],
         "spin -f '! ({0})' > {1}.ltl".format(claim, claim_name),
         chdir=True)
