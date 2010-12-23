@@ -68,7 +68,7 @@ proctype CarsGenerator()
 endCG:
   do
   :: true ->
-    /* Generate car (probably) */
+    /* Generate car */
   
     tlId = 0;
     do
