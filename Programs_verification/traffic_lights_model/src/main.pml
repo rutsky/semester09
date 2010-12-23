@@ -75,17 +75,17 @@ endCG:
     do
     :: (tlId < N_TRAFFIC_LIGHTS) ->
       if
-      :: true ->
+      :: nfull(carsWaiting[tlId]) ->
         /* Generate car */
         carsWaiting[tlId] ! CAR;
-        break;
+        /*break;*/
       :: true
         /* Skip car generation for current traffic light */
       fi;
       tlId++;
     :: else ->
       /* No cars generated, generate for zero traffic light */
-      carsWaiting[0] ! CAR;
+      /*carsWaiting[0] ! CAR;*/
       break;
     od;
   od
