@@ -333,35 +333,3 @@ init
  * [] (car_waiting_2 -> <> tl_green_2)
  * [] (car_waiting_3 -> <> tl_green_3)
  */
-
-/*
-// []
-
-ltl safe_green_01 { 
-  always (!(tlColor[0] == GREEN && tlColor[1] == GREEN)) }
-ltl safe_green_02 { 
-  always (!(tlColor[0] == GREEN && tlColor[2] == GREEN)) }
-ltl safe_green_03 { 
-  always (!(tlColor[0] == GREEN && tlColor[3] == GREEN)) }
-ltl safe_green_13 { 
-  always (!(tlColor[1] == GREEN && tlColor[3] == GREEN)) }
-ltl safe_green_23 { 
-  always (!(tlColor[2] == GREEN && tlColor[3] == GREEN)) }
- */
-
-/* Liveness: If cars wait on traffic light, then in future traffic light
- * became GREEN */
-/*
-ltl car_will_pass_0 {
-  always ((len(carsWaiting[0]) > 0) ->
-              eventually (tlColor[0] == GREEN)) }
-ltl car_will_pass_1 {
-  always ((len(carsWaiting[1]) > 0) ->
-              eventually (tlColor[1] == GREEN)) }
-ltl car_will_pass_2 {
-  always ((len(carsWaiting[2]) > 0) ->
-              eventually (tlColor[2] == GREEN)) }
-ltl car_will_pass_3 {
-  always ((len(carsWaiting[3]) > 0) ->
-              eventually (tlColor[3] == GREEN)) }
- */
