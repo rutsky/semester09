@@ -50,8 +50,6 @@
 /* Number of intersections */
 #define N_INTERSECTIONS  5
 
-#define INVALID_TL_ID  255
-
 /*** cut here ***/
 
 /* Car object */
@@ -129,7 +127,6 @@ proctype TrafficLight( byte initTlId )
   
   tlId = initTlId;
 
-  assert(tlId != INVALID_TL_ID);
   assert(tlColor[tlId] == RED);
 
 endTL:

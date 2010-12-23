@@ -2,8 +2,10 @@
 
 with open("data/main.pml", 'r') as f:
     contents = f.read()
+    
+cut_string = "/*** cut here ***/"
 
-parts = contents.split("/*** cut here ***/")
+parts = contents.split(cut_string)
 assert len(parts) == 6
 
 locations = {
@@ -18,3 +20,6 @@ locations = {
 for idx, path in locations.iteritems():
     with open(path, 'w') as f:
         f.write(parts[idx].strip("\n"))
+
+with open("data/main.pml_", 'w') as f:
+    f.write(contents.replace("\n" + cut_string + "\n", ""))
