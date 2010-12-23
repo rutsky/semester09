@@ -289,11 +289,6 @@ init
    *
    */
 
-/*
- * always      <=>  []
- * eventually  <=>  <>
- */
-
 /* Car crash accident definition */
 #define accident_01 (tlColor[0] == GREEN && tlColor[1] == GREEN)
 #define accident_02 (tlColor[0] == GREEN && tlColor[2] == GREEN)

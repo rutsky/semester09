@@ -96,20 +96,39 @@
 
 \section{Решение}
 
+\subsection{Моделирование внешней среды}
+Внешняя среда в данной задаче моделируется процессами \textit{LineTrafficGenerator}:
+
+\lstinputlisting[language=Promela]{data/car_generators.pml_}
+
+В качестве датчика 
+
+\subsection{Моделирование пересечений полос движения}
+\textit{Intersection}.
+
+\lstinputlisting[language=Promela]{data/intersections.pml_}
+
+\subsection{Моделирование светофоров}
+
+\lstinputlisting[language=Promela]{data/traffic_lights.pml_}
 
 
-\subsection{Верификация алгоритма}
+\section{Верификация алгоритма}
 
+\lstinputlisting[language=Promela]{data/correctness.pml_}
 
-\subsection{Проверка корректности}
 
 \section{Результат работы}
 В результате работы ...
 
+\pagebreak
+
 \appendix
 \section{Исходный код}
 
-\lstinputlisting[language=c]{data/main.pml}
+\lstinputlisting[language=Promela]{data/main.pml_}
+
+\pagebreak
 
 \bibliographystyle{unsrt}
 \bibliography{references.bib}
