@@ -32,21 +32,21 @@ verify_basic_safety = env.Command("verify_basic_safety", sources,
     "time -v ./pan -v -m2000000 -w19 -c1 -b -v", chdir=True)
 Clean(verify_basic_safety, ["pan.b", "pan.m", "pan.h", "pan.t", "pan.tmp", "pan"])
 
-safety_claim = env.Command("safety.ltl", [],
-    "spin -f '! ([] (!accident_01 && !accident_02 && !accident_03 && !accident_13 && !accident_23))' > safety.ltl",
+safety_01 = env.Command("safety_01.ltl", [],
+    "spin -f '! ([] (!accident_01))' > safety_01.ltl",
     chdir=True)
 
-verify_safety = env.Command("verify_safety", safety_claim,
-    "spin -a -N safety.ltl -v main.pml && "
-    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNFAIR=4 -DNOREDUCE pan.c && "
+verify_safety_01 = env.Command("verify_safety_01", safety_01,
+    "spin -a -N safety_01.ltl -v main.pml && "
+    "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
     "echo && "
-    "time -v ./pan -v -m2000000 -w19 -a -c1 -b -v -f", chdir=True)
-Clean(verify_safety, ["pan"])
+    "time -v ./pan -v -m2000000 -w19 -a -c1", chdir=True)
+Clean(verify_safety_01, ["pan"])
 
 verify_liveness_progress = env.Command("verify_liveness_progress", automata_source_node,
     "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNP -DNOCLAIM -DXUSAFE -DNOFAIR pan.c && "
     "echo && "
     "time -v ./pan -v -m2000000 -w19  -l -c1", chdir=True)
-Clean(verify_safety, ["pan"])
+Clean(verify_liveness_progress, ["pan"])
 
 Default(automata_source_node)
