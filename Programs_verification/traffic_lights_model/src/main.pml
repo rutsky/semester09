@@ -71,39 +71,6 @@ proctype LineTrafficGenerator( byte initTlId )
   od
 }
 
-/* Cars generator process */
-#if 0
-proctype CarsGenerator()
-{
-  byte tlId;
-
-endCG:
-  do
-  :: true ->
-    /* Generate car */
-  
-  progressCarGeneration:
-    tlId = 0;
-    do
-    :: (tlId < N_TRAFFIC_LIGHTS) ->
-      if
-      :: nfull(carsWaiting[tlId]) ->
-        /* Generate car */
-        carsWaiting[tlId] ! CAR;
-        /*break;*/
-      :: true
-        /* Skip car generation for current traffic light */
-      fi;
-      tlId++;
-    :: else ->
-      /* No cars generated, generate for zero traffic light */
-      /*carsWaiting[0] ! CAR;*/
-      break;
-    od;
-  od
-}
-#endif
-
 /*** cut here ***/
 
 /* Manager messages */
