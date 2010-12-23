@@ -62,10 +62,10 @@ for claim_name, claim in safety_claims.iteritems():
         "spin -a -N {0}.ltl -v main.pml && "
         "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DXUSAFE -DNOFAIR pan.c && "
         "echo '========================' && "
-        "echo '  Verifying {0}         ' && "
+        "echo '  Verifying {0}: {1}    ' && "
         "echo '========================' && "
         "time -v ./pan -v -m2000000 -w19 -a -c1 && "
-        "echo === DONE ===".format(claim_name), chdir=True)
+        "echo === DONE ===".format(claim_name, claim), chdir=True)
     Clean(verify_cmd, ["pan"])
     
     safety_verify_cmds.append(verify_cmd)
@@ -90,10 +90,10 @@ for claim_name, claim in liveness_claims.iteritems():
         "spin -a -N {0}.ltl -v main.pml && "
         "gcc -w -o pan -D_POSIX_SOURCE -DMEMLIM=2048 -DNOREDUCE -DNFAIR=5 pan.c && "
         "echo '========================' && "
-        "echo '  Verifying {0}         ' && "
+        "echo '  Verifying {0}: {1}    ' && "
         "echo '========================' && "
         "time -v ./pan -v -m2000000 -w19 -a -f -n -c1 && "
-        "echo === DONE ===".format(claim_name), chdir=True)
+        "echo === DONE ===".format(claim_name, claim), chdir=True)
     Clean(verify_cmd, ["pan"])
     
     liveness_verify_cmds.append(verify_cmd)
