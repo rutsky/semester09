@@ -25,6 +25,8 @@ import Queue
 import bisect
 import random
 
+# TODO: Should transfer stream of bits not bytes.
+
 class SendingNode(object):
     def __init__(self, **kwds):
         self.send_queue = kwds.pop('send_queue', None)
