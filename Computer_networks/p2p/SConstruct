@@ -1,4 +1,4 @@
-#  This program is part of network emulation test model.
+#  This file is part of network emulation test model.
 #
 #  Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
 #
@@ -15,12 +15,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
+env = Environment(tools=["default"])
+Export('env')
 
-Import('env')
-env['ENV']['HOME'] = os.environ['HOME']
-
-env['PDFLATEXFLAGS'].append('-shell-escape')
-pdfOutput = env.PDF(target="report.pdf", source="report.tex")
-Depends(pdfOutput, Split("title.tex data/duplex_link.py references.bib"))
-#Depends(pdfOutput, Split("references.bib"))
+SConscript("report/SConscript", variant_dir="build/report")
+#SConscript("tests/SConscript")

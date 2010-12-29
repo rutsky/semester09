@@ -30,7 +30,10 @@
 \usepackage{subfig}
 
 %TODO: use texments
-\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{texments}
+%\usepackage{listings}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
@@ -75,6 +78,7 @@
 Передача ведётся по полнодуплексному каналу.
 
 \section{Выбранный метод решения}
+\cite{tanenbaum2003compnet}
 
 \subsection{}
 
@@ -86,13 +90,16 @@
 \section{Исходный код}
 \label{appendix-sources}
 
-\lstinputlisting[language=Python,numbers=left,%
-caption={Описание классов полнодуплексного соединения},%
-label=src-duplex-link]{data/duplex_link.py}
+%\lstinputlisting[language=Python,numbers=left,%
+%caption={Описание классов полнодуплексного соединения},%
+%label=src-duplex-link]{data/duplex_link.py}
+
+\usestyle{default}
+\includecode{data/duplex_link.py}
 
 \pagebreak
 
 \bibliographystyle{unsrt}
-\bibliography{references.bib}
+\bibliography{references}
 
 \end{document}
