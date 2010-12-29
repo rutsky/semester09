@@ -1,0 +1,136 @@
+% Report.
+%
+% Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
+%
+% This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 
+% Unported License. See <http://creativecommons.org/licenses/by-sa/3.0/> 
+% for details.
+
+% TODO: Use styles according to GOST (it's hard).
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\usepackage{amsmath, amsthm, amssymb}
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+\usepackage{url}
+\usepackage[unicode]{hyperref}
+
+%\usepackage[final]{pdfpages}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{subfig}
+
+%TODO: use texments
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{texments}
+%\usepackage{listings}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+%\flushbottom       % page height aligning
+%\hoffset=0cm
+%\pagestyle{empty}  % without numeration
+
+\newcommand{\myemail}[1]{%
+\href{mailto:#1}{\nolinkurl{#1}}}
+
+\begin{document}
+
+% Title page.
+\input{./title.tex}
+
+\tableofcontents
+\pagebreak
+
+% Content
+
+\section{Постановка задачи}
+Необходимо реализовать модели канального уровня сетевой модели OSI, 
+использующие различные протоколы передачи данных peer-to-peer, 
+и сравнить эффективность их работы при передаче данных с ошибками.
+
+Для сравнения необходимо взять алгоритмы, 
+использующие идею плавающего окна.
+
+Передача ведётся по полнодуплексному каналу.
+Данные должны передаваться с гарантией доставки.
+
+\section{Выбранный метод решения}
+Для сравнения были выбраны следующие протоколы, описанные в~\cite{tanenbaum2003compnet}:
+\begin{itemize}
+  \item протокол с возвратом на $n$ (\textit{go back $n$}),
+  \item протокол с выборочным повтором (\textit{selective repeat}).
+\end{itemize}
+
+Оба протокола используют идею плавающего окна:
+отправитель отправляет кадры в пределах некоторого <<окна>>~--- 
+интервал ограниченной длины последовательно идущих кадров;
+получатель ожидает кадров также в пределах своего рабочего окна.
+
+При получении кадра получатель отправляет уведомление о доставке 
+отправителю.
+При получении уведомления о доставке отправитель сдвигает рабочее окно
+таким образом, чтобы для первого кадра окна ещё не было получено
+уведомления о доставке.
+Аналогичным образом получатель поддерживает своё рабочее окно.
+
+Для каждого отправленного кадра отправитель создаёт таймер, 
+который подсчитывает сколько времени кадр находится в состоянии ожидания
+уведомления о доставке.
+В случае превышения времени ожидания для кадра устанавливается флаг ошибки доставки.
+
+Рассматриваемые протоколы отличаются стратегией обработки недоставленных кадров.
+
+\subsection{Протокол с возвратом на $n$}
+В протоколе с возвратом на $n$ обработка кадров с ошибкой доставки происходит следующим образом:
+при обнаружении первого кадра с ошибкой доставки, обозначим его номер как $n$,
+производится повторная посылка всех кадров начиная с $n$.
+
+\subsection{Протокол с выборочным повтором}
+В протоколе с выборочным повтором обработка кадров с ошибкой доставки происходит следующим образом:
+при обнаружении кадра с ошибкой доставки производится его повторная отправка.
+
+\section{Результат работы}
+
+\pagebreak
+
+\appendix
+\section{Исходный код}
+\label{appendix-sources}
+
+%\lstinputlisting[language=Python,numbers=left,%
+%caption={Описание классов полнодуплексного соединения},%
+%label=src-duplex-link]{data/duplex_link.py}
+
+\usestyle{default}
+\includecode{data/duplex_link.py}
+
+\pagebreak
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

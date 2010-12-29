@@ -25,7 +25,7 @@ import Queue
 import bisect
 import random
 
-# TODO: Should transfer stream of bits not bytes.
+# TODO: May be loss function will loose bits, not bytes?
 
 class SendingNode(object):
     def __init__(self, **kwds):
@@ -34,7 +34,7 @@ class SendingNode(object):
             self.send_queue = Queue.Queue()
         super(SendingNode, self).__init__(**kwds)
 
-    def write_ch(self, ch):
+    def _write_ch(self, ch):
         assert isinstance(ch, str)
         assert len(ch) == 1
         self.send_queue.put(ch)
@@ -42,7 +42,7 @@ class SendingNode(object):
     def write(self, string):
         assert isinstance(string, str)
         for ch in string:
-            self.write_ch(ch)
+            self._write_ch(ch)
 
 class ReceivingNode(object):
     def __init__(self, **kwds):
@@ -105,9 +105,9 @@ class SendingWithLossNode(SendingNode):
             self._loss_func = LossFunc(0, 0, 0)
         super(SendingWithLossNode, self).__init__(**kwds)
 
-    def write_ch(self, ch):
+    def _write_ch(self, ch):
         for new_ch in self._loss_func(ch):
-            super(SendingWithLossNode, self).write_ch(new_ch)
+            super(SendingWithLossNode, self)._write_ch(new_ch)
 
 class FullDuplexNode(SendingWithLossNode, ReceivingNode):
     def __init__(self, **kwds):
