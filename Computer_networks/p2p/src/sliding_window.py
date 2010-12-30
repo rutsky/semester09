@@ -61,23 +61,59 @@ class PacketTypes(object):
     data = 1
     ack  = 2
 
-class DataPacket(namedtuple('DataPacket', 'type id data')):
+class InvalidPacket(Exception):
+    pass
+
+class Packet(namedtuple('Packet', 'type src dest id data')):
+    # Packet:
+    #    1      4     4     2     4             4     - field size
+    # *------*-----*------*----*-----*--  --*-------*
+    # | type | src | dest | id | len | data | CRC32 |
+    # *------*-----*------*----*-----*--  --*-------*
+
+    format_string = '<BLLHL{0}sL'
+    empty_packet_size = struct.calcsize(format_string.format(0))
+
+
     def __init__(self):
-        super(DataPacket, self).__init__(*args, **kwargs)
+        super(Packet, self).__init__(*args, **kwargs)
 
-    def serialize(self):
-        # Packet:
-        #   4 byte   4 byte   4 byte    data     4 byte
-        # *--------*--------*--------*--     --*--------*
-        # |  type  |   id   |   len  |   ...   |  CRC32 |
-        # *--------*--------*--------*---------*--------*
+    def crc(self):
+        return binascii.crc32(self.serialize(0)) & 0xffffffff
 
-        packet_str = struct.pack("LLL",
-            PacketTypes.data, self.id, len(self.data)) + \
-            self.data
+    def serialize(self, crc = None):
+        """Returns string representing packet."""
+
+        if crc is not None:
+            return struct.pack(
+                self.format_string.format(len(self.data)),
+                self.type, self.src, self.dest, self.id, len(self.data),
+                self.data, crc)
+        else:
+            return self.serialize(self.crc())
+
+    @staticmethod
+    def deserialize(packet_str):
+        data_len = len(packet_str) - Packet.empty_packet_size
+        if data_len < 0:
+            raise InvalidPacket()
+
+        packet = Packet()
+
+        packet.type, packet.src, packet.dest, packet.id, read_data_len, \
+            packet.data, packet_crc = \
+                struct.unpack(Packet.format_string.format(data_len), packet_str)
         
-        packet_str += struct.pack("L", binascii.crc32(packet_str) & 0xffffffff)
-        return packet_str
+        if packet.type not in [PacketTypes.data, PacketTypes.ack]:
+            raise InvalidPacket()
+
+        if read_data_len != data_len:
+            raise InvalidPacket()
+
+        if packet_crc != packet.crc():
+            raise InvalidPacket()
+
+        return packet
 
 class ChannelSender(object):
     def __init__(self, *args, **kwargs):
