@@ -18,64 +18,51 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
+__all__ = ["FrameTransmitter"]
+
+import itertools
 import struct
 import binascii
-from collections import namedtuple
+import threading
+import time
+import logging
+import Queue
+import StringIO
+from collections import deque
+from recordtype import recordtype
 
-class FrameTransmitter(object):
-    # Similar to SLIP.
-    frame_end       = "\xC0"
-    esc_char        = "\xDB"
-    frame_end_subst = esc_char + "\xDC"
-    esc_subst       = esc_char + "\xDD"
+from frame import SimpleFrameTransmitter
 
-    def __init__(self, *args, **kwargs):
-        self.node = kwargs.pop('node')
-        super(FrameTransmitter, self).__init__(*args, **kwargs)
+# TODO: So `Packet' of `Frame'?
 
-    def write_frame(self, frame):
-        raw_data = (
-            # Replace escape characters.
-            frame.replace(esc_char, esc_subst)
-            # Replace frame end characters inside frame.
-                .replace(frame_end, frame_end_subst) +
-            # Append frame end at end.
-            frame_end)
-        self.node.write(raw_data)
-
-    def read_frame(self):
-        while True:
-            ch = self.node.read(1)
-            if ch == "":
-                # No more characters for now.
-                return None
-            elif ch == frame_end:
-                # Read till frame end. Decode and return it.
-                self._read_buffer.replace(frame_end_subst, frame_end).\
-                    replace(esc_subst, esc_char)
-                return self._read_buffer
-            else:
-                self._read_buffer.append(ch)
-
-class PacketTypes(object):
+class PacketType(object):
     data = 1
     ack  = 2
 
-class InvalidPacket(Exception):
-    pass
+class InvalidPacketException(Exception):
+    def __init__(self, *args, **kwargs):
+        super(InvalidPacketException, self).__init__(*args, **kwargs)
 
-class Packet(namedtuple('Packet', 'type src dest id data')):
+# TODO: Inherit from recordtype.
+class Packet(object):
     # Packet:
-    #    1      4     4     2     4             4     - field size
-    # *------*-----*------*----*-----*--  --*-------*
-    # | type | src | dest | id | len | data | CRC32 |
-    # *------*-----*------*----*-----*--  --*-------*
+    #    1     2     4             4     - field size
+    # *------*----*-----*--  --*-------*
+    # | type | id | len | data | CRC32 |
+    # *------*----*-----*--  --*-------*
 
-    format_string = '<BLLHL{0}sL'
+    format_string = '<BHL{0}sL'
     empty_packet_size = struct.calcsize(format_string.format(0))
 
-
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        self.type = kwargs.pop('type')
+        self.id = kwargs.pop('id')
+        if self.type == PacketType.data:
+            self.data = kwargs.pop('data')
+        else:
+            self.data = ""
+            if 'data' in kwargs:
+                kwargs.pop('data')
         super(Packet, self).__init__(*args, **kwargs)
 
     def crc(self):
@@ -87,7 +74,7 @@ class Packet(namedtuple('Packet', 'type src dest id data')):
         if crc is not None:
             return struct.pack(
                 self.format_string.format(len(self.data)),
-                self.type, self.src, self.dest, self.id, len(self.data),
+                self.type, self.id, len(self.data),
                 self.data, crc)
         else:
             return self.serialize(self.crc())
@@ -96,56 +83,322 @@ class Packet(namedtuple('Packet', 'type src dest id data')):
     def deserialize(packet_str):
         data_len = len(packet_str) - Packet.empty_packet_size
         if data_len < 0:
-            raise InvalidPacket()
+            raise InvalidPacketException(
+                "Packet too small, not enough fields")
 
-        packet = Packet()
-
-        packet.type, packet.src, packet.dest, packet.id, read_data_len, \
-            packet.data, packet_crc = \
+        packet_type, packet_id, read_data_len, packet_data, packet_crc = \
                 struct.unpack(Packet.format_string.format(data_len), packet_str)
         
-        if packet.type not in [PacketTypes.data, PacketTypes.ack]:
-            raise InvalidPacket()
+        if packet_type not in [PacketType.data, PacketType.ack]:
+            raise InvalidPacketException(
+                "Invalid packet type '{0}'".format(packet_type))
 
         if read_data_len != data_len:
-            raise InvalidPacket()
+            raise InvalidPacketException(
+                "Invalid data length: {0}, expected {1}".format(
+                    read_data_len, data_len))
+
+        packet = Packet(type=packet_type, id=packet_id, data=packet_data)
 
         if packet_crc != packet.crc():
-            raise InvalidPacket()
+            raise InvalidPacketException(
+                "Invalid ckecksum: {0:04X}, correct one is {1:04X}".format(
+                    packet_crc, packet.crc()))
 
         return packet
 
-class ChannelSender(object):
+    def __str__(self):
+        if self.type == PacketType.data:
+            return "Data({id}, 0x{data})".format(id=self.id,
+                data=self.data.encode('hex'))
+        elif self.type == PacketType.ack:
+            return "Ack({id})".format(id=self.id)
+        else:
+            assert False
+
+class FrameTransmitter(object):
+    #_frame_id_period = 32768
+    _frame_id_period = 200 # DEBUG
+
     def __init__(self, *args, **kwargs):
-        self.frame_transmitter = FrameTransmitter(node=kwargs.pop('node'))
-        self.max_packet = kwds.pop('max_packet_data', 100)
-        self.max_window_size = kwds.pop('max_window_size', 100)
-        super(ChannelSender, self).__init__(*args, **kwargs)
+        self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
+        self._max_packet = kwargs.pop('max_packet_data', 100)
+        self._window_size = kwargs.pop('window_size', 100)
+        self._ack_timeout = kwargs.pop('ack_timeout', 1)
+        super(FrameTransmitter, self).__init__(*args, **kwargs)
 
-        self._next_packet_id = 0
-        self._window = []
+        # Queue of tuples (id, frame).
+        self._frames_to_send = Queue.Queue()
 
-    class _Packet(object):
-        def __init__(self, id):
-            super(_Packet, self).__init__()
-            self.id = id
+        # Queue of characters.
+        self._received_data = Queue.Queue()
 
+        # If working thread will be able to acquire the lock, that it should
+        # terminate himself.
+        self._exit_lock = threading.RLock()
+        self._exit_lock.acquire()
 
-    def _transmit(self, string):
-        pass
+        self._working_thread = threading.Thread(target=self._work)
+        self._working_thread.start()
 
-    def write(self, string):
-        # Subdivide string to few packets.
-        for string_part in [string[i:i + self.max_packet]
-                for i in xrange(0, len(string), self.max_packet)]:
-            self._transmit(string_part)
+    # TODO
+    def terminate(self):
+        # Release exit lock and wait until working thread will not terminate.
+        self._exit_lock.release()
+        self._working_thread.join()
 
-    def update(self):
-        
+    def write(self, data_string):
+        # Subdivide data string on frames and put them into working queue.
+        for frame_part in [data_string[i:i + self._max_packet]
+                for i in xrange(0, len(data_string), self._max_packet)]:
+            self._frames_to_send.put(frame_part)
 
-class ChannelReceiver(object):
-    def __init__(self, *args, **kwargs):
-        super(ChannelReceiver, self).__init__(*args, **kwargs)
+    def read(self, size=0, block=True):
+        assert size >= 0
 
-    def read(self, size=0):
-        pass
+        in_str = StringIO.StringIO()
+
+        while size == 0 or len(in_str.getvalue()) < size:
+            try:
+                in_str.write(self._received_data.get(block and (size > 0)))
+            except Queue.Empty:
+                break
+
+        return in_str.getvalue()
+
+    def _work(self):
+        class SendWindow(object):
+            SendItem = recordtype('SendItem', 'id time packet ack_received')
+
+            def __init__(self, logger, maxlen, frame_id_it, timeout):
+                super(SendWindow, self).__init__()
+
+                self.logger = logger
+                self.maxlen = maxlen
+                self.queue = deque(maxlen=maxlen)
+                self.frame_id_it = frame_id_it
+                self.timeout = timeout
+
+            def can_add_next(self):
+                return len(self.queue) < self.maxlen
+
+            def add_next(self, data, curtime=time.time()):
+                assert self.can_add_next()
+
+                frame_id = self.frame_id_it.next()                
+                p = Packet(type=PacketType.data, id=frame_id, data=data)
+                item = SendWindow.SendItem(frame_id, curtime, p, False)
+                self.queue.append(item)
+
+                return item
+
+            def timeout_items(self, curtime=time.time()):
+                for item in self.queue:
+                    if item.time + self.timeout < curtime:
+                        yield item
+
+            def ack_received(self, frame_id):
+                # TODO: Performance issue.
+                for item in self.queue:
+                    if item.id == frame_id:
+                        item.ack_received = True
+                        break
+                else:
+                    self.logger.warning(
+                        "Received ack for frame outside working window: {0}".
+                            format(frame_id))
+
+                while len(self.queue) > 0 and self.queue[0].ack_received:
+                    self.queue.popleft()
+
+        class ReceiveWindow(object):
+            ReceiveItem = recordtype('ReceiveItem', 'id packet')
+
+            def __init__(self, logger, maxlen, frame_id_it):
+                super(ReceiveWindow, self).__init__()
+
+                self.logger = logger
+                self.queue = deque(maxlen=maxlen)
+                self.frame_id_it = frame_id_it
+                
+                # Fill receive window with placeholders for receiving frames.
+                for idx in xrange(maxlen):
+                    item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
+                    self.queue.append(item)
+
+            def receive_frame(self, packet):
+                # TODO: Performance issue.
+                for item in self.queue:
+                    if item.id == packet.id:
+                        item.packet = packet
+                        break
+                else:
+                    self.logger.warning(
+                        "Received packet outside working window: {0}".
+                            format(packet))
+
+                while self.queue[0].packet is not None:
+                    for ch in self.queue[0].packet.data:
+                        yield ch
+
+                    self.queue.popleft()
+                    new_item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
+                    self.queue.append(new_item)
+
+        logger = logging.getLogger("{0}._work".format(self))
+
+        logger.debug("Working thread started")
+
+        send_window = SendWindow(logger, self._window_size,
+            itertools.cycle(xrange(self._frame_id_period)),
+            self._ack_timeout)
+        receive_window = ReceiveWindow(logger, self._window_size,
+            itertools.cycle(xrange(self._frame_id_period)))
+
+        while True:
+            if self._exit_lock.acquire(False):
+                # Obtained exit lock. Terminate.
+
+                self._exit_lock.release()
+                logger.debug("Exit working thread")
+                return
+
+            # Send frames.
+            if not self._frames_to_send.empty() and send_window.can_add_next():
+                # Have frame for sending in queue and free space in send
+                # window. Send frame.
+
+                frame = self._frames_to_send.get()
+
+                item = send_window.add_next(frame)
+
+                logger.debug("Sending:\n{0}".format(str(item.packet)))
+                self._simple_frame_transmitter.write_frame(
+                    item.packet.serialize())
+
+            # Handle timeouts.
+            curtime = time.time()
+            for item in send_window.timeout_items(curtime):
+                # TODO: Currently it is selective repeat.
+
+                logger.debug("Resending due to timeout:\n{0}".format(
+                    str(item.packet)))
+                self._simple_frame_transmitter.write_frame(
+                    item.packet.serialize())
+                item.time = curtime
+            assert len(list(send_window.timeout_items(curtime))) == 0
+
+            # Handle receiving data.
+            frame = self._simple_frame_transmitter.read_frame(block=False)
+            if frame is not None:
+                # Received frame.
+
+                try:
+                    p = Packet.deserialize(frame)
+                except InvalidPacketException as ex:
+                    logger.warning("Received invalid packet: {0}".format(
+                        str(ex)))
+                    continue
+                else:
+                    logger.debug("Received:\n{0}".format(p))
+
+                if p.type == PacketType.data:
+                    # Received data.
+
+                    # Send ACK (even if packet already received before).
+                    ack = Packet(type=PacketType.ack, id=p.id, data="")
+                    logger.debug("Sending acknowledge:\n{0}".format(ack))
+                    self._simple_frame_transmitter.write_frame(ack.serialize())
+
+                    for ch in receive_window.receive_frame(p):
+                        self._received_data.put(ch)
+
+                elif p.type == PacketType.ack:
+                    # Received ACK.
+
+                    send_window.ack_received(p.id)
+                    
+                else:
+                    assert False
+
+def _test():
+    # TODO: Use in separate file to test importing functionality.
+
+    import unittest2 as unittest
+    import gc
+    
+    from duplex_link import FullDuplexLink
+
+    logging.basicConfig(level=logging.DEBUG)
+
+    class TestPacket(unittest.TestCase):
+        def test_packet(self):
+            id = 13804
+            data = "Some test data for Packet class (12334567890)."
+            p = Packet(type=PacketType.data, id=id, data=data)
+            s = p.serialize()
+            np = Packet.deserialize(s)
+            self.assertEqual(p.type, np.type)
+            self.assertEqual(p.id, np.id)
+            self.assertEqual(p.data, np.data)
+
+            p = Packet(type=PacketType.data, id=id, data="")
+            s = p.serialize()
+            np = Packet.deserialize(s)
+            self.assertEqual(p.type, np.type)
+            self.assertEqual(p.id, np.id)
+            self.assertEqual("", np.data)
+
+    class TestFrameTransmitter(unittest.TestCase):
+        def test_transmit(self):
+            a, b = FullDuplexLink()
+
+            at = SimpleFrameTransmitter(node=a)
+            bt = SimpleFrameTransmitter(node=b)
+
+            aft = FrameTransmitter(simple_frame_transmitter=at)
+            bft = FrameTransmitter(simple_frame_transmitter=bt)
+
+            text = "Test!"
+            aft.write(text)
+            self.assertEqual(bft.read(len(text)), text)
+
+            self.assertEqual(bft.read(block=False), "")
+
+            text2 = "".join(map(chr, xrange(256)))
+            bft.write(text2)
+            self.assertEqual(aft.read(len(text2)), text2)
+
+            self.assertEqual(aft.read(block=False), "")
+
+            text3 = "test"
+            bft.write(text3)
+            
+            text_a = text2
+            text_b = "".join(reversed(text2))
+            aft.write(text_a)
+            aft.write(text_b)
+            self.assertEqual(aft.read(len(text3)), text3)
+            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+
+            text4 = text2 * 100
+            aft.write(text4)
+            self.assertEqual(bft.read(len(text4)), text4)
+
+            self.assertEqual(aft.read(block=False), "")
+            self.assertEqual(bft.read(block=False), "")
+
+            aft.terminate()
+            bft.terminate()
+
+    #unittest.main()
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestPacket)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestFrameTransmitter)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    gc.collect()
+
+if __name__ == "__main__":
+    _test()

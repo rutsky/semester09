@@ -18,9 +18,11 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
+__all__ = ["SimpleFrameTransmitter"]
+
 import StringIO
 
-class FrameTransmitter(object):
+class SimpleFrameTransmitter(object):
     # Similar to SLIP.
     frame_end       = "\xC0"
     esc_char        = "\xDB"
@@ -29,7 +31,7 @@ class FrameTransmitter(object):
 
     def __init__(self, *args, **kwargs):
         self.node = kwargs.pop('node')
-        super(FrameTransmitter, self).__init__(*args, **kwargs)
+        super(SimpleFrameTransmitter, self).__init__(*args, **kwargs)
         self._read_buffer = StringIO.StringIO()
 
     def write_frame(self, frame):
@@ -79,8 +81,8 @@ def _test():
         def test_link(self):
             a, b = FullDuplexLink()
 
-            at = FrameTransmitter(node=a)
-            bt = FrameTransmitter(node=b)
+            at = SimpleFrameTransmitter(node=a)
+            bt = SimpleFrameTransmitter(node=b)
 
             self.assertEqual(at.read_frame(block=False), None)
             self.assertEqual(bt.read_frame(block=False), None)
@@ -94,10 +96,10 @@ def _test():
             self.assertEqual(at.read_frame(block=False), None)
 
             test = "Th{fes}is is{es} the {fe} te{ec}st! 12345".format(
-                fe=FrameTransmitter.frame_end,
-                ec=FrameTransmitter.esc_char,
-                fes=FrameTransmitter.frame_end_subst,
-                es=FrameTransmitter.esc_subst)
+                fe=SimpleFrameTransmitter.frame_end,
+                ec=SimpleFrameTransmitter.esc_char,
+                fes=SimpleFrameTransmitter.frame_end_subst,
+                es=SimpleFrameTransmitter.esc_subst)
             at.write_frame(test)
             self.assertEqual(bt.read_frame(), test)
 

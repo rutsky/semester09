@@ -70,6 +70,7 @@ class ReceivingNode(object):
 
         return in_str.getvalue()
 
+# TODO: May be not "loss" but "noise"?
 class LossFunc(object):
     def __init__(self, skip_ch_prob, modify_ch_prob, new_ch_prob):
         super(LossFunc, self).__init__()
