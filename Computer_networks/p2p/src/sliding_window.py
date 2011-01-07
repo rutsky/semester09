@@ -124,7 +124,7 @@ class FrameTransmitter(object):
         self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
         self._max_packet = kwargs.pop('max_packet_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
-        self._ack_timeout = kwargs.pop('ack_timeout', 1)
+        self._ack_timeout = kwargs.pop('ack_timeout', 0.2)
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
         # Queue of tuples (id, frame).
@@ -327,7 +327,7 @@ def _test():
     import unittest2 as unittest
     import gc
     
-    from duplex_link import FullDuplexLink
+    from duplex_link import FullDuplexLink, LossFunc
 
     logging.basicConfig(level=logging.DEBUG)
 
@@ -381,9 +381,50 @@ def _test():
             self.assertEqual(aft.read(len(text3)), text3)
             self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
 
-            text4 = text2 * 100
+            text4 = text2 * 10
             aft.write(text4)
             self.assertEqual(bft.read(len(text4)), text4)
+
+            self.assertEqual(aft.read(block=False), "")
+            self.assertEqual(bft.read(block=False), "")
+
+            aft.terminate()
+            bft.terminate()
+
+        def test_transmit_with_losses(self):
+            a, b = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+
+            at = SimpleFrameTransmitter(node=a)
+            bt = SimpleFrameTransmitter(node=b)
+
+            aft = FrameTransmitter(simple_frame_transmitter=at)
+            bft = FrameTransmitter(simple_frame_transmitter=bt)
+
+            text = "Test!"
+            aft.write(text)
+            self.assertEqual(bft.read(len(text)), text)
+
+            self.assertEqual(bft.read(block=False), "")
+
+            text2 = "".join(map(chr, xrange(256)))
+            bft.write(text2)
+            self.assertEqual(aft.read(len(text2)), text2)
+
+            self.assertEqual(aft.read(block=False), "")
+
+            text3 = "test"
+            bft.write(text3)
+
+            text_a = text2
+            text_b = "".join(reversed(text2))
+            aft.write(text_a)
+            aft.write(text_b)
+            self.assertEqual(aft.read(len(text3)), text3)
+            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+
+            #text4 = text2 * 100
+            #aft.write(text4)
+            #self.assertEqual(bft.read(len(text4)), text4)
 
             self.assertEqual(aft.read(block=False), "")
             self.assertEqual(bft.read(block=False), "")
