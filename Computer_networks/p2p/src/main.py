@@ -18,7 +18,23 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
+import sys
+from PyQt4 import QtCore, QtGui
+
 def main():
+    app = QtGui.QApplication(sys.argv)
+
+    scene = QtGui.QGraphicsScene()
+    scene.addText("Hello, world!")
+
+    view = QtGui.QGraphicsView(scene)
+    view.show()
+
+    app.exec_()
+    
+    import time
+    time.sleep(1)
+    
     print "Test!"
 
 if __name__ == "__main__":
