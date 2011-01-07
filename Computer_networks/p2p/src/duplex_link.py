@@ -18,20 +18,19 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", "FullDuplexLink",
-    "LossFunc"]
+__all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", 
+    "FullDuplexLink", "LossFunc"]
 
 import Queue
 import bisect
 import random
+import StringIO
 
 # TODO: May be loss function will loose bits, not bytes?
 
 class SendingNode(object):
     def __init__(self, **kwds):
-        self.send_queue = kwds.pop('send_queue', None)
-        if self.send_queue is None:
-            self.send_queue = Queue.Queue()
+        self.send_queue = kwds.pop('send_queue')
         super(SendingNode, self).__init__(**kwds)
 
     def _write_ch(self, ch):
@@ -46,19 +45,30 @@ class SendingNode(object):
 
 class ReceivingNode(object):
     def __init__(self, **kwds):
-        self.receive_queue = kwds.pop('receive_queue', None)
-        if self.receive_queue is None:
-            self.receive_queue = Queue.Queue()
+        self.receive_queue = kwds.pop('receive_queue')
         super(ReceivingNode, self).__init__(**kwds)
 
-    def read(self, size=0):
-        chars = []
-        while size <= 0 or len(chars) < size:
+    def read(self, size=0, block=True):
+        """Read bytes from input queue.
+        If `size' equal to zero it reads all available in queue characters.
+        Assumed that this function is the only reader from queue.
+
+        Otherwise if `block' is True it reads exactly `size' elements.
+        If `block' is False it reads not more that `size' elements depending
+        on how much is currently available in queue.
+        """
+
+        assert size >= 0
+
+        in_str = StringIO.StringIO()
+
+        while size == 0 or len(in_str.getvalue()) < size:
             try:
-                chars.append(self.receive_queue.get(False))
+                in_str.write(self.receive_queue.get(block and (size > 0)))
             except Queue.Empty:
                 break
-        return "".join(chars)
+
+        return in_str.getvalue()
 
 class LossFunc(object):
     def __init__(self, skip_ch_prob, modify_ch_prob, new_ch_prob):
@@ -113,29 +123,22 @@ class FullDuplexNode(SendingWithLossNode, ReceivingNode):
     def __init__(self, **kwds):
         super(FullDuplexNode, self).__init__(**kwds)
 
-class FullDuplexLink(object):
-    def __init__(self, loss_func=None):
-        self._queue_a_to_b = Queue.Queue()
-        self._queue_b_to_a = Queue.Queue()
-        self._node_a = FullDuplexNode(
-            send_queue=self._queue_a_to_b,
-            receive_queue=self._queue_b_to_a,
-            loss_func=loss_func)
-        self._node_b = FullDuplexNode(
-            send_queue=self._queue_b_to_a,
-            receive_queue=self._queue_a_to_b,
-            loss_func=loss_func)
+def FullDuplexLink(a_to_b_queue=None, b_to_a_queue=None, loss_func=None):
+    queue1 = a_to_b_queue if a_to_b_queue is not None else Queue.Queue()
+    queue2 = b_to_a_queue if b_to_a_queue is not None else Queue.Queue()
 
-    def node_a(self):
-        return self._node_a
-
-    def node_b(self):
-        return self._node_b
+    node_a = FullDuplexNode(
+        send_queue   =queue1,
+        receive_queue=queue2,
+        loss_func=loss_func)
+    node_b = FullDuplexNode(
+        send_queue   =queue2,
+        receive_queue=queue1,
+        loss_func=loss_func)
+    return node_a, node_b
 
 if __name__ == "__main__":
-    link = FullDuplexLink()
-    a = link.node_a()
-    b = link.node_b()
+    a, b = FullDuplexLink()
     a.write("test")
     assert b.read() == "test"
     b.write("1234")
@@ -148,20 +151,20 @@ if __name__ == "__main__":
     text = "This is quite long text, do you agree?"
     print "Working with text: '{0}'".format(text)
 
-    link = FullDuplexLink(LossFunc(0.2, 0, 0))
-    link.node_a().write(text)
-    print "Skipping:          '{0}'".format(link.node_b().read())
+    a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0, 0))
+    a.write(text)
+    print "Skipping:          '{0}'".format(b.read())
 
-    link = FullDuplexLink(LossFunc(0, 0.2, 0))
-    link.node_a().write(text)
-    print "Modify:            '{0}'".format(link.node_b().read())
+    a, b = FullDuplexLink(loss_func=LossFunc(0, 0.2, 0))
+    a.write(text)
+    print "Modify:            '{0}'".format(b.read())
 
-    link = FullDuplexLink(LossFunc(0, 0, 0.2))
-    link.node_a().write(text)
-    print "New:               '{0}'".format(link.node_b().read())
+    a, b = FullDuplexLink(loss_func=LossFunc(0, 0, 0.2))
+    a.write(text)
+    print "New:               '{0}'".format(b.read())
 
-    link = FullDuplexLink(LossFunc(0.2, 0.2, 0.2))
-    link.node_a().write(text)
-    print "All:               '{0}'".format(link.node_b().read())
+    a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0.2, 0.2))
+    a.write(text)
+    print "All:               '{0}'".format(b.read())
 
     print
