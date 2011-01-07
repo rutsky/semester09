@@ -20,8 +20,6 @@ __license__ = "GPL"
 
 import StringIO
 
-from duplex_link import FullDuplexLink
-
 class FrameTransmitter(object):
     # Similar to SLIP.
     frame_end       = "\xC0"
@@ -75,6 +73,7 @@ def _test():
     # TODO: Use in separate file to test importing functionality.
 
     import unittest2 as unittest
+    from duplex_link import FullDuplexLink
 
     class TestFrameTransmitter(unittest.TestCase):
         def test_link(self):
