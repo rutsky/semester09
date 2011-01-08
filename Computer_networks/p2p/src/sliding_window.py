@@ -130,13 +130,13 @@ class FrameTransmitter(object):
         self._ack_timeout = kwargs.pop('ack_timeout', 0.2)
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
+        # TODO: Send and receive not symmetrical, but should be.
         # Queue of tuples (id, frame).
         self._frames_to_send = Queue.Queue()
-
         # Queue of characters.
         self._received_data = Queue.Queue()
 
-        # If working thread will be able to acquire the lock, that it should
+        # If working thread will be able to acquire the lock, then it should
         # terminate himself.
         self._exit_lock = threading.RLock()
         self._exit_lock.acquire()
