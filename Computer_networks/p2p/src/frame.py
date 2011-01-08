@@ -20,6 +20,9 @@ __license__ = "GPL"
 
 __all__ = ["SimpleFrameTransmitter"]
 
+"""Transmit frame between two connected hosts without any acknowledge.
+"""
+
 import StringIO
 
 class SimpleFrameTransmitter(object):

@@ -20,6 +20,9 @@ __license__ = "GPL"
 
 __all__ = ["FrameTransmitter"]
 
+"""Transmit frame between two connected hosts with acknowledge.
+"""
+
 import itertools
 import struct
 import binascii

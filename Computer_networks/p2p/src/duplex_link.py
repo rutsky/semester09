@@ -21,6 +21,9 @@ __license__ = "GPL"
 __all__ = ["ReceivingNode", "SendingNode", "FullDuplexNode", 
     "FullDuplexLink", "LossFunc"]
 
+"""Byte channel implementation.
+"""
+
 import Queue
 import bisect
 import random
