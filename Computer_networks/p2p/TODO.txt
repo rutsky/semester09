@@ -1,0 +1,3 @@
+ * May be rename modules according classes they implement? Like 
+"simple_frame_transmitter.py" instead of "frame.py" and "frame_transmitter.py"
+instead of "sliding_window.py".
