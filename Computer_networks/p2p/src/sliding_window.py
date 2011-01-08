@@ -36,43 +36,41 @@ from recordtype import recordtype
 
 from frame import SimpleFrameTransmitter
 
-# TODO: So `Packet' of `Frame'?
-
-class PacketType(object):
+class FrameType(object):
     data = 1
     ack  = 2
 
-class InvalidPacketException(Exception):
+class InvalidFrameException(Exception):
     def __init__(self, *args, **kwargs):
-        super(InvalidPacketException, self).__init__(*args, **kwargs)
+        super(InvalidFrameException, self).__init__(*args, **kwargs)
 
 # TODO: Inherit from recordtype.
-class Packet(object):
-    # Packet:
+class Frame(object):
+    # Frame:
     #    1     2     4             4     - field size
     # *------*----*-----*--  --*-------*
     # | type | id | len | data | CRC32 |
     # *------*----*-----*--  --*-------*
 
     format_string = '<BHL{0}sL'
-    empty_packet_size = struct.calcsize(format_string.format(0))
+    empty_frame_size = struct.calcsize(format_string.format(0))
 
     def __init__(self, *args, **kwargs):
         self.type = kwargs.pop('type')
         self.id = kwargs.pop('id')
-        if self.type == PacketType.data:
+        if self.type == FrameType.data:
             self.data = kwargs.pop('data')
         else:
             self.data = ""
             if 'data' in kwargs:
                 kwargs.pop('data')
-        super(Packet, self).__init__(*args, **kwargs)
+        super(Frame, self).__init__(*args, **kwargs)
 
     def crc(self):
         return binascii.crc32(self.serialize(0)) & 0xffffffff
 
     def serialize(self, crc = None):
-        """Returns string representing packet."""
+        """Returns string representing frame."""
 
         if crc is not None:
             return struct.pack(
@@ -83,38 +81,40 @@ class Packet(object):
             return self.serialize(self.crc())
 
     @staticmethod
-    def deserialize(packet_str):
-        data_len = len(packet_str) - Packet.empty_packet_size
-        if data_len < 0:
-            raise InvalidPacketException(
-                "Packet too small, not enough fields")
+    def deserialize(frame_str):
+        # TODO: Add frame dump into InvalidFrameException error message.
 
-        packet_type, packet_id, read_data_len, packet_data, packet_crc = \
-                struct.unpack(Packet.format_string.format(data_len), packet_str)
+        data_len = len(frame_str) - Frame.empty_frame_size
+        if data_len < 0:
+            raise InvalidFrameException(
+                "Frame too small, not enough fields")
+
+        frame_type, frame_id, read_data_len, frame_data, frame_crc = \
+                struct.unpack(Frame.format_string.format(data_len), frame_str)
         
-        if packet_type not in [PacketType.data, PacketType.ack]:
-            raise InvalidPacketException(
-                "Invalid packet type '{0}'".format(packet_type))
+        if frame_type not in [FrameType.data, FrameType.ack]:
+            raise InvalidFrameException(
+                "Invalid frame type '{0}'".format(frame_type))
 
         if read_data_len != data_len:
-            raise InvalidPacketException(
+            raise InvalidFrameException(
                 "Invalid data length: {0}, expected {1}".format(
                     read_data_len, data_len))
 
-        packet = Packet(type=packet_type, id=packet_id, data=packet_data)
+        frame = Frame(type=frame_type, id=frame_id, data=frame_data)
 
-        if packet_crc != packet.crc():
-            raise InvalidPacketException(
+        if frame_crc != frame.crc():
+            raise InvalidFrameException(
                 "Invalid ckecksum: {0:04X}, correct one is {1:04X}".format(
-                    packet_crc, packet.crc()))
+                    frame_crc, frame.crc()))
 
-        return packet
+        return frame
 
     def __str__(self):
-        if self.type == PacketType.data:
+        if self.type == FrameType.data:
             return "Data({id}, 0x{data})".format(id=self.id,
                 data=self.data.encode('hex'))
-        elif self.type == PacketType.ack:
+        elif self.type == FrameType.ack:
             return "Ack({id})".format(id=self.id)
         else:
             assert False
@@ -125,7 +125,7 @@ class FrameTransmitter(object):
 
     def __init__(self, *args, **kwargs):
         self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
-        self._max_packet = kwargs.pop('max_packet_data', 100)
+        self._max_frame = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.2)
         super(FrameTransmitter, self).__init__(*args, **kwargs)
@@ -152,8 +152,8 @@ class FrameTransmitter(object):
 
     def write(self, data_string):
         # Subdivide data string on frames and put them into working queue.
-        for frame_part in [data_string[i:i + self._max_packet]
-                for i in xrange(0, len(data_string), self._max_packet)]:
+        for frame_part in [data_string[i:i + self._max_frame]
+                for i in xrange(0, len(data_string), self._max_frame)]:
             self._frames_to_send.put(frame_part)
 
     def read(self, size=0, block=True):
@@ -171,7 +171,7 @@ class FrameTransmitter(object):
 
     def _work(self):
         class SendWindow(object):
-            SendItem = recordtype('SendItem', 'id time packet ack_received')
+            SendItem = recordtype('SendItem', 'id time frame ack_received')
 
             def __init__(self, logger, maxlen, frame_id_it, timeout):
                 super(SendWindow, self).__init__()
@@ -189,7 +189,7 @@ class FrameTransmitter(object):
                 assert self.can_add_next()
 
                 frame_id = self.frame_id_it.next()                
-                p = Packet(type=PacketType.data, id=frame_id, data=data)
+                p = Frame(type=FrameType.data, id=frame_id, data=data)
                 item = SendWindow.SendItem(frame_id, curtime, p, False)
                 self.queue.append(item)
 
@@ -215,7 +215,7 @@ class FrameTransmitter(object):
                     self.queue.popleft()
 
         class ReceiveWindow(object):
-            ReceiveItem = recordtype('ReceiveItem', 'id packet')
+            ReceiveItem = recordtype('ReceiveItem', 'id frame')
 
             def __init__(self, logger, maxlen, frame_id_it):
                 super(ReceiveWindow, self).__init__()
@@ -229,19 +229,19 @@ class FrameTransmitter(object):
                     item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
                     self.queue.append(item)
 
-            def receive_frame(self, packet):
+            def receive_frame(self, frame):
                 # TODO: Performance issue.
                 for item in self.queue:
-                    if item.id == packet.id:
-                        item.packet = packet
+                    if item.id == frame.id:
+                        item.frame = frame
                         break
                 else:
                     self.logger.warning(
-                        "Received packet outside working window: {0}".
-                            format(packet))
+                        "Received frame outside working window: {0}".
+                            format(frame))
 
-                while self.queue[0].packet is not None:
-                    for ch in self.queue[0].packet.data:
+                while self.queue[0].frame is not None:
+                    for ch in self.queue[0].frame.data:
                         yield ch
 
                     self.queue.popleft()
@@ -275,9 +275,9 @@ class FrameTransmitter(object):
 
                 item = send_window.add_next(frame)
 
-                logger.debug("Sending:\n{0}".format(str(item.packet)))
+                logger.debug("Sending:\n{0}".format(str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
-                    item.packet.serialize())
+                    item.frame.serialize())
 
             # Handle timeouts.
             curtime = time.time()
@@ -285,9 +285,9 @@ class FrameTransmitter(object):
                 # TODO: Currently it is selective repeat.
 
                 logger.debug("Resending due to timeout:\n{0}".format(
-                    str(item.packet)))
+                    str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
-                    item.packet.serialize())
+                    item.frame.serialize())
                 item.time = curtime
             assert len(list(send_window.timeout_items(curtime))) == 0
 
@@ -297,26 +297,26 @@ class FrameTransmitter(object):
                 # Received frame.
 
                 try:
-                    p = Packet.deserialize(frame)
-                except InvalidPacketException as ex:
-                    logger.warning("Received invalid packet: {0}".format(
+                    p = Frame.deserialize(frame)
+                except InvalidFrameException as ex:
+                    logger.warning("Received invalid frame: {0}".format(
                         str(ex)))
                     continue
                 else:
                     logger.debug("Received:\n{0}".format(p))
 
-                if p.type == PacketType.data:
+                if p.type == FrameType.data:
                     # Received data.
 
-                    # Send ACK (even if packet already received before).
-                    ack = Packet(type=PacketType.ack, id=p.id, data="")
+                    # Send ACK (even if frame already received before).
+                    ack = Frame(type=FrameType.ack, id=p.id, data="")
                     logger.debug("Sending acknowledge:\n{0}".format(ack))
                     self._simple_frame_transmitter.write_frame(ack.serialize())
 
                     for ch in receive_window.receive_frame(p):
                         self._received_data.put(ch)
 
-                elif p.type == PacketType.ack:
+                elif p.type == FrameType.ack:
                     # Received ACK.
 
                     send_window.ack_received(p.id)
@@ -334,20 +334,20 @@ def _test():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    class TestPacket(unittest.TestCase):
-        def test_packet(self):
+    class TestFrame(unittest.TestCase):
+        def test_frame(self):
             id = 13804
-            data = "Some test data for Packet class (12334567890)."
-            p = Packet(type=PacketType.data, id=id, data=data)
+            data = "Some test data for Frame class (12334567890)."
+            p = Frame(type=FrameType.data, id=id, data=data)
             s = p.serialize()
-            np = Packet.deserialize(s)
+            np = Frame.deserialize(s)
             self.assertEqual(p.type, np.type)
             self.assertEqual(p.id, np.id)
             self.assertEqual(p.data, np.data)
 
-            p = Packet(type=PacketType.data, id=id, data="")
+            p = Frame(type=FrameType.data, id=id, data="")
             s = p.serialize()
-            np = Packet.deserialize(s)
+            np = Frame.deserialize(s)
             self.assertEqual(p.type, np.type)
             self.assertEqual(p.id, np.id)
             self.assertEqual("", np.data)
@@ -437,7 +437,7 @@ def _test():
 
     #unittest.main()
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPacket)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestFrame)
     unittest.TextTestRunner(verbosity=2).run(suite)
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFrameTransmitter)
     unittest.TextTestRunner(verbosity=2).run(suite)
