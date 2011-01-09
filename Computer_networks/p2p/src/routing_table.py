@@ -21,18 +21,19 @@ __license__ = "GPL"
 __all__ = []
 
 """Routing table implementation.
-"""
 
-# TODO: should abstract real table like:
-#   (Destination, Gateway, Interface)
-# or table according to selected network topology model
+In used network model routing table is reduced to list of following tuples:
+  (destination router, next router)
+When router receives packet (src, dest, data) it looks up next router in
+routing table and retransmits packet there.
+"""
 
 class RoutingTable(object):
     def __init__(self):
         super(RoutingTable, self).__init__()
 
     def next_hop(self, dest):
-        """By destination network name returns name of next host to which
+        """By destination router name returns name of next router to which
         datagram should be retransmitted.
 
         Returns None in case when next hop is undefined (and datagram should

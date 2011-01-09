@@ -37,8 +37,7 @@ from recordtype import recordtype
 from sliding_window import DatagramTransmitter
 
 class DatagramType(object):
-    data = 1
-    ack  = 2
+    pass
 
 class InvalidDatagramException(Exception):
     def __init__(self, *args, **kwargs):
@@ -151,10 +150,10 @@ class DatagramRouter(object):
                 break
 
     # TODO: Draft.
-    def interface_up(self, iface_name, network, address):
+    def add_link(self, router_name, frame_transmitter):
         pass
 
-    def interface_down(self, iface_name):
+    def remove_link(self, router_name):
         pass
 
     def _work(self):

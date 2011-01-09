@@ -36,3 +36,8 @@ For simpler RIP implementation was used following network topology model:
 Only networks connected to leaf routers interfaces valued as networks,
 and each router has exactly one of them. All routers connected directly to
 each other.
+
+Routing table is reduced to:
+  (destination router, next router)
+When router receives packet (src, dest, data) it looks up next router in 
+routing table and retransmits packet there.
