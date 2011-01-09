@@ -47,23 +47,27 @@ class InvalidFrameException(Exception):
 # TODO: Inherit from recordtype.
 class Frame(object):
     # Frame:
-    #    1     2     4             4     - field size
-    # *------*----*-----*--  --*-------*
-    # | type | id | len | data | CRC32 |
-    # *------*----*-----*--  --*-------*
+    #    1     2     1      4             4     - field size
+    # *------*----*------*-----*--  --*-------*
+    # | type | id | last | len | data | CRC32 |
+    # *------*----*------*-----*--  --*-------*
 
-    format_string = '<BHL{0}sL'
+    format_string = '<BHBL{0}sL'
     empty_frame_size = struct.calcsize(format_string.format(0))
 
     def __init__(self, *args, **kwargs):
         self.type = kwargs.pop('type')
         self.id = kwargs.pop('id')
         if self.type == FrameType.data:
-            self.data = kwargs.pop('data')
+            self.data    = kwargs.pop('data')
+            self.is_last = kwargs.pop('is_last')
         else:
             self.data = ""
             if 'data' in kwargs:
                 kwargs.pop('data')
+            self.is_last = False
+            if 'is_last' in kwargs:
+                kwargs.pop('is_last')
         super(Frame, self).__init__(*args, **kwargs)
 
     def crc(self):
@@ -75,7 +79,7 @@ class Frame(object):
         if crc is not None:
             return struct.pack(
                 self.format_string.format(len(self.data)),
-                self.type, self.id, len(self.data),
+                self.type, self.id, self.is_last, len(self.data),
                 self.data, crc)
         else:
             return self.serialize(self.crc())
@@ -89,7 +93,7 @@ class Frame(object):
             raise InvalidFrameException(
                 "Frame too small, not enough fields")
 
-        frame_type, frame_id, read_data_len, frame_data, frame_crc = \
+        frame_type, frame_id, is_last, read_data_len, frame_data, frame_crc = \
                 struct.unpack(Frame.format_string.format(data_len), frame_str)
         
         if frame_type not in [FrameType.data, FrameType.ack]:
@@ -101,7 +105,8 @@ class Frame(object):
                 "Invalid data length: {0}, expected {1}".format(
                     read_data_len, data_len))
 
-        frame = Frame(type=frame_type, id=frame_id, data=frame_data)
+        frame = Frame(type=frame_type, id=frame_id, is_last=is_last,
+            data=frame_data)
 
         if frame_crc != frame.crc():
             raise InvalidFrameException(
@@ -112,7 +117,8 @@ class Frame(object):
 
     def __str__(self):
         if self.type == FrameType.data:
-            return "Data({id}, 0x{data})".format(id=self.id,
+            return "Data({id}, is_last={is_last}, 0x{data})".format(
+                id=self.id, is_last=self.is_last,
                 data=self.data.encode('hex'))
         elif self.type == FrameType.ack:
             return "Ack({id})".format(id=self.id)
@@ -125,16 +131,17 @@ class FrameTransmitter(object):
 
     def __init__(self, *args, **kwargs):
         self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
-        self._max_frame = kwargs.pop('max_frame_data', 100)
+        self._max_frame_data = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.2)
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
-        # TODO: Send and receive not symmetrical, but should be.
-        # Queue of tuples (id, frame).
-        self._frames_to_send = Queue.Queue()
-        # Queue of characters.
+        # Queue of tuples (is_last, frame_data).
+        self._frames_data_to_send = Queue.Queue()
+        # Queue of tuples (is_last, frame_data).
         self._received_data = Queue.Queue()
+
+        self._received_frames_buffer = []
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
@@ -150,24 +157,25 @@ class FrameTransmitter(object):
         self._exit_lock.release()
         self._working_thread.join()
 
-    def write(self, data_string):
+    def send(self, data_string):
         # Subdivide data string on frames and put them into working queue.
-        for frame_part in [data_string[i:i + self._max_frame]
-                for i in xrange(0, len(data_string), self._max_frame)]:
-            self._frames_to_send.put(frame_part)
+        frame_data_parts = [data_string[i:i + self._max_frame_data]
+                for i in xrange(0, len(data_string), self._max_frame_data)]
+        for frame_data_part in frame_data_parts[:-1]:
+            self._frames_data_to_send.put((False, frame_data_part))
+        self._frames_data_to_send.put((True, frame_data_parts[-1]))
 
-    def read(self, size=0, block=True):
-        assert size >= 0
-
-        in_str = StringIO.StringIO()
-
-        while size == 0 or len(in_str.getvalue()) < size:
+    def receive(self, block=True):
+        while True:
             try:
-                in_str.write(self._received_data.get(block and (size > 0)))
+                is_last, frame = self._received_data.get(block)
+                self._received_frames_buffer.append(frame)
+                if is_last:
+                    data_string = "".join(self._received_frames_buffer)
+                    self._received_frames_buffer = []
+                    return data_string
             except Queue.Empty:
                 break
-
-        return in_str.getvalue()
 
     def _work(self):
         class SendWindow(object):
@@ -185,11 +193,12 @@ class FrameTransmitter(object):
             def can_add_next(self):
                 return len(self.queue) < self.maxlen
 
-            def add_next(self, data, curtime=time.time()):
+            def add_next(self, is_last, data, curtime=time.time()):
                 assert self.can_add_next()
 
                 frame_id = self.frame_id_it.next()                
-                p = Frame(type=FrameType.data, id=frame_id, data=data)
+                p = Frame(type=FrameType.data, id=frame_id, is_last=is_last,
+                    data=data)
                 item = SendWindow.SendItem(frame_id, curtime, p, False)
                 self.queue.append(item)
 
@@ -241,8 +250,7 @@ class FrameTransmitter(object):
                             format(frame))
 
                 while self.queue[0].frame is not None:
-                    for ch in self.queue[0].frame.data:
-                        yield ch
+                    yield self.queue[0].frame
 
                     self.queue.popleft()
                     new_item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
@@ -267,13 +275,14 @@ class FrameTransmitter(object):
                 return
 
             # Send frames.
-            if not self._frames_to_send.empty() and send_window.can_add_next():
+            if (not self._frames_data_to_send.empty() and
+                    send_window.can_add_next()):
                 # Have frame for sending in queue and free space in send
                 # window. Send frame.
 
-                frame = self._frames_to_send.get()
+                is_last, frame_data = self._frames_data_to_send.get()
 
-                item = send_window.add_next(frame)
+                item = send_window.add_next(is_last, frame_data)
 
                 logger.debug("Sending:\n{0}".format(str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
@@ -313,8 +322,8 @@ class FrameTransmitter(object):
                     logger.debug("Sending acknowledge:\n{0}".format(ack))
                     self._simple_frame_transmitter.write_frame(ack.serialize())
 
-                    for ch in receive_window.receive_frame(p):
-                        self._received_data.put(ch)
+                    for frame in receive_window.receive_frame(p):
+                        self._received_data.put((frame.is_last, frame.data))
 
                 elif p.type == FrameType.ack:
                     # Received ACK.
@@ -332,20 +341,21 @@ def _test():
     
     from duplex_link import FullDuplexLink, LossFunc
 
-    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     class TestFrame(unittest.TestCase):
         def test_frame(self):
             id = 13804
             data = "Some test data for Frame class (12334567890)."
-            p = Frame(type=FrameType.data, id=id, data=data)
+            p = Frame(type=FrameType.data, id=id, is_last=True, data=data)
             s = p.serialize()
             np = Frame.deserialize(s)
             self.assertEqual(p.type, np.type)
             self.assertEqual(p.id, np.id)
             self.assertEqual(p.data, np.data)
 
-            p = Frame(type=FrameType.data, id=id, data="")
+            p = Frame(type=FrameType.data, id=id, is_last=True, data="")
             s = p.serialize()
             np = Frame.deserialize(s)
             self.assertEqual(p.type, np.type)
@@ -363,33 +373,34 @@ def _test():
             bft = FrameTransmitter(simple_frame_transmitter=bt)
 
             text = "Test!"
-            aft.write(text)
-            self.assertEqual(bft.read(len(text)), text)
+            aft.send(text)
+            self.assertEqual(bft.receive(), text)
 
-            self.assertEqual(bft.read(block=False), "")
+            self.assertEqual(bft.receive(block=False), None)
 
             text2 = "".join(map(chr, xrange(256)))
-            bft.write(text2)
-            self.assertEqual(aft.read(len(text2)), text2)
+            bft.send(text2)
+            self.assertEqual(aft.receive(), text2)
 
-            self.assertEqual(aft.read(block=False), "")
+            self.assertEqual(aft.receive(block=False), None)
 
             text3 = "test"
-            bft.write(text3)
+            bft.send(text3)
             
             text_a = text2
             text_b = "".join(reversed(text2))
-            aft.write(text_a)
-            aft.write(text_b)
-            self.assertEqual(aft.read(len(text3)), text3)
-            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+            aft.send(text_a)
+            aft.send(text_b)
+            self.assertEqual(aft.receive(), text3)
+            self.assertEqual(bft.receive(), text_a)
+            self.assertEqual(bft.receive(), text_b)
 
             text4 = text2 * 10
-            aft.write(text4)
-            self.assertEqual(bft.read(len(text4)), text4)
+            aft.send(text4)
+            self.assertEqual(bft.receive(), text4)
 
-            self.assertEqual(aft.read(block=False), "")
-            self.assertEqual(bft.read(block=False), "")
+            self.assertEqual(aft.receive(block=False), None)
+            self.assertEqual(bft.receive(block=False), None)
 
             aft.terminate()
             bft.terminate()
@@ -404,33 +415,34 @@ def _test():
             bft = FrameTransmitter(simple_frame_transmitter=bt)
 
             text = "Test!"
-            aft.write(text)
-            self.assertEqual(bft.read(len(text)), text)
+            aft.send(text)
+            self.assertEqual(bft.receive(), text)
 
-            self.assertEqual(bft.read(block=False), "")
+            self.assertEqual(bft.receive(block=False), None)
 
             text2 = "".join(map(chr, xrange(256)))
-            bft.write(text2)
-            self.assertEqual(aft.read(len(text2)), text2)
+            bft.send(text2)
+            self.assertEqual(aft.receive(), text2)
 
-            self.assertEqual(aft.read(block=False), "")
+            self.assertEqual(aft.receive(block=False), None)
 
             text3 = "test"
-            bft.write(text3)
+            bft.send(text3)
 
             text_a = text2
             text_b = "".join(reversed(text2))
-            aft.write(text_a)
-            aft.write(text_b)
-            self.assertEqual(aft.read(len(text3)), text3)
-            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+            aft.send(text_a)
+            aft.send(text_b)
+            self.assertEqual(aft.receive(), text3)
+            self.assertEqual(bft.receive(), text_a)
+            self.assertEqual(bft.receive(), text_b)
 
-            #text4 = text2 * 100
-            #aft.write(text4)
-            #self.assertEqual(bft.read(len(text4)), text4)
+            #text4 = text2 * 10
+            #aft.send(text4)
+            #self.assertEqual(bft.receive(), text4)
 
-            self.assertEqual(aft.read(block=False), "")
-            self.assertEqual(bft.read(block=False), "")
+            self.assertEqual(aft.receive(block=False), None)
+            self.assertEqual(bft.receive(block=False), None)
 
             aft.terminate()
             bft.terminate()
