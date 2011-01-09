@@ -149,6 +149,10 @@ class DatagramRouter(object):
         self._exit_lock.release()
         self._working_thread.join()
 
+    @property
+    def name(self):
+        return self._router_name
+
     # TODO: currently exposed datagram has exposed parts of low level
     # implementation, like serialize().
     def send(self, datagram):
@@ -302,6 +306,9 @@ def _test():
             def test_set_routing_table(self):
                 self.dt1.set_routing_table(loopback_routing_table(1))
                 self.dt1.set_routing_table(LocalRoutingTable(1, self.lm1))
+
+            def test_name(self):
+                self.assertEqual(self.dt1.name, 1)
 
             def test_transmit(self):
                 self.dt1.send(datagram(1, 1, 2, "unreachable test"))

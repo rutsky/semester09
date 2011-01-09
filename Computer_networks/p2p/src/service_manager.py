@@ -58,8 +58,9 @@ def datagram_to_packet(datagram):
 class RouterServiceManager(object):
     # `_receive_queue' and `_send_queue' are queues for received and send
     # ServiceDatagram's accordingly.
+    # TODO: rename to something like `ServiceTransmitter'.
     class _ServiceInfo(
-            namedtuple('_ServiceInfoBase', 'receive_queue send_queue')):
+            namedtuple('_ServiceInfoBase', 'name receive_queue send_queue')):
         def send(self, packet):
             assert isinstance(packet, Packet)
 
@@ -69,6 +70,16 @@ class RouterServiceManager(object):
             try:
                 return self.receive_queue.get(block)
             except Queue.Empty:
+                return None
+
+        def send_data(self, dest, data):
+            self.send(Packet(self.name, dest, data))
+
+        def receive_data(self, block=True):
+            packet = self.receive(block)
+            if packet is not None:
+                return (packet.src, packet.data)
+            else:
                 return None
 
     def __init__(self, datagram_router):
@@ -93,9 +104,13 @@ class RouterServiceManager(object):
         self._exit_lock.release()
         self._working_thread.join()
 
+    @property
+    def name(self):
+        return self._datagram_router.name
+
     def register_service(self, protocol):
         service_info = \
-            RouterServiceManager._ServiceInfo(Queue.Queue(), Queue.Queue())
+            RouterServiceManager._ServiceInfo(self.name, Queue.Queue(), Queue.Queue())
 
         with self._services_lock:
             assert protocol not in self._services
@@ -134,7 +149,7 @@ class RouterServiceManager(object):
                                 "unhandled:\n{1}".format(
                                     protocol, packet))
 
-        logger = logging.getLogger("{0}".format(self))
+        logger = logging.getLogger("{0}._work".format(self))
 
         logger.info("Working thread started")
 
@@ -182,7 +197,8 @@ def _test():
 
         class Test_ServiceInfo(unittest.TestCase):
             def test_main(self):
-                sm = RouterServiceManager._ServiceInfo(1, 2)
+                sm = RouterServiceManager._ServiceInfo(0, 1, 2)
+                self.assertEqual(sm.name, 0)
                 self.assertEqual(sm.receive_queue, 1)
                 self.assertEqual(sm.send_queue, 2)
 
@@ -218,6 +234,14 @@ def _test():
                     link_manager=self.lm1)
 
                 self.sm1 = RouterServiceManager(self.dt1)
+
+            def test_send_receive_data(self):
+                self.s30 = self.sm1.register_service(30)
+
+                text = "Some text text."
+                self.s30.send_data(1, text)
+                self.assertEqual(self.s30.receive_data(), (1, text))
+                self.assertEqual(self.s30.receive_data(False), None)
 
             def test_main(self):
                 s10 = self.sm1.register_service(10)
@@ -403,8 +427,8 @@ def _test():
                 self.ft2.terminate()
 
     #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.INFO)
-    #logging.basicConfig(level=logging.CRITICAL)
+    #logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.CRITICAL)
     
     suite = unittest.TestSuite()
     for k, v in Tests.__dict__.iteritems():

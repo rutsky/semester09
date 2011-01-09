@@ -33,7 +33,7 @@ class RoutingTable(object):
     def __init__(self):
         super(RoutingTable, self).__init__()
 
-    def next_hop(self, dest):
+    def next_router(self, dest):
         """By destination router name returns name of next router to which
         datagram should be retransmitted.
 
@@ -49,6 +49,16 @@ class StaticRoutingTable(RoutingTable):
 
     def next_router(self, dest):
         return self.dest_to_next_router.setdefault(dest, None)
+
+class DynamicRoutingTable(RoutingTable):
+    def __init__(self, dest_to_next_router, lock):
+        super(DynamicRoutingTable, self).__init__()
+        self.dest_to_next_router = dest_to_next_router
+        self.lock = dest_to_next_router
+
+    def next_router(self, dest):
+        with self.lock:
+            return self.dest_to_next_router.setdefault(dest, None)
 
 def loopback_routing_table(router_name):
     return StaticRoutingTable({router_name: router_name})
