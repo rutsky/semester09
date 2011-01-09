@@ -18,7 +18,7 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = []
+__all__ = ["RoutingTable", "StaticRoutingTable"]
 
 """Routing table implementation.
 
