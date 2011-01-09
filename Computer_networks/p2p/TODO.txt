@@ -5,3 +5,5 @@ instead of "sliding_window.py".
 infinite cycles. Some event system should be used.
  * When something fails big chances that process will hang with running in 
 background threads infinite loops.
+ * In protocols above frame transfer we relying on correct fragments 
+delivering between connected routers which is not really good (and realistic).
