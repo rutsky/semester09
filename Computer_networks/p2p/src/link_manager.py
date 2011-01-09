@@ -64,24 +64,29 @@ def _test():
     import unittest2 as unittest
     import logging
     
+    class Tests(object):
+        class TestLinkManager(unittest.TestCase):
+            def test_links(self):
+                m = RouterLinkManager()
+
+                m.add_link("1", 1)
+                m.add_link("2", 2)
+                m.add_link("3", 3)
+
+                self.assertEqual(set(m.connected_routers()), set(["1", "2", "3"]))
+                self.assertEqual(set(m.connected_links()),
+                                 set([("1", 1), ("2", 2), ("3", 3)]))
+
+                m.remove_link("2")
+                self.assertEqual(set(m.connected_routers()), set(["1", "3"]))
+
     logging.basicConfig(level=logging.DEBUG)
 
-    class TestLinkManager(unittest.TestCase):
-        def test_links(self):
-            m = RouterLinkManager()
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
-            m.add_link("1", 1)
-            m.add_link("2", 2)
-            m.add_link("3", 3)
-
-            self.assertEqual(set(m.connected_routers()), set(["1", "2", "3"]))
-            self.assertEqual(set(m.connected_links()),
-                             set([("1", 1), ("2", 2), ("3", 3)]))
-
-            m.remove_link("2")
-            self.assertEqual(set(m.connected_routers()), set(["1", "3"]))
-
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestLinkManager)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 if __name__ == "__main__":

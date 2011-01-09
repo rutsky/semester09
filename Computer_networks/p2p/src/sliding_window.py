@@ -312,28 +312,30 @@ class FrameTransmitter(object):
                 except InvalidFrameException as ex:
                     logger.warning("Received invalid frame: {0}".format(
                         str(ex)))
-                    continue
                 else:
                     logger.debug("Received:\n{0}".format(p))
 
-                if p.type == FrameType.data:
-                    # Received data.
+                    if p.type == FrameType.data:
+                        # Received data.
 
-                    # Send ACK (even if frame already received before).
-                    ack = Frame(type=FrameType.ack, id=p.id, data="")
-                    logger.debug("Sending acknowledge:\n{0}".format(ack))
-                    self._simple_frame_transmitter.write_frame(ack.serialize())
+                        # Send ACK (even if frame already received before).
+                        ack = Frame(type=FrameType.ack, id=p.id, data="")
+                        logger.debug("Sending acknowledge:\n{0}".format(ack))
+                        self._simple_frame_transmitter.write_frame(
+                            ack.serialize())
 
-                    for frame in receive_window.receive_frame(p):
-                        self._received_data.put((frame.is_last, frame.data))
+                        for frame in receive_window.receive_frame(p):
+                            self._received_data.put((frame.is_last, frame.data))
 
-                elif p.type == FrameType.ack:
-                    # Received ACK.
+                    elif p.type == FrameType.ack:
+                        # Received ACK.
 
-                    send_window.ack_received(p.id)
-                    
-                else:
-                    assert False
+                        send_window.ack_received(p.id)
+
+                    else:
+                        assert False
+                        
+            time.sleep(1e-6)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

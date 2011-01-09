@@ -141,8 +141,63 @@ def recordtype(typename, field_names, verbose=False, **default_kwds):
         cls.__module__ = sys._getframe(1).f_globals['__name__']
     return cls
 
+def _test():
+    import sys
+    
+    if sys.version[:2] < (2, 7):
+        # Backports.
+        import unittest2 as unittest
+    else:
+        import unittest
+
+    class Tests:
+        class TestRecordtypeInheritance(unittest.TestCase):
+            def setUp(self):
+                class A(recordtype('A', 'a, b, c')):
+                    def __init__(self, *args, **kwargs):
+                        super(A, self).__init__(*args, **kwargs)
+
+                self.A = A
+
+            @unittest.expectedFailure
+            def test_empty_args(self):
+                a = self.A()
+
+            def test_args(self):
+                a = self.A(1, 2, 3)
+
+            def test_kwargs(self):
+                a = self.A(a=1, b=2, c=3)
+
+        class TestRecordtypeInheritanceNested(unittest.TestCase):
+            def setUp(self):
+                class NestedClass(object):
+                    class A(recordtype('A', 'a, b, c')):
+                        def __init__(self, *args, **kwargs):
+                            super(NestedClass.A, self).__init__(*args, **kwargs)
+
+                self.A = NestedClass.A
+
+            @unittest.expectedFailure
+            def test_empty_args(self):
+                a = self.A()
+
+            def test_args(self):
+                a = self.A(1, 2, 3)
+
+            def test_kwargs(self):
+                a = self.A(a=1, b=2, c=3)
+
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
+
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 if __name__ == '__main__':
     import doctest
     TestResults = recordtype('TestResults', 'failed, attempted')
     print TestResults(*doctest.testmod())
+
+    _test()

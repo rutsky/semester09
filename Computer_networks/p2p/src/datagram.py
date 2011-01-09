@@ -30,6 +30,7 @@ import threading
 import logging
 import Queue
 import pprint
+import time
 from recordtype import recordtype
 
 from sliding_window import FrameTransmitter
@@ -40,6 +41,7 @@ class InvalidDatagramException(Exception):
         super(InvalidDatagramException, self).__init__(*args, **kwargs)
 
 # TODO: Inherit from recordtype.
+# TODO: Rename `type' to `protocol'.
 class Datagram(object):
     # Datagram:
     #    1      4     4      4             4     - field size
@@ -238,6 +240,8 @@ class DatagramRouter(object):
 
             handle_in_traffic()
             handle_send_requests()
+
+            time.sleep(1e-6)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -454,7 +458,8 @@ def _test():
                 self.ft2.terminate()
 
     #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig()
+    #logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.CRITICAL)
 
     suite = unittest.TestSuite()
     for k, v in Tests.__dict__.iteritems():
