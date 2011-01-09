@@ -133,7 +133,7 @@ class FrameTransmitter(object):
         self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
         self._max_frame_data = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
-        self._ack_timeout = kwargs.pop('ack_timeout', 0.2)
+        self._ack_timeout = kwargs.pop('ack_timeout', 0.5)
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
         # Queue of tuples (is_last, frame_data).
@@ -258,7 +258,7 @@ class FrameTransmitter(object):
 
         logger = logging.getLogger("{0}._work".format(self))
 
-        logger.debug("Working thread started")
+        logger.info("Working thread started")
 
         send_window = SendWindow(logger, self._window_size,
             itertools.cycle(xrange(self._frame_id_period)),
@@ -271,7 +271,7 @@ class FrameTransmitter(object):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.debug("Exit working thread")
+                logger.info("Exit working thread")
                 return
 
             # Send frames.
@@ -293,7 +293,7 @@ class FrameTransmitter(object):
             for item in send_window.timeout_items(curtime):
                 # TODO: Currently it is selective repeat.
 
-                logger.debug("Resending due to timeout:\n{0}".format(
+                logger.warning("Resending due to timeout:\n{0}".format(
                     str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
                     item.frame.serialize())
