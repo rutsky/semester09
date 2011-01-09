@@ -18,7 +18,7 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["DatagramTransmitter", "Datagram"]
+__all__ = ["DatagramRouter", "Datagram", "datagram"]
 
 """Transmit datagram between two connected hosts.
 """
@@ -27,17 +27,13 @@ import itertools
 import struct
 import binascii
 import threading
-import time
 import logging
 import Queue
-import StringIO
-from collections import deque
+import pprint
 from recordtype import recordtype
 
-from sliding_window import DatagramTransmitter
-
-class DatagramType(object):
-    pass
+from sliding_window import FrameTransmitter
+from routing_table import loopback_routing_table
 
 class InvalidDatagramException(Exception):
     def __init__(self, *args, **kwargs):
@@ -109,10 +105,28 @@ class Datagram(object):
                 type=self.type, src=self.src, dest=self.dest,
                 data=self.data.encode('hex'))
 
+    def __eq__(self, other):
+        return (
+            self.type == other.type and
+            self.src  == other.src  and
+            self.dest == other.dest and
+            self.data == other.data)
+
+    def __ne__(self, other):
+        return not self == other
+
+def datagram(type, src, dest, data):
+    return Datagram(type=type, src=src, dest=dest, data=data)
+
 class DatagramRouter(object):
     def __init__(self, *args, **kwargs):
-        self._frame_transmitter = kwargs.pop('frame_transmitter')
-        super(DatagramTransmitter, self).__init__(*args, **kwargs)
+        self._router_name       = kwargs.pop('router_name')
+        self._link_manager      = kwargs.pop('link_manager')
+        self._routing_table     = kwargs.pop('routing_table', 
+            loopback_routing_table(self._router_name))
+        self._routing_table_lock = threading.RLock()
+
+        super(DatagramRouter, self).__init__(*args, **kwargs)
 
         # Queue of Datagram's.
         self._datagrams_to_send = Queue.Queue()
@@ -138,156 +152,316 @@ class DatagramRouter(object):
     def send(self, datagram):
         self._datagrams_to_send.put(datagram)
 
-    def receive(self, size=0, block=True):
-        assert size >= 0
+    def receive(self, block=True):
+        try:
+            return self._received_datagrams.get(block)
+        except Queue.Empty:
+            return None
 
-        nreceived = 0
-        while size == 0 or nreceived < size:
-            try:
-                yield self._received_data.get(block and (size > 0))
-                nreceived += 1
-            except Queue.Empty:
-                break
-
-    # TODO: Draft.
-    def add_link(self, router_name, frame_transmitter):
-        pass
-
-    def remove_link(self, router_name):
-        pass
+    def set_routing_table(self, new_routing_table):
+        with self._routing_table_lock:
+            self._routing_table = new_routing_table
 
     def _work(self):
-        logger = logging.getLogger("{0}._work".format(self))
+        def handle_datagram(from_router, datagram):
+            # Detect next router for retransmitting.
+            with self._routing_table_lock:
+                next_router = self._routing_table.next_router(datagram.dest)
+            logger.debug("  next router is {0}".format(next_router))
 
-        logger.debug("Working thread started")
+            if next_router == self._router_name:
+                logger.debug("  datagram is addressed for this router, "
+                    "pass it up for processing ")
+
+                # Diagram addressed to current host.
+                self._received_datagrams.put(datagram)
+            else:
+                if next_router in connected_routers:
+                    # Retransmit to next router
+
+                    logger.debug("  retransmit datagram")
+
+                    connected_routers[next_router].send(
+                        datagram.serialize())
+                else:
+                    # Next host is unreachable. Destroy datagram.
+                    logger.warning(
+                        "Datagram next router is unreachable. "
+                        "Received from {0}, "
+                        "next router {1}, "
+                        "datagram:\n{2}".
+                            format(from_router, next_router, str(datagram)))
+                    logger.debug("Routing table:\n{0}".format(
+                        pprint.pformat(connected_routers)))
+
+        def handle_in_traffic():
+            for from_router, frame_transmitter in connected_routers.iteritems():
+                while True:
+                    raw_datagram = frame_transmitter.receive(block=False)
+                    if raw_datagram is None:
+                        break
+
+                    datagram = Datagram.deserialize(raw_datagram)
+
+                    logger.debug("Received datagram from {0}:\n{1}".format(
+                        from_router, str(datagram)))
+
+                    handle_datagram(from_router, datagram)
+
+        def handle_send_requests():
+            while True:
+                try:
+                    datagram = self._datagrams_to_send.get(block=False)
+
+                    logger.debug(
+                        "Handling send request for datagram:\n{0}".format(
+                            str(datagram)))
+
+                    handle_datagram(self._router_name, datagram)
+                except Queue.Empty:
+                    break
+
+        logger = logging.getLogger("{0}._work<router={1}>".format(
+            self, self._router_name))
+
+        logger.info("Working thread started")
 
         while True:
             if self._exit_lock.acquire(False):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.debug("Exit working thread")
+                logger.info("Exit working thread")
                 return
+
+            connected_routers = dict(self._link_manager.connected_links())
+
+            handle_in_traffic()
+            handle_send_requests()
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
     import unittest2 as unittest
-    import gc
     
     from duplex_link import FullDuplexLink, LossFunc
+    from frame import SimpleFrameTransmitter
+    from link_manager import RouterLinkManager
+    from routing_table import loopback_routing_table, LocalRoutingTable
 
-    logging.basicConfig(level=logging.DEBUG)
+    class Tests(object):
+        class TestDatagram(unittest.TestCase):
+            def test_datagram(self):
+                id = 13804
+                data = "Some test data for Datagram class (12334567890)."
+                p = Datagram(type=12, src=100, dest=200, data=data)
+                s = p.serialize()
+                np = Datagram.deserialize(s)
+                self.assertEqual(p.type, np.type)
+                self.assertEqual(p.src, np.src)
+                self.assertEqual(p.dest, np.dest)
+                self.assertEqual(p.data, np.data)
 
-    class TestDatagram(unittest.TestCase):
-        def test_datagram(self):
-            id = 13804
-            data = "Some test data for Datagram class (12334567890)."
-            p = Datagram(type=DatagramType.data, id=id, data=data)
-            s = p.serialize()
-            np = Datagram.deserialize(s)
-            self.assertEqual(p.type, np.type)
-            self.assertEqual(p.id, np.id)
-            self.assertEqual(p.data, np.data)
+                p = Datagram(type=12, src=100, dest=200, data="")
+                s = p.serialize()
+                np = Datagram.deserialize(s)
+                self.assertEqual(p.type, np.type)
+                self.assertEqual(p.src, np.src)
+                self.assertEqual(p.dest, np.dest)
+                self.assertEqual("", np.data)
 
-            p = Datagram(type=DatagramType.data, id=id, data="")
-            s = p.serialize()
-            np = Datagram.deserialize(s)
-            self.assertEqual(p.type, np.type)
-            self.assertEqual(p.id, np.id)
-            self.assertEqual("", np.data)
+            def test_datagram_func(self):
+                d = datagram(1, 2, 3, "test")
+                self.assertEqual(d.type, 1)
+                self.assertEqual(d.src, 2)
+                self.assertEqual(d.dest, 3)
+                self.assertEqual(d.data, "test")
 
-    class TestDatagramTransmitter(unittest.TestCase):
-        def test_transmit(self):
-            a, b = FullDuplexLink()
+        class TestDatagramRouterBasic(unittest.TestCase):
+            def test_basic(self):
+                lm = RouterLinkManager()
 
-            at = SimpleDatagramTransmitter(node=a)
-            bt = SimpleDatagramTransmitter(node=b)
+                dt10 = DatagramRouter(
+                    router_name=10,
+                    link_manager=lm)
 
-            aft = DatagramTransmitter(simple_datagram_transmitter=at)
-            bft = DatagramTransmitter(simple_datagram_transmitter=bt)
+                dt10.terminate()
 
-            text = "Test!"
-            aft.write(text)
-            self.assertEqual(bft.read(len(text)), text)
+        class TestDatagramRouter1(unittest.TestCase):
+            def setUp(self):
+                self.lm1 = RouterLinkManager()
 
-            self.assertEqual(bft.read(block=False), "")
+                self.dt1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=self.lm1)
 
-            text2 = "".join(map(chr, xrange(256)))
-            bft.write(text2)
-            self.assertEqual(aft.read(len(text2)), text2)
+            def test_set_routing_table(self):
+                self.dt1.set_routing_table(loopback_routing_table(1))
+                self.dt1.set_routing_table(LocalRoutingTable(1, self.lm1))
 
-            self.assertEqual(aft.read(block=False), "")
+            def test_transmit(self):
+                self.dt1.send(datagram(1, 1, 2, "unreachable test"))
 
-            text3 = "test"
-            bft.write(text3)
-            
-            text_a = text2
-            text_b = "".join(reversed(text2))
-            aft.write(text_a)
-            aft.write(text_b)
-            self.assertEqual(aft.read(len(text3)), text3)
-            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+                self.assertEqual(self.dt1.receive(block=False), None)
 
-            text4 = text2 * 10
-            aft.write(text4)
-            self.assertEqual(bft.read(len(text4)), text4)
+                self.dt1.send(datagram(13, 1, 1, "test"))
+                d = self.dt1.receive()
+                self.assertEqual(d.type, 13)
+                self.assertEqual(d.src, 1)
+                self.assertEqual(d.dest, 1)
+                self.assertEqual(d.data, "test")
 
-            self.assertEqual(aft.read(block=False), "")
-            self.assertEqual(bft.read(block=False), "")
+                self.dt1.send(datagram(14, 1, 1, "test 1"))
+                self.dt1.send(datagram(15, 1, 1, "test 2"))
 
-            aft.terminate()
-            bft.terminate()
+                d = self.dt1.receive()
+                self.assertEqual(d.type, 14)
+                self.assertEqual(d.src, 1)
+                self.assertEqual(d.dest, 1)
+                self.assertEqual(d.data, "test 1")
 
-        def test_transmit_with_losses(self):
-            a, b = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+                d = self.dt1.receive()
+                self.assertEqual(d.type, 15)
+                self.assertEqual(d.src, 1)
+                self.assertEqual(d.dest, 1)
+                self.assertEqual(d.data, "test 2")
 
-            at = SimpleDatagramTransmitter(node=a)
-            bt = SimpleDatagramTransmitter(node=b)
+            def tearDown(self):
+                self.dt1.terminate()
 
-            aft = DatagramTransmitter(simple_datagram_transmitter=at)
-            bft = DatagramTransmitter(simple_datagram_transmitter=bt)
+        class TestDatagramRouter2(unittest.TestCase):
+            def setUp(self):
+                l1, l2 = FullDuplexLink()
 
-            text = "Test!"
-            aft.write(text)
-            self.assertEqual(bft.read(len(text)), text)
+                sft1 = SimpleFrameTransmitter(node=l1)
+                sft2 = SimpleFrameTransmitter(node=l2)
 
-            self.assertEqual(bft.read(block=False), "")
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
 
-            text2 = "".join(map(chr, xrange(256)))
-            bft.write(text2)
-            self.assertEqual(aft.read(len(text2)), text2)
+                rlm1 = RouterLinkManager()
+                rlm2 = RouterLinkManager()
+                
+                self.dr1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=rlm1,
+                    routing_table=LocalRoutingTable(1, rlm1))
+                self.dr2 = DatagramRouter(
+                    router_name=2,
+                    link_manager=rlm2,
+                    routing_table=LocalRoutingTable(2, rlm2))
 
-            self.assertEqual(aft.read(block=False), "")
+                rlm1.add_link(2, self.ft1)
+                rlm2.add_link(1, self.ft2)
 
-            text3 = "test"
-            bft.write(text3)
+            def test_transmit(self):
+                d12 = datagram(12, 1, 2, "test")
+                self.dr1.send(d12)
+                self.assertEqual(self.dr2.receive(), d12)
 
-            text_a = text2
-            text_b = "".join(reversed(text2))
-            aft.write(text_a)
-            aft.write(text_b)
-            self.assertEqual(aft.read(len(text3)), text3)
-            self.assertEqual(bft.read(len(text_a + text_b)), text_a + text_b)
+                self.dr2.send(d12)
+                self.assertEqual(self.dr2.receive(), d12)
 
-            #text4 = text2 * 100
-            #aft.write(text4)
-            #self.assertEqual(bft.read(len(text4)), text4)
+                d21 = datagram(13, 2, 1, "test 2")
+                self.dr2.send(d21)
+                self.assertEqual(self.dr1.receive(), d21)
 
-            self.assertEqual(aft.read(block=False), "")
-            self.assertEqual(bft.read(block=False), "")
+                self.dr1.send(d21)
+                self.assertEqual(self.dr1.receive(), d21)
 
-            aft.terminate()
-            bft.terminate()
+                text = "".join(map(chr, xrange(256)))
+                d_big = datagram(130, 1, 2, text * 10)
+                self.dr1.send(d_big)
+                self.assertEqual(self.dr2.receive(), d_big)
 
-    #unittest.main()
+                d12_2 = datagram(14, 1, 2, "test 2")
+                d12_3 = datagram(14, 1, 2, "test 3")
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDatagram)
+                self.dr1.send(d12)
+                self.dr1.send(d12_2)
+                self.assertEqual(self.dr2.receive(), d12)
+                self.dr1.send(d12_3)
+                self.assertEqual(self.dr2.receive(), d12_2)
+                self.assertEqual(self.dr2.receive(), d12_3)
+
+            def tearDown(self):
+                self.dr1.terminate()
+                self.dr2.terminate()
+
+                self.ft1.terminate()
+                self.ft2.terminate()
+
+        class TestDatagramRouter2WithLosses(unittest.TestCase):
+            def setUp(self):
+                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+
+                sft1 = SimpleFrameTransmitter(node=l1)
+                sft2 = SimpleFrameTransmitter(node=l2)
+
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+
+                rlm1 = RouterLinkManager()
+                rlm2 = RouterLinkManager()
+
+                self.dr1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=rlm1,
+                    routing_table=LocalRoutingTable(1, rlm1))
+                self.dr2 = DatagramRouter(
+                    router_name=2,
+                    link_manager=rlm2,
+                    routing_table=LocalRoutingTable(2, rlm2))
+
+                rlm1.add_link(2, self.ft1)
+                rlm2.add_link(1, self.ft2)
+
+            def test_transmit(self):
+                d12 = datagram(12, 1, 2, "test")
+                self.dr1.send(d12)
+                self.assertEqual(self.dr2.receive(), d12)
+
+                self.dr2.send(d12)
+                self.assertEqual(self.dr2.receive(), d12)
+
+                d21 = datagram(13, 2, 1, "test 2")
+                self.dr2.send(d21)
+                self.assertEqual(self.dr1.receive(), d21)
+
+                self.dr1.send(d21)
+                self.assertEqual(self.dr1.receive(), d21)
+
+                text = "".join(map(chr, xrange(256)))
+                d_big = datagram(130, 1, 2, text * 10)
+                self.dr1.send(d_big)
+                self.assertEqual(self.dr2.receive(), d_big)
+
+                d12_2 = datagram(14, 1, 2, "test 2")
+                d12_3 = datagram(14, 1, 2, "test 3")
+
+                self.dr1.send(d12)
+                self.dr1.send(d12_2)
+                self.assertEqual(self.dr2.receive(), d12)
+                self.dr1.send(d12_3)
+                self.assertEqual(self.dr2.receive(), d12_2)
+                self.assertEqual(self.dr2.receive(), d12_3)
+
+            def tearDown(self):
+                self.dr1.terminate()
+                self.dr2.terminate()
+
+                self.ft1.terminate()
+                self.ft2.terminate()
+
+    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig()
+
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
+
     unittest.TextTestRunner(verbosity=2).run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDatagramTransmitter)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-    gc.collect()
 
 if __name__ == "__main__":
     _test()

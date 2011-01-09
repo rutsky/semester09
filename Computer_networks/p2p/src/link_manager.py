@@ -25,12 +25,12 @@ __all__ = []
 
 import threading
 
-class LinkManager(object):
+class RouterLinkManager(object):
     """Represents router links to other routers.
     """
 
     def __init__(self):
-        super(LinkManager, self).__init__()
+        super(RouterLinkManager, self).__init__()
 
         # Links dictionary: {router name: frame transmitter}.
         self._links = {}
@@ -68,7 +68,7 @@ def _test():
 
     class TestLinkManager(unittest.TestCase):
         def test_links(self):
-            m = LinkManager()
+            m = RouterLinkManager()
 
             m.add_link("1", 1)
             m.add_link("2", 2)

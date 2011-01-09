@@ -37,6 +37,9 @@ Only networks connected to leaf routers interfaces valued as networks,
 and each router has exactly one of them. All routers connected directly to
 each other.
 
+Data is send from router to router assuming that in true model it is sent
+from/to networks connected to according router.
+
 Routing table is reduced to:
   (destination router, next router)
 When router receives packet (src, dest, data) it looks up next router in 

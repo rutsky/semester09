@@ -146,58 +146,59 @@ def _test():
 
     import unittest2 as unittest
 
-    class TestDuplexLink(unittest.TestCase):
-        def test_link(self):
-            a, b = FullDuplexLink()
+    class Tests(object):
+        class TestDuplexLink(unittest.TestCase):
+            def test_link(self):
+                a, b = FullDuplexLink()
 
-            self.assertEqual(a.read(), "")
-            a.write("test")
-            self.assertEqual(b.read(), "test")
-            b.write("1234")
-            self.assertEqual(a.read(2), "12")
-            self.assertEqual(a.read(), "34")
-            a.write("789")
-            a.write("098")
-            self.assertEqual(b.read(), "789098")
-            self.assertEqual(b.read(), "")
+                self.assertEqual(a.read(), "")
+                a.write("test")
+                self.assertEqual(b.read(), "test")
+                b.write("1234")
+                self.assertEqual(a.read(2), "12")
+                self.assertEqual(a.read(), "34")
+                a.write("789")
+                a.write("098")
+                self.assertEqual(b.read(), "789098")
+                self.assertEqual(b.read(), "")
 
-    class TestLossFunc(unittest.TestCase):
-        def test_losses(self):
-            # TODO: Non determinant tests.
+        class TestLossFunc(unittest.TestCase):
+            def test_losses(self):
+                # TODO: Non determinant tests.
 
-            text = "This is quite long text, do you agree?"
-            print "Working with text: '{0}'".format(text)
+                text = "This is quite long text, do you agree?"
+                print "Working with text: '{0}'".format(text)
 
-            a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0, 0))
-            a.write(text)
-            result = b.read()
-            print "Skipping:          '{0}'".format(result)
-            self.assertLess(len(result), len(text))
+                a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0, 0))
+                a.write(text)
+                result = b.read()
+                print "Skipping:          '{0}'".format(result)
+                self.assertLess(len(result), len(text))
 
-            a, b = FullDuplexLink(loss_func=LossFunc(0, 0.2, 0))
-            a.write(text)
-            result = b.read()
-            print "Modify:            '{0}'".format(result)
-            self.assertEqual(len(result), len(text))
-            self.assertNotEqual(result, text)
+                a, b = FullDuplexLink(loss_func=LossFunc(0, 0.2, 0))
+                a.write(text)
+                result = b.read()
+                print "Modify:            '{0}'".format(result)
+                self.assertEqual(len(result), len(text))
+                self.assertNotEqual(result, text)
 
-            a, b = FullDuplexLink(loss_func=LossFunc(0, 0, 0.2))
-            a.write(text)
-            result = b.read()
-            print "New:               '{0}'".format(result)
-            self.assertGreater(len(result), len(text))
+                a, b = FullDuplexLink(loss_func=LossFunc(0, 0, 0.2))
+                a.write(text)
+                result = b.read()
+                print "New:               '{0}'".format(result)
+                self.assertGreater(len(result), len(text))
 
-            a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0.2, 0.2))
-            a.write(text)
-            result = b.read()
-            print "All:               '{0}'".format(result)
-            self.assertNotEqual(result, text)
+                a, b = FullDuplexLink(loss_func=LossFunc(0.2, 0.2, 0.2))
+                a.write(text)
+                result = b.read()
+                print "All:               '{0}'".format(result)
+                self.assertNotEqual(result, text)
 
-    #unittest.main()
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDuplexLink)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestLossFunc)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
  * May be rename modules according classes they implement? Like 
 "simple_frame_transmitter.py" instead of "frame.py" and "frame_transmitter.py"
 instead of "sliding_window.py".
+ * There is serious performance issue - all waiting of events implemented as 
+infinite cycles. Some event system should be used.
+ * When something fails big chances that process will hang with running in 
+background threads infinite loops.

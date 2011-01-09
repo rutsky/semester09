@@ -125,6 +125,8 @@ class Frame(object):
         else:
             assert False
 
+    # TODO: Implement __eq__(), __ne__().
+
 class FrameTransmitter(object):
     #_frame_id_period = 32768
     _frame_id_period = 200 # DEBUG
@@ -337,124 +339,122 @@ def _test():
     # TODO: Use in separate file to test importing functionality.
 
     import unittest2 as unittest
-    import gc
     
     from duplex_link import FullDuplexLink, LossFunc
 
-    #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.INFO)
+    class Tests(object):
+        class TestFrame(unittest.TestCase):
+            def test_frame(self):
+                id = 13804
+                data = "Some test data for Frame class (12334567890)."
+                p = Frame(type=FrameType.data, id=id, is_last=True, data=data)
+                s = p.serialize()
+                np = Frame.deserialize(s)
+                self.assertEqual(p.type, np.type)
+                self.assertEqual(p.id, np.id)
+                self.assertEqual(p.data, np.data)
 
-    class TestFrame(unittest.TestCase):
-        def test_frame(self):
-            id = 13804
-            data = "Some test data for Frame class (12334567890)."
-            p = Frame(type=FrameType.data, id=id, is_last=True, data=data)
-            s = p.serialize()
-            np = Frame.deserialize(s)
-            self.assertEqual(p.type, np.type)
-            self.assertEqual(p.id, np.id)
-            self.assertEqual(p.data, np.data)
+                p = Frame(type=FrameType.data, id=id, is_last=True, data="")
+                s = p.serialize()
+                np = Frame.deserialize(s)
+                self.assertEqual(p.type, np.type)
+                self.assertEqual(p.id, np.id)
+                self.assertEqual("", np.data)
 
-            p = Frame(type=FrameType.data, id=id, is_last=True, data="")
-            s = p.serialize()
-            np = Frame.deserialize(s)
-            self.assertEqual(p.type, np.type)
-            self.assertEqual(p.id, np.id)
-            self.assertEqual("", np.data)
+        class TestFrameTransmitter(unittest.TestCase):
+            def test_transmit(self):
+                a, b = FullDuplexLink()
 
-    class TestFrameTransmitter(unittest.TestCase):
-        def test_transmit(self):
-            a, b = FullDuplexLink()
+                at = SimpleFrameTransmitter(node=a)
+                bt = SimpleFrameTransmitter(node=b)
 
-            at = SimpleFrameTransmitter(node=a)
-            bt = SimpleFrameTransmitter(node=b)
+                aft = FrameTransmitter(simple_frame_transmitter=at)
+                bft = FrameTransmitter(simple_frame_transmitter=bt)
 
-            aft = FrameTransmitter(simple_frame_transmitter=at)
-            bft = FrameTransmitter(simple_frame_transmitter=bt)
+                text = "Test!"
+                aft.send(text)
+                self.assertEqual(bft.receive(), text)
 
-            text = "Test!"
-            aft.send(text)
-            self.assertEqual(bft.receive(), text)
+                self.assertEqual(bft.receive(block=False), None)
 
-            self.assertEqual(bft.receive(block=False), None)
+                text2 = "".join(map(chr, xrange(256)))
+                bft.send(text2)
+                self.assertEqual(aft.receive(), text2)
 
-            text2 = "".join(map(chr, xrange(256)))
-            bft.send(text2)
-            self.assertEqual(aft.receive(), text2)
+                self.assertEqual(aft.receive(block=False), None)
 
-            self.assertEqual(aft.receive(block=False), None)
+                text3 = "test"
+                bft.send(text3)
 
-            text3 = "test"
-            bft.send(text3)
-            
-            text_a = text2
-            text_b = "".join(reversed(text2))
-            aft.send(text_a)
-            aft.send(text_b)
-            self.assertEqual(aft.receive(), text3)
-            self.assertEqual(bft.receive(), text_a)
-            self.assertEqual(bft.receive(), text_b)
+                text_a = text2
+                text_b = "".join(reversed(text2))
+                aft.send(text_a)
+                aft.send(text_b)
+                self.assertEqual(aft.receive(), text3)
+                self.assertEqual(bft.receive(), text_a)
+                self.assertEqual(bft.receive(), text_b)
 
-            text4 = text2 * 10
-            aft.send(text4)
-            self.assertEqual(bft.receive(), text4)
+                text4 = text2 * 10
+                aft.send(text4)
+                self.assertEqual(bft.receive(), text4)
 
-            self.assertEqual(aft.receive(block=False), None)
-            self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(aft.receive(block=False), None)
+                self.assertEqual(bft.receive(block=False), None)
 
-            aft.terminate()
-            bft.terminate()
+                aft.terminate()
+                bft.terminate()
 
-        def test_transmit_with_losses(self):
-            a, b = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+            def test_transmit_with_losses(self):
+                a, b = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
 
-            at = SimpleFrameTransmitter(node=a)
-            bt = SimpleFrameTransmitter(node=b)
+                at = SimpleFrameTransmitter(node=a)
+                bt = SimpleFrameTransmitter(node=b)
 
-            aft = FrameTransmitter(simple_frame_transmitter=at)
-            bft = FrameTransmitter(simple_frame_transmitter=bt)
+                aft = FrameTransmitter(simple_frame_transmitter=at)
+                bft = FrameTransmitter(simple_frame_transmitter=bt)
 
-            text = "Test!"
-            aft.send(text)
-            self.assertEqual(bft.receive(), text)
+                text = "Test!"
+                aft.send(text)
+                self.assertEqual(bft.receive(), text)
 
-            self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(bft.receive(block=False), None)
 
-            text2 = "".join(map(chr, xrange(256)))
-            bft.send(text2)
-            self.assertEqual(aft.receive(), text2)
+                text2 = "".join(map(chr, xrange(256)))
+                bft.send(text2)
+                self.assertEqual(aft.receive(), text2)
 
-            self.assertEqual(aft.receive(block=False), None)
+                self.assertEqual(aft.receive(block=False), None)
 
-            text3 = "test"
-            bft.send(text3)
+                text3 = "test"
+                bft.send(text3)
 
-            text_a = text2
-            text_b = "".join(reversed(text2))
-            aft.send(text_a)
-            aft.send(text_b)
-            self.assertEqual(aft.receive(), text3)
-            self.assertEqual(bft.receive(), text_a)
-            self.assertEqual(bft.receive(), text_b)
+                text_a = text2
+                text_b = "".join(reversed(text2))
+                aft.send(text_a)
+                aft.send(text_b)
+                self.assertEqual(aft.receive(), text3)
+                self.assertEqual(bft.receive(), text_a)
+                self.assertEqual(bft.receive(), text_b)
 
-            #text4 = text2 * 10
-            #aft.send(text4)
-            #self.assertEqual(bft.receive(), text4)
+                #text4 = text2 * 10
+                #aft.send(text4)
+                #self.assertEqual(bft.receive(), text4)
 
-            self.assertEqual(aft.receive(block=False), None)
-            self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(aft.receive(block=False), None)
+                self.assertEqual(bft.receive(block=False), None)
 
-            aft.terminate()
-            bft.terminate()
+                aft.terminate()
+                bft.terminate()
 
-    #unittest.main()
+    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.INFO)
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestFrame)
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
+
     unittest.TextTestRunner(verbosity=2).run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestFrameTransmitter)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-    gc.collect()
 
 if __name__ == "__main__":
     _test()

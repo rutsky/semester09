@@ -18,7 +18,8 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["RoutingTable", "StaticRoutingTable"]
+__all__ = ["RoutingTable", "StaticRoutingTable", "loopback_routing_table",
+    "LocalRoutingTable"]
 
 """Routing table implementation.
 
@@ -42,29 +43,73 @@ class RoutingTable(object):
         pass
 
 class StaticRoutingTable(RoutingTable):
-    def __init__(self, dest_to_host):
+    def __init__(self, dest_to_next_router):
         super(StaticRoutingTable, self).__init__()
-        self.dest_to_host = dest_to_host
+        self.dest_to_next_router = dest_to_next_router
 
-    def next_hop(self, dest):
-        return self.dest_to_host.setdefault(dest, None)
+    def next_router(self, dest):
+        return self.dest_to_next_router.setdefault(dest, None)
+
+def loopback_routing_table(router_name):
+    return StaticRoutingTable({router_name: router_name})
+
+class LocalRoutingTable(RoutingTable):
+    def __init__(self, router_name, router_link_manager):
+        super(LocalRoutingTable, self).__init__()
+        self._router_name = router_name
+        self._link_manager = router_link_manager
+
+    def next_router(self, dest):
+        if (dest == self._router_name or
+                dest in self._link_manager.connected_routers()):
+            return dest
+        else:
+            return None
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
     import unittest2 as unittest
     import logging
-    
+
+    from link_manager import RouterLinkManager
+
+    class Tests(object):
+        class TestStaticRoutingTable(unittest.TestCase):
+            def test_routing(self):
+                rt = StaticRoutingTable({'A': '1', 'B': 2, 'C': 3})
+
+                self.assertEqual(rt.next_router('B'), 2)
+                self.assertEqual(rt.next_router('E'), None)
+
+            def test_loopback(self):
+                rt = loopback_routing_table("A")
+
+                self.assertEqual(rt.next_router("A"), "A")
+                self.assertEqual(rt.next_router("B"), None)
+
+        class TestLocalRoutingTable(unittest.TestCase):
+            def test_routing(self):
+                lm = RouterLinkManager()
+
+                rt = LocalRoutingTable(1, lm)
+
+                self.assertEqual(rt.next_router(1), 1)
+                self.assertEqual(rt.next_router(2), None)
+
+                lm.add_link(2, None)
+                self.assertEqual(rt.next_router(2), 2)
+
+                self.assertEqual(rt.next_router(1), 1)
+                self.assertEqual(rt.next_router(3), None)
+
     logging.basicConfig(level=logging.DEBUG)
 
-    class TestStaticRoutingTable(unittest.TestCase):
-        def test_routing(self):
-            rt = StaticRoutingTable({'A': '1', 'B': 2, 'C': 3})
-            
-            self.assertEqual(rt.next_hop('B'), 2)
-            self.assertEqual(rt.next_hop('E'), None)
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestStaticRoutingTable)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 if __name__ == "__main__":

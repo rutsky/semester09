@@ -80,35 +80,38 @@ def _test():
     import unittest2 as unittest
     from duplex_link import FullDuplexLink
 
-    class TestFrameTransmitter(unittest.TestCase):
-        def test_link(self):
-            a, b = FullDuplexLink()
+    class Tests(object):
+        class TestFrameTransmitter(unittest.TestCase):
+            def test_link(self):
+                a, b = FullDuplexLink()
 
-            at = SimpleFrameTransmitter(node=a)
-            bt = SimpleFrameTransmitter(node=b)
+                at = SimpleFrameTransmitter(node=a)
+                bt = SimpleFrameTransmitter(node=b)
 
-            self.assertEqual(at.read_frame(block=False), None)
-            self.assertEqual(bt.read_frame(block=False), None)
+                self.assertEqual(at.read_frame(block=False), None)
+                self.assertEqual(bt.read_frame(block=False), None)
 
-            at.write_frame("")
-            self.assertEqual(bt.read_frame(), "")
+                at.write_frame("")
+                self.assertEqual(bt.read_frame(), "")
 
-            bt.write_frame("A")
-            self.assertEqual(at.read_frame(), "A")
+                bt.write_frame("A")
+                self.assertEqual(at.read_frame(), "A")
 
-            self.assertEqual(at.read_frame(block=False), None)
+                self.assertEqual(at.read_frame(block=False), None)
 
-            test = "Th{fes}is is{es} the {fe} te{ec}st! 12345".format(
-                fe=SimpleFrameTransmitter.frame_end,
-                ec=SimpleFrameTransmitter.esc_char,
-                fes=SimpleFrameTransmitter.frame_end_subst,
-                es=SimpleFrameTransmitter.esc_subst)
-            at.write_frame(test)
-            self.assertEqual(bt.read_frame(), test)
+                test = "Th{fes}is is{es} the {fe} te{ec}st! 12345".format(
+                    fe=SimpleFrameTransmitter.frame_end,
+                    ec=SimpleFrameTransmitter.esc_char,
+                    fes=SimpleFrameTransmitter.frame_end_subst,
+                    es=SimpleFrameTransmitter.esc_subst)
+                at.write_frame(test)
+                self.assertEqual(bt.read_frame(), test)
 
-    #unittest.main()
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestFrameTransmitter)
     unittest.TextTestRunner(verbosity=2).run(suite)
     
 if __name__ == "__main__":
