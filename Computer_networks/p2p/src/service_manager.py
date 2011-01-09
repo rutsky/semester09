@@ -58,7 +58,8 @@ def datagram_to_packet(datagram):
 class RouterServiceManager(object):
     # `_receive_queue' and `_send_queue' are queues for received and send
     # ServiceDatagram's accordingly.
-    class _ServiceInfo(namedtuple('_ServiceInfoBase', 'receive_queue send_queue')):
+    class _ServiceInfo(
+            namedtuple('_ServiceInfoBase', 'receive_queue send_queue')):
         def send(self, packet):
             assert isinstance(packet, Packet)
 
