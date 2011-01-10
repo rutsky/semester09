@@ -102,6 +102,11 @@ def _test():
                 t.reset()
                 self.assertEqual(t.is_expired(), True)
 
+        class TestDummyTimer(unittest.TestCase):
+            def test_main(self):
+                t = DummyTimer()
+                self.assertEqual(t.is_expired(), False)
+
     logging.basicConfig(level=logging.DEBUG)
 
     suite = unittest.TestSuite()
