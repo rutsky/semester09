@@ -18,40 +18,98 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = []
+__all__ = ["Timer", "DummyTimer"]
 
-class Clock(object):
+import time
+
+# TODO: Pretty ungeneric and ugly timers.
+
+class Timer(object):
+    def __init__(self, period, start=True, start_time=None):
+        super(Timer, self).__init__()
+        self.period = period
+        if start:
+            self.start_time = \
+                start_time if start_time is not None else time.time()
+        else:
+            self.start_time = None
+
+    def is_expired(self):
+        """Returns is timer expired or is timer not started.
+        """
+        return (self.start_time is None or
+            self.start_time + self.period <= time.time())
+
+    def restart(self, restart_time=None):
+        self.start_time = \
+            restart_time if restart_time is not None else time.time()
+
+    def reset(self):
+        self.start_time = None
+
+class DummyTimer(object):
     def __init__(self):
-        super(Clock, self).__init__()
-        self._time = 0
-        # TODO: Use some priority queue.
-        # Dictionary: end_time -> [timer_object].
-        self._timers = {}
+        super(DummyTimer, self).__init__()
 
-    def time(self):
-        return self._time;
+    def is_expired(self):
+        return False
 
-    class _Timer(self):
-        def __init__(self, clock, time_interval):
-            assert time_interval >= 0
-            self._clock = clock
-            self._end_time = self._clock.time() + time_interval
+def _test():
+    # TODO: Use in separate file to test importing functionality.
 
-        def end_time(self):
-            return self._end_time
+    import unittest2 as unittest
+    import logging
 
-        def __bool__(self):
-            return self._clock >= self._end_time
+    class Tests(object):
+        # TODO: Assume that computer is not very slow.
+                
+        class TestTimer(unittest.TestCase):
+            def test_constructor(self):
+                t = Timer(0.3)
 
-    def create_timer(self, time_interval):
-        assert time_interval >= 0
-        timer = _Timer(self, time_interval)
-        self._timers.setdefault(timer.end_time(), []).append(timer)
+            def test_with_time(self):
+                t = Timer(0.3)
 
-    def wait(self, time_interval):
-        assert time_interval >= 0
-        self._time += time_interval
-        while self._timers:
-            t = sorted(self._timers.keys())[0]
-            if t <= self.time():
-                del self._timers[t]
+                self.assertEqual(t.is_expired(), False)
+                self.assertEqual(t.is_expired(), False)
+                self.assertEqual(t.is_expired(), False)
+                self.assertEqual(t.is_expired(), False)
+
+                time.sleep(0.3)
+                self.assertEqual(t.is_expired(), True)
+                self.assertEqual(t.is_expired(), True)
+
+            def test_without_time(self):
+                t = Timer(0.3, start=False)
+
+                self.assertEqual(t.is_expired(), True)
+
+                t.restart()
+                self.assertEqual(t.is_expired(), False)
+
+                time.sleep(0.3)
+                self.assertEqual(t.is_expired(), True)
+
+                t.restart()
+                self.assertEqual(t.is_expired(), False)
+
+                time.sleep(0.3)
+                self.assertEqual(t.is_expired(), True)
+
+                t.restart()
+                self.assertEqual(t.is_expired(), False)
+
+                t.reset()
+                self.assertEqual(t.is_expired(), True)
+
+    logging.basicConfig(level=logging.DEBUG)
+
+    suite = unittest.TestSuite()
+    for k, v in Tests.__dict__.iteritems():
+        if k.startswith('Test'):
+            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
+
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+if __name__ == "__main__":
+    _test()
