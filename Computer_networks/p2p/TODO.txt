@@ -7,3 +7,4 @@ infinite cycles. Some event system should be used.
 background threads infinite loops.
  * In protocols above frame transfer we relying on correct fragments 
 delivering between connected routers which is not really good (and realistic).
+ * Implement blocking reads with timeout.
