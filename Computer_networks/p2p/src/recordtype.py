@@ -144,6 +144,7 @@ def recordtype(typename, field_names, verbose=False, **default_kwds):
 def _test():
     import sys
     
+    import sys
     if sys.version[:2] < (2, 7):
         # Backports.
         import unittest2 as unittest
