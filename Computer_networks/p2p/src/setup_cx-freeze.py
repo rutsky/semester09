@@ -26,7 +26,11 @@ if sys.platform == "win32":
     base = "Win32GUI"
 
 setup(
-    name        = "network_model",
-    version     = "0.1",
-    description = "Network emulation test model",
-    executables = [Executable("main.py", base=base)])
+    name="network_model",
+    version="0.1",
+    description="Network emulation test model",
+    author='Vladimir Rutsky',
+    author_email='altsysrq@gmail.com',
+    url='http://github.com/rutsky/semester09/',
+    executables=[Executable("main.py", base=base)],
+    )
