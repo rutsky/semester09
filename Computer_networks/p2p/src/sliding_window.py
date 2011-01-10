@@ -33,6 +33,7 @@ import Queue
 import StringIO
 from collections import deque
 from recordtype import recordtype
+from encodings import hex_codec
 
 from frame import SimpleFrameTransmitter
 
