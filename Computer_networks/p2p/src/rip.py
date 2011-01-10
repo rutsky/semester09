@@ -47,6 +47,8 @@ class RIPData(recordtype('RIPDataBase', 'distances')):
         return RIPData(distances)
 
 class RIPService(object):
+    protocol = 520
+
     def __init__(self, router_name, router_link_manager, service_transmitter,
             **kwargs):
         self._inf_dist       = kwargs.pop('inf_dist',       16)
@@ -312,7 +314,7 @@ def _test():
                     link_manager=self.lm1)
 
                 self.sm1 = RouterServiceManager(self.dt1)
-                self.rip_st1 = self.sm1.register_service(520)
+                self.rip_st1 = self.sm1.register_service(RIPService.protocol)
 
             def test_constructor(self):
                 rs1 = RIPService(1, self.lm1, self.rip_st1)
@@ -341,7 +343,7 @@ def _test():
                     link_manager=self.lm1)
 
                 self.sm1 = RouterServiceManager(self.dt1)
-                self.rip_st1 = self.sm1.register_service(520)
+                self.rip_st1 = self.sm1.register_service(RIPService.protocol)
 
                 self.rs1 = RIPService(1, self.lm1, self.rip_st1,
                     update_period=0.3, inf_timeout=0.6, remove_timeout=1)
@@ -421,8 +423,8 @@ def _test():
                 self.sm1 = RouterServiceManager(self.dr1)
                 self.sm2 = RouterServiceManager(self.dr2)
 
-                self.rip_st1 = self.sm1.register_service(520)
-                self.rip_st2 = self.sm2.register_service(520)
+                self.rip_st1 = self.sm1.register_service(RIPService.protocol)
+                self.rip_st2 = self.sm2.register_service(RIPService.protocol)
 
                 self.rs1 = RIPService(1, rlm1, self.rip_st1,
                     update_period=0.3, inf_timeout=0.6, remove_timeout=1)
@@ -507,8 +509,8 @@ def _test():
                 self.sm1 = RouterServiceManager(self.dr1)
                 self.sm2 = RouterServiceManager(self.dr2)
 
-                self.rip_st1 = self.sm1.register_service(520)
-                self.rip_st2 = self.sm2.register_service(520)
+                self.rip_st1 = self.sm1.register_service(RIPService.protocol)
+                self.rip_st2 = self.sm2.register_service(RIPService.protocol)
 
                 self.rs1 = RIPService(1, rlm1, self.rip_st1,
                     update_period=0.3, inf_timeout=0.6, remove_timeout=1)
