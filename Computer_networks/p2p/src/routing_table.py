@@ -54,7 +54,7 @@ class DynamicRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router, lock):
         super(DynamicRoutingTable, self).__init__()
         self.dest_to_next_router = dest_to_next_router
-        self.lock = dest_to_next_router
+        self.lock = lock
 
     def next_router(self, dest):
         with self.lock:

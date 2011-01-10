@@ -26,10 +26,11 @@ __all__ = []
 import threading
 import pickle
 import time
+import logging
 
 from recordtype import recordtype
 
-from routing_table import RoutingTable
+from routing_table import DynamicRoutingTable
 from service_manager import Packet
 from timer import Timer, DummyTimer
 
@@ -94,7 +95,7 @@ class RIPService(object):
 
             # Set distance to infinity for destination routers route to which
             # leaded through disconnected routers.
-            for to_router, dest_router_info in dest_routers_info:
+            for to_router, dest_router_info in dest_routers_info.iteritems():
                 if dest_router_info.next_router == to_router:
                     dest_router_info.dist = self._inf_dist
 
@@ -162,7 +163,7 @@ class RIPService(object):
 
         def handle_receive():
             while True:
-                result = self._service_transmitter.get_data(block=False)
+                result = self._service_transmitter.receive_data(block=False)
                 if result is None:
                     break
                 src, raw_data = result
@@ -184,7 +185,7 @@ class RIPService(object):
             with self._dest_to_next_router_lock:
                 self._dest_to_next_router.clear()
 
-                for dest, dest_rr_info in dest_routers_info:
+                for dest, dest_rr_info in dest_routers_info.iteritems():
                     if dest_rr_info.dist < self._inf_dist:
                         assert dest not in self._dest_to_next_router
                         assert dest_rr_info.next_router in connected_routers
@@ -203,8 +204,8 @@ class RIPService(object):
         # {destination router name: DestRouterInfo()}
         # `timer' member is for last time information about destination router
         # was updated,
-        dest_routers_info = {self.name:
-            DestRouterInfo(dist=0, next_router=self.name, timer=DummyTimer())}
+        dest_routers_info = {self._router_name:
+            DestRouterInfo(dist=0, next_router=self._router_name, timer=DummyTimer())}
 
         # {connected router: ConnectedRouterInfo()}
         # `timer' member if for last time information packet was sent to
@@ -249,6 +250,8 @@ def _test():
     import logging
 
     from link_manager import RouterLinkManager
+    from datagram import DatagramRouter
+    from service_manager import RouterServiceManager
 
     class Tests(object):
         class TestRIPData(unittest.TestCase):
@@ -262,6 +265,34 @@ def _test():
 
                 self.assertEqual(rd, new_rd)
                 self.assertEqual(new_rd.distances, distances)
+
+        class TestRIPServiceBasic(unittest.TestCase):
+            def setUp(self):
+                self.lm1 = RouterLinkManager()
+
+                self.dt1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=self.lm1)
+
+                self.sm1 = RouterServiceManager(self.dt1)
+                self.rip_st1 = self.sm1.register_service(520)
+
+            def test_constructor(self):
+                rs1 = RIPService(1, self.lm1, self.rip_st1)
+
+                rs1.terminate()
+
+            def test_main(self):
+                rs1 = RIPService(1, self.lm1, self.rip_st1)
+
+                self.assertEqual(rs1.dynamic_routing_table().next_router(1),
+                    None)
+
+                rs1.terminate()
+
+            def tearDown(self):
+                self.sm1.terminate()
+                self.dt1.terminate()
 
     logging.basicConfig(level=logging.DEBUG)
 
