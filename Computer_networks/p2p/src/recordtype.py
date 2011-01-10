@@ -145,7 +145,7 @@ def _test():
     import sys
     
     import sys
-    if sys.version[:2] < (2, 7):
+    if sys.version_info[:2] < (2, 7):
         # Backports.
         import unittest2 as unittest
     else:
