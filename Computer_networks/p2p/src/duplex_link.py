@@ -144,7 +144,11 @@ def FullDuplexLink(a_to_b_queue=None, b_to_a_queue=None, loss_func=None):
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
-    import unittest2 as unittest
+    if sys.version[:2] < (2, 7):
+        # Backports.
+        import unittest2 as unittest
+    else:
+        import unittest
 
     class Tests(object):
         class TestDuplexLink(unittest.TestCase):

@@ -61,7 +61,11 @@ class RouterLinkManager(object):
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
-    import unittest2 as unittest
+    if sys.version[:2] < (2, 7):
+        # Backports.
+        import unittest2 as unittest
+    else:
+        import unittest
     import logging
     
     class Tests(object):
