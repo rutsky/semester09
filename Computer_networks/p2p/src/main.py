@@ -19,23 +19,28 @@ __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
 import sys
-from PyQt4 import QtCore, QtGui
+
+from PyQt4 import QtGui, QtCore, uic
+
+class MainWindow(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+
+        uic.loadUi('main_window.ui', self)
 
 def main():
     app = QtGui.QApplication(sys.argv)
 
-    scene = QtGui.QGraphicsScene()
-    scene.addText("Hello, world!")
+    w = MainWindow()
+    w.show()
 
-    view = QtGui.QGraphicsView(scene)
-    view.show()
+    #scene = QtGui.QGraphicsScene()
+    #scene.addText("Hello, world!")
 
-    app.exec_()
+    #view = QtGui.QGraphicsView(scene)
+    #view.show()
+
+    sys.exit(app.exec_())
     
-    import time
-    time.sleep(1)
-    
-    print "Test!"
-
 if __name__ == "__main__":
     main()
