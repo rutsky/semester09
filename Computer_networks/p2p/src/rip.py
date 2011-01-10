@@ -122,7 +122,8 @@ class RIPService(object):
                     dist=1, next_router=router_name,
                     timer=DummyTimer())
                 logger.debug(
-                    "Add route: Directly connected: {dest}:({dist}, {next})".format(
+                    "Add route: Directly connected: "
+                    "{dest}:({dist}, {next})".format(
                         dest=router_name,
                         dist=dest_routers_info[router_name].dist,
                         next=dest_routers_info[router_name].next_router))
@@ -236,7 +237,8 @@ class RIPService(object):
         # `timer' member is for last time information about destination router
         # was updated,
         dest_routers_info = {self._router_name:
-            DestRouterInfo(dist=0, next_router=self._router_name, timer=DummyTimer())}
+            DestRouterInfo(dist=0, next_router=self._router_name,
+                timer=DummyTimer())}
 
         # {connected router: ConnectedRouterInfo()}
         # `timer' member if for last time information packet was sent to
