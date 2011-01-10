@@ -245,7 +245,7 @@ class DatagramRouter(object):
             handle_in_traffic()
             handle_send_requests()
 
-            time.sleep(1e-6)
+            time.sleep(1e-3)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

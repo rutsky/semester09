@@ -195,20 +195,23 @@ class FrameTransmitter(object):
             def can_add_next(self):
                 return len(self.queue) < self.maxlen
 
-            def add_next(self, is_last, data, curtime=time.time()):
+            def add_next(self, is_last, data, curtime=None):
                 assert self.can_add_next()
 
+                using_curtime = curtime if curtime is not None else time.time()
+                
                 frame_id = self.frame_id_it.next()                
                 p = Frame(type=FrameType.data, id=frame_id, is_last=is_last,
                     data=data)
-                item = SendWindow.SendItem(frame_id, curtime, p, False)
+                item = SendWindow.SendItem(frame_id, using_curtime, p, False)
                 self.queue.append(item)
 
                 return item
 
-            def timeout_items(self, curtime=time.time()):
+            def timeout_items(self, curtime=None):
+                using_curtime = curtime if curtime is not None else time.time()
                 for item in self.queue:
-                    if item.time + self.timeout < curtime:
+                    if item.time + self.timeout < using_curtime:
                         yield item
 
             def ack_received(self, frame_id):
@@ -335,7 +338,7 @@ class FrameTransmitter(object):
                     else:
                         assert False
                         
-            time.sleep(1e-6)
+            time.sleep(1e-3)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

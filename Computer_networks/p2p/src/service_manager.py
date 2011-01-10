@@ -164,7 +164,7 @@ class RouterServiceManager(object):
             deliver_to_network()
             deliver_from_network()
 
-            time.sleep(1e-6)
+            time.sleep(1e-3)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
