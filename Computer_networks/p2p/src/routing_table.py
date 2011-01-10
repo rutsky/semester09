@@ -42,6 +42,9 @@ class RoutingTable(object):
         """
         pass
 
+    def table(self):
+        pass
+
 class StaticRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router):
         super(StaticRoutingTable, self).__init__()
@@ -50,6 +53,10 @@ class StaticRoutingTable(RoutingTable):
     def next_router(self, dest):
         return self.dest_to_next_router.setdefault(dest, None)
 
+    def table(self):
+        return self.dest_to_next_router
+
+# TODO: Add tests.
 class DynamicRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router, lock):
         super(DynamicRoutingTable, self).__init__()
@@ -59,6 +66,10 @@ class DynamicRoutingTable(RoutingTable):
     def next_router(self, dest):
         with self.lock:
             return self.dest_to_next_router.setdefault(dest, None)
+
+    def table(self):
+        with self.lock:
+            return self.dest_to_next_router.copy()
 
 def loopback_routing_table(router_name):
     return StaticRoutingTable({router_name: router_name})
@@ -70,11 +81,17 @@ class LocalRoutingTable(RoutingTable):
         self._link_manager = router_link_manager
 
     def next_router(self, dest):
+        return self.table().setdefault(dest, None)
         if (dest == self._router_name or
                 dest in self._link_manager.connected_routers()):
             return dest
         else:
             return None
+
+    def table(self):
+        routers = self._link_manager.connected_routers()
+        routers.append(self._router_name)
+        return dict(zip(routers, routers))
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -87,16 +104,16 @@ def _test():
     class Tests(object):
         class TestStaticRoutingTable(unittest.TestCase):
             def test_routing(self):
-                rt = StaticRoutingTable({'A': '1', 'B': 2, 'C': 3})
+                rt = StaticRoutingTable({1: 1, 2: 2, 3: 3})
 
-                self.assertEqual(rt.next_router('B'), 2)
-                self.assertEqual(rt.next_router('E'), None)
+                self.assertEqual(rt.next_router(2), 2)
+                self.assertEqual(rt.next_router(4), None)
 
             def test_loopback(self):
-                rt = loopback_routing_table("A")
+                rt = loopback_routing_table(1)
 
-                self.assertEqual(rt.next_router("A"), "A")
-                self.assertEqual(rt.next_router("B"), None)
+                self.assertEqual(rt.next_router(1), 1)
+                self.assertEqual(rt.next_router(2), None)
 
         class TestLocalRoutingTable(unittest.TestCase):
             def test_routing(self):

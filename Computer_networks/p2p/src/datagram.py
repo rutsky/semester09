@@ -44,12 +44,12 @@ class InvalidDatagramException(Exception):
 # TODO: Rename `type' to `protocol'.
 class Datagram(object):
     # Datagram:
-    #    1      4     4      4             4     - field size
-    # *------*-----*------*-----*--  --*-------*
-    # | type | src | dest | len | data | CRC32 |
-    # *------*-----*------*-----*--  --*-------*
+    #     2      4     4      4             4     - field size
+    # *-------*-----*------*-----*--  --*-------*
+    # | proto | src | dest | len | data | CRC32 |
+    # *-------*-----*------*-----*--  --*-------*
 
-    format_string = '<BLLL{0}sL'
+    format_string = '<HLLL{0}sL'
     empty_datagram_size = struct.calcsize(format_string.format(0))
 
     def __init__(self, *args, **kwargs):
@@ -172,9 +172,12 @@ class DatagramRouter(object):
         def handle_datagram(from_router, datagram):
             # Detect next router for retransmitting.
             with self._routing_table_lock:
+                routing_table = self._routing_table.table()
                 next_router = self._routing_table.next_router(datagram.dest)
             logger.debug("  next router is {0}".format(next_router))
 
+            # TODO: Duplicating functionality - at least RIP routing table
+            # contains entries for directly connected routers.
             if next_router == self._router_name:
                 logger.debug("  datagram is addressed for this router, "
                     "pass it up for processing ")
@@ -198,7 +201,7 @@ class DatagramRouter(object):
                         "datagram:\n{2}".
                             format(from_router, next_router, str(datagram)))
                     logger.debug("Routing table:\n{0}".format(
-                        pprint.pformat(connected_routers)))
+                        pprint.pformat(routing_table)))
 
         def handle_in_traffic():
             for from_router, frame_transmitter in connected_routers.iteritems():

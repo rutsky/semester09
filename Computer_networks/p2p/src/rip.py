@@ -89,10 +89,10 @@ class RIPService(object):
 
             if new_connected_routers:
                 logger.debug("Connected to routers: {0}".format(
-                    new_connected_routers))
+                    list(new_connected_routers)))
             if new_disconnected_routers:
                 logger.debug("Disconnected from routers: {0}".format(
-                    new_disconnected_routers))
+                    list(new_disconnected_routers)))
 
             # Remove disconnected routers from list.
             for router_name in new_disconnected_routers:
@@ -104,6 +104,10 @@ class RIPService(object):
             for to_router, dest_router_info in dest_routers_info.iteritems():
                 if dest_router_info.next_router in new_disconnected_routers:
                     dest_router_info.dist = self._inf_dist
+                    logger.debug(
+                        "Remove route: Due to disconnection: {dest}:({dist}, {next})".format(
+                            dest=to_router, dist=dest_router_info.dist,
+                            next=dest_router_info.next_router))
 
             # Add connected hosts to according list.
             for router_name in new_connected_routers:
@@ -116,7 +120,12 @@ class RIPService(object):
             for router_name in new_connected_routers:
                 dest_routers_info[router_name] = DestRouterInfo(
                     dist=1, next_router=router_name,
-                    timer=Timer(self._inf_timeout))
+                    timer=DummyTimer())
+                logger.debug(
+                    "Add route: Directly connected: {dest}:({dist}, {next})".format(
+                        dest=router_name,
+                        dist=dest_routers_info[router_name].dist,
+                        next=dest_routers_info[router_name].next_router))
 
         def connected_routers_with_timeout():
             for rr_name, connected_rr_info in connected_rrs_info.iteritems():
@@ -130,11 +139,21 @@ class RIPService(object):
                     dest_router_info.dist = self._inf_dist
                     dest_router_info.timer = Timer(self._remove_timeout)
 
+                    logger.debug(
+                        "Remove route: Due to timeout: "
+                        "{dest}:({dist}, {next})".format(
+                            dest=dest, dist=dest_router_info.dist,
+                            next=dest_router_info.next_router))
+
         def remove_timeout_distances():
-            for dest, dest_router_info in dest_routers_info.iteritems():
+            for dest, dest_router_info in dest_routers_info.items():
                 if (dest_router_info.dist == self._inf_dist and
                         dest_router_info.timer.is_expired()):
                     del dest_routers_info[dest]
+
+                    logger.debug(
+                        "Due to big timout removing target: {dest}".format(
+                            dest=dest))
 
         def distances_for_sending(to_router):
             distances = []
@@ -179,13 +198,19 @@ class RIPService(object):
                 for dist, dest in rip_data.distances:
                     dist = max(dist + 1, self._inf_dist)
                     if (dest not in dest_routers_info or
-                            dest_routers_info[dist].dist > dist or
-                            dest_routers_info[dist].next_router == src):
-                        dest_routers_info[dist] = DestRouterInfo(
+                            dest_routers_info[dest].dist > dist or
+                            dest_routers_info[dest].next_router == src):
+                        dest_routers_info[dest] = DestRouterInfo(
                             dist=dist, next_router=src,
                             timer=Timer(self._inf_timeout
                                 if dist != self._inf_dist
                                 else self._remove_timeout))
+
+                        logger.debug(
+                            "Update route with received: "
+                            "{dest}:({dist}, {next})".format(
+                                dest=dest, dist=dist,
+                                next=src))
 
         def update_routing_table():
             with self._dest_to_next_router_lock:
@@ -452,7 +477,47 @@ def _test():
                 self.ft1.terminate()
                 self.ft2.terminate()
 
+        class TestRIPService2WithLosses(TestRIPService2):
+            def setUp(self):
+                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+
+                sft1 = SimpleFrameTransmitter(node=l1)
+                sft2 = SimpleFrameTransmitter(node=l2)
+
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+
+                rlm1 = RouterLinkManager()
+                rlm2 = RouterLinkManager()
+
+                self.dr1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=rlm1,
+                    routing_table=LocalRoutingTable(1, rlm1))
+                self.dr2 = DatagramRouter(
+                    router_name=2,
+                    link_manager=rlm2,
+                    routing_table=LocalRoutingTable(2, rlm2))
+
+                rlm1.add_link(2, self.ft1)
+                rlm2.add_link(1, self.ft2)
+
+                self.sm1 = RouterServiceManager(self.dr1)
+                self.sm2 = RouterServiceManager(self.dr2)
+
+                self.rip_st1 = self.sm1.register_service(520)
+                self.rip_st2 = self.sm2.register_service(520)
+
+                self.rs1 = RIPService(1, rlm1, self.rip_st1,
+                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                self.rs2 = RIPService(2, rlm2, self.rip_st2,
+                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+
+                self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
+                self.dr2.set_routing_table(self.rs1.dynamic_routing_table())
+
     logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.CRITICAL)
 
     suite = unittest.TestSuite()
     for k, v in Tests.__dict__.iteritems():
