@@ -96,8 +96,8 @@ class RIPService(object):
 
             # Remove disconnected routers from list.
             for router_name in new_disconnected_routers:
-                assert router_name in connected_routers_info
-                del connected_routers_info[router_name]
+                assert router_name in connected_rrs_info
+                del connected_rrs_info[router_name]
 
             # Set distance to infinity for destination routers route to which
             # leaded through disconnected routers.
@@ -107,9 +107,9 @@ class RIPService(object):
 
             # Add connected hosts to according list.
             for router_name in new_connected_routers:
-                router_name not in connected_routers_info
-                connected_routers_info[router_name] = \
-                    ConnectedRouterInfo(Timer())
+                router_name not in connected_rrs_info
+                connected_rrs_info[router_name] = \
+                    ConnectedRouterInfo(Timer(self._update_period))
 
             # Update routing information for directly connected destination
             # routers.
@@ -119,9 +119,9 @@ class RIPService(object):
                     timer=Timer(self._inf_timeout))
 
         def connected_routers_with_timeout():
-            for router_name, connected_router_info in connected_routers_info:
-                if connected_router_info.timer.is_expired():
-                    yield router_name
+            for rr_name, connected_rr_info in connected_rrs_info.iteritems():
+                if connected_rr_info.timer.is_expired():
+                    yield rr_name
 
         def set_infinite_timeout_distances():
             for dest, dest_router_info in dest_routers_info.iteritems():
@@ -165,7 +165,7 @@ class RIPService(object):
                 self._service_transmitter.send_data(to_router, raw_data)
 
                 # Mark time data was sent.
-                connected_routers_info[to_router].timer.restart()
+                connected_rrs_info[to_router].timer.restart()
 
         def handle_receive():
             while True:
@@ -205,8 +205,7 @@ class RIPService(object):
 
         DestRouterInfo = recordtype(
             'DestRouterInfo', 'dist next_router timer')
-        ConnectedRouterInfo = recordtype(
-            'ConnectedRouterInfo', 'timer')
+        ConnectedRouterInfo = recordtype('ConnectedRouterInfo', 'timer')
 
         # {destination router name: DestRouterInfo()}
         # `timer' member is for last time information about destination router
@@ -217,7 +216,7 @@ class RIPService(object):
         # {connected router: ConnectedRouterInfo()}
         # `timer' member if for last time information packet was sent to
         # router}
-        connected_routers_info = {}
+        connected_rrs_info = {}
 
         connected_routers = frozenset()
         while True:
@@ -256,9 +255,13 @@ def _test():
     import unittest2 as unittest
     import logging
 
+    from duplex_link import FullDuplexLink, LossFunc
+    from frame import SimpleFrameTransmitter
+    from sliding_window import FrameTransmitter
     from link_manager import RouterLinkManager
     from datagram import DatagramRouter
     from service_manager import RouterServiceManager
+    from routing_table import loopback_routing_table, LocalRoutingTable
 
     class Tests(object):
         class TestRIPData(unittest.TestCase):
@@ -362,6 +365,92 @@ def _test():
                 self.rs1.terminate()
                 self.sm1.terminate()
                 self.dt1.terminate()
+
+        class TestRIPService2(unittest.TestCase):
+            def setUp(self):
+                l1, l2 = FullDuplexLink()
+
+                sft1 = SimpleFrameTransmitter(node=l1)
+                sft2 = SimpleFrameTransmitter(node=l2)
+
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+
+                rlm1 = RouterLinkManager()
+                rlm2 = RouterLinkManager()
+
+                self.dr1 = DatagramRouter(
+                    router_name=1,
+                    link_manager=rlm1,
+                    routing_table=LocalRoutingTable(1, rlm1))
+                self.dr2 = DatagramRouter(
+                    router_name=2,
+                    link_manager=rlm2,
+                    routing_table=LocalRoutingTable(2, rlm2))
+
+                rlm1.add_link(2, self.ft1)
+                rlm2.add_link(1, self.ft2)
+
+                self.sm1 = RouterServiceManager(self.dr1)
+                self.sm2 = RouterServiceManager(self.dr2)
+
+                self.rip_st1 = self.sm1.register_service(520)
+                self.rip_st2 = self.sm2.register_service(520)
+
+                self.rs1 = RIPService(1, rlm1, self.rip_st1,
+                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                self.rs2 = RIPService(2, rlm2, self.rip_st2,
+                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+
+                self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
+                self.dr2.set_routing_table(self.rs1.dynamic_routing_table())
+
+            def test_transmit(self):
+                s1_77 = self.sm1.register_service(77)
+                s2_77 = self.sm2.register_service(77)
+
+                d12 = Packet(1, 2, "test")
+                s1_77.send(d12)
+                self.assertEqual(s2_77.receive(), d12)
+                s2_77.send(d12)
+                self.assertEqual(s2_77.receive(), d12)
+
+                s1_33 = self.sm1.register_service(33)
+                s2_33 = self.sm2.register_service(33)
+
+                d21 = Packet(2, 1, "test 2")
+                s2_33.send(d21)
+                self.assertEqual(s1_33.receive(), d21)
+                s1_33.send(d21)
+                self.assertEqual(s1_33.receive(), d21)
+
+                text = "".join(map(chr, xrange(256)))
+                d_big = Packet(1, 2, text * 10)
+                s1_33.send(d_big)
+                self.assertEqual(s2_33.receive(), d_big)
+
+                d12_2 = Packet(1, 2, "test 2")
+                d12_3 = Packet(1, 2, "test 3")
+
+                s1_33.send(d12)
+                s1_33.send(d12_2)
+                self.assertEqual(s2_33.receive(), d12)
+                s1_77.send(d12_3)
+                self.assertEqual(s2_77.receive(), d12_3)
+                self.assertEqual(s2_33.receive(), d12_2)
+
+            def tearDown(self):
+                self.rs1.terminate()
+                self.rs2.terminate()
+
+                self.sm1.terminate()
+                self.sm2.terminate()
+
+                self.dr1.terminate()
+                self.dr2.terminate()
+
+                self.ft1.terminate()
+                self.ft2.terminate()
 
     logging.basicConfig(level=logging.DEBUG)
 
