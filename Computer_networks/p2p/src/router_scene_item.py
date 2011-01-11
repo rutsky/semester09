@@ -30,17 +30,22 @@ class RouterItem(QGraphicsItem):
         # Circle color
         self.color = QColor(255, 0, 0)
 
+        # Circle radius.
+        self.radius = 15
         # Circle (width, height).
-        self.size = QSizeF(30, 30)
+        self.size = QSizeF(2 * self.radius, 2 * self.radius)
         self.size_rect = QRectF(
             QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
             self.size)
+
+        self.links = set()
 
     def boundingRect(self):
         adjust = 2
 
         return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
 
+    # TODO: Is circular shape really needed?
     def shape(self):
         path = QPainterPath()
         path.addEllipse(self.size_rect)
@@ -50,6 +55,15 @@ class RouterItem(QGraphicsItem):
         painter.setPen(QPen(Qt.black, 0))
         painter.setBrush(QBrush(self.color))
         painter.drawEllipse(self.size_rect)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            for link in self.links:
+                link.adjust()
+        return super(RouterItem, self).itemChange(change, value)
+
+    def add_link(self, link):
+        self.link.insert(link)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -63,17 +77,25 @@ def _test():
     import logging
 
     class Tests(object):
-        # TODO: Assume that computer is not very slow.
-                
         class TestRouterItem(unittest.TestCase):
             def setUp(self):
                 self.app = QApplication(sys.argv)
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
+                self.scene.setSceneRect(-150, -105, 300, 210)
                 self.view.setScene(self.scene)
 
             def test_main(self):
                 self.scene.addItem(RouterItem())
+
+                self.view.show()
+                self.app.exec_()
+
+            def test_change_position(self):
+                ri = RouterItem()
+                self.scene.addItem(ri)
+
+                ri.setPos(50, 50)
 
                 self.view.show()
                 self.app.exec_()
