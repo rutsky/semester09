@@ -18,37 +18,38 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["MainWindow"]
+__all__ = ["RouterItem"]
 
-import PyQt4.uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-from PyQt4.Qt import *
 
-from router_scene_item import RouterItem
-
-class MainWindow(QMainWindow):
+class RouterItem(QGraphicsItem):
     def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super(RouterItem, self).__init__(parent)
 
-        PyQt4.uic.loadUi('main_window.ui', self)
+        # Circle color
+        self.color = QColor(255, 0, 0)
 
-        self.scene = QGraphicsScene()
+        # Circle (width, height).
+        self.size = QSizeF(30, 30)
+        self.size_rect = QRectF(
+            QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
+            self.size)
 
-        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
-        self.scene.setSceneRect(-150, -105, 300, 210)
+    def boundingRect(self):
+        adjust = 2
 
-        self.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
-        self.graphicsView.setViewportUpdateMode(
-            QGraphicsView.BoundingRectViewportUpdate)
-        self.graphicsView.setRenderHint(QPainter.Antialiasing)
-        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+        return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
 
-        self.scene.addText("Hello, world!")
-        self.scene.addItem(RouterItem())
+    def shape(self):
+        path = QPainterPath()
+        path.addEllipse(self.size_rect)
+        return path
 
-        self.graphicsView.setScene(self.scene)
+    def paint(self, painter, style_option, widget):
+        painter.setPen(QPen(Qt.black, 0))
+        painter.setBrush(QBrush(self.color))
+        painter.drawEllipse(self.size_rect)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -64,7 +65,7 @@ def _test():
     class Tests(object):
         # TODO: Assume that computer is not very slow.
                 
-        class TestMainWindow(unittest.TestCase):
+        class TestRouterItem(unittest.TestCase):
             pass
 
     logging.basicConfig(level=logging.DEBUG)
