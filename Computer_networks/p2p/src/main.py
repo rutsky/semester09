@@ -20,9 +20,6 @@ __license__ = "GPL"
 
 import sys
 
-# Workaround for cx_Freeze.
-import sip
-
 from PyQt4 import QtGui, QtCore, uic
 
 class MainWindow(QtGui.QMainWindow):

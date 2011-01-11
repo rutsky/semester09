@@ -25,6 +25,9 @@ base = None
 if sys.platform == "win32":
     base = "Win32GUI"
 
+include_files = [('main_window.ui', 'main_window.ui')]
+includes = ['sip', 'encodings.ascii', 'encodings.utf_8', 'encodings.hex_codec']
+
 setup(
     name="network_model",
     version="0.1",
@@ -33,10 +36,8 @@ setup(
     author_email='altsysrq@gmail.com',
     options={
         'build_exe': {
-            'include_files':
-                [('main_window.ui', 'main_window.ui')],
-            'includes':
-                ['encodings.ascii', 'encodings.utf_8'],
+            'include_files': include_files,
+            'includes': includes,
             },
         },
     executables=[Executable("main.py", base=base)],

@@ -31,7 +31,6 @@ import logging
 import Queue
 import pprint
 import time
-from encodings import hex_codec
 from recordtype import recordtype
 
 from sliding_window import FrameTransmitter
