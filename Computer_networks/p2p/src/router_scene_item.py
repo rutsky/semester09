@@ -31,7 +31,7 @@ class RouterItem(QGraphicsItem):
         self.color = QColor(255, 0, 0)
 
         # Circle radius.
-        self.radius = 15
+        self.radius = 15.0
         # Circle (width, height).
         self.size = QSizeF(2 * self.radius, 2 * self.radius)
         self.size_rect = QRectF(
@@ -63,7 +63,7 @@ class RouterItem(QGraphicsItem):
         return super(RouterItem, self).itemChange(change, value)
 
     def add_link(self, link):
-        self.link.insert(link)
+        self.links.add(link)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -77,7 +77,7 @@ def _test():
     import logging
 
     class Tests(object):
-        class TestRouterItem(unittest.TestCase):
+        class TestRouterItemGUI(unittest.TestCase):
             def setUp(self):
                 self.app = QApplication(sys.argv)
                 self.view = QGraphicsView()
@@ -85,11 +85,12 @@ def _test():
                 self.scene.setSceneRect(-150, -105, 300, 210)
                 self.view.setScene(self.scene)
 
-            def test_main(self):
-                self.scene.addItem(RouterItem())
-
+            def tearDown(self):
                 self.view.show()
                 self.app.exec_()
+
+            def test_main(self):
+                self.scene.addItem(RouterItem())
 
             def test_change_position(self):
                 ri = RouterItem()
@@ -97,8 +98,31 @@ def _test():
 
                 ri.setPos(50, 50)
 
-                self.view.show()
-                self.app.exec_()
+            def test_add_link(self):
+                ri = RouterItem()
+                link = "dummy"
+                ri.add_link(link)
+                self.assertEqual(ri.links, set([link]))
+
+            def _test_add_link_with_adjustment(self):
+                ri = RouterItem()
+                class Link(object):
+                    def __init__(self):
+                        self.adjusted = False
+
+                    def adjust(self):
+                        self.adjusted = True
+
+                link = Link()
+
+                self.assertFalse(link.adjusted)
+                ri.add_link(link)
+                self.assertFalse(link.adjusted)
+                self.assertEqual(ri.links, set([link]))
+
+                # TODO
+                #ri.setPos(10, 10)
+                #self.assertTrue(link.adjusted)
 
     logging.basicConfig(level=logging.DEBUG)
 
