@@ -66,6 +66,17 @@ def main():
     w = MainWindow()
 
     scene = QGraphicsScene()
+
+    scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+    scene.setSceneRect(-150, -105, 300, 210)
+    
+    w.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
+    w.graphicsView.setViewportUpdateMode(
+        QGraphicsView.BoundingRectViewportUpdate)
+    w.graphicsView.setRenderHint(QPainter.Antialiasing)
+    w.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+    w.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+
     scene.addText("Hello, world!")
     scene.addItem(RouterItem())
 
