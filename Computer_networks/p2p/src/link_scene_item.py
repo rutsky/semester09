@@ -79,7 +79,7 @@ class LinkItem(QGraphicsItem):
         line = QLineF(self.src_point, self.dest_point)
         assert not qFuzzyCompare(line.length(), 0.)
 
-        painter.setPen(QPen(Qt.black, 1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setPen(QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line)
 
 def _test():

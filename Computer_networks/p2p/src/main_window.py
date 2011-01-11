@@ -50,6 +50,11 @@ class MainWindow(QMainWindow):
 
         self.graphicsView.setScene(self.scene)
 
+        self.timer_id = self.startTimer(1000 / 25)
+
+    def timerEvent(self, event):
+        pass
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
@@ -62,12 +67,19 @@ def _test():
     import logging
 
     class Tests(object):
-        # TODO: Assume that computer is not very slow.
-                
         class TestMainWindow(unittest.TestCase):
-            pass
+            def setUp(self):
+                self.app = QApplication(sys.argv)
 
-    logging.basicConfig(level=logging.DEBUG)
+            def tearDown(self):
+                self.app.exec_()
+
+            def test_main(self):
+                self.w = MainWindow()
+                self.w.show()
+
+    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.CRITICAL)
 
     suite = unittest.TestSuite()
     for k, v in Tests.__dict__.iteritems():
