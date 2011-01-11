@@ -33,6 +33,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
 
     w = MainWindow()
+    #time.sleep(0.01)
     w.show()
 
     #scene = QtGui.QGraphicsScene()
