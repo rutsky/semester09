@@ -1,4 +1,4 @@
-#  This file is part of network emulation test model.
+#  This program is part of network emulation test model.
 #
 #  Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
 #
@@ -15,8 +15,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-env = Environment(tools=["default"])
-Export('env')
+import os
 
-SConscript("report/SConscript", variant_dir="build/report")
-SConscript("src/SConscript")
+Import('env')
+
+sources = Glob("*.py", strings=True) + Glob("*.ui", strings=True)
+
+build_cx_freeze = env.Command("build_cx-freeze", sources,
+    "python setup_cx-freeze.py build",
+    chdir=True)
+
+Default()
