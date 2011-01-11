@@ -26,6 +26,6 @@ setup(
     description="Network emulation test model",
     author='Vladimir Rutsky',
     author_email='altsysrq@gmail.com',
-    url='http://github.com/rutsky/semester09/',
+    #data_files=[('', ['main_window.ui'])], # don't work
     py_modules = ['main'],
     )
