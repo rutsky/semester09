@@ -19,63 +19,10 @@ __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
 import sys
-import time
 
-import PyQt4.uic
 from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4.Qt import *
 
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
-
-        PyQt4.uic.loadUi('main_window.ui', self)
-
-        self.scene = QGraphicsScene()
-
-        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
-        self.scene.setSceneRect(-150, -105, 300, 210)
-
-        self.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
-        self.graphicsView.setViewportUpdateMode(
-            QGraphicsView.BoundingRectViewportUpdate)
-        self.graphicsView.setRenderHint(QPainter.Antialiasing)
-        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
-
-        self.scene.addText("Hello, world!")
-        self.scene.addItem(RouterItem())
-
-        self.graphicsView.setScene(self.scene)
-
-class RouterItem(QGraphicsItem):
-    def __init__(self, parent=None):
-        super(RouterItem, self).__init__(parent)
-
-        # Circle color
-        self.color = QColor(255, 0, 0)
-
-        # Circle (width, height).
-        self.size = QSizeF(30, 30)
-        self.size_rect = QRectF(
-            QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
-            self.size)
-
-    def boundingRect(self):
-        adjust = 2
-
-        return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
-
-    def shape(self):
-        path = QPainterPath()
-        path.addEllipse(self.size_rect)
-        return path
-
-    def paint(self, painter, style_option, widget):
-        painter.setPen(QPen(Qt.black, 0))
-        painter.setBrush(QBrush(self.color))
-        painter.drawEllipse(self.size_rect)
+from main_window import MainWindow
 
 def main():
     app = QApplication(sys.argv)
