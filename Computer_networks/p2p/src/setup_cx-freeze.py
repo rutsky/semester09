@@ -31,6 +31,8 @@ setup(
     description="Network emulation test model",
     author='Vladimir Rutsky',
     author_email='altsysrq@gmail.com',
-    url='http://github.com/rutsky/semester09/',
+    options={'build_exe':
+        {'include_files':
+            [('main_window.ui', 'main_window.ui')]}},
     executables=[Executable("main.py", base=base)],
     )
