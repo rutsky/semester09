@@ -66,7 +66,17 @@ def _test():
         # TODO: Assume that computer is not very slow.
                 
         class TestRouterItem(unittest.TestCase):
-            pass
+            def setUp(self):
+                self.app = QApplication(sys.argv)
+                self.view = QGraphicsView()
+                self.scene = QGraphicsScene()
+                self.view.setScene(self.scene)
+
+            def test_main(self):
+                self.scene.addItem(RouterItem())
+
+                self.view.show()
+                self.app.exec_()
 
     logging.basicConfig(level=logging.DEBUG)
 
