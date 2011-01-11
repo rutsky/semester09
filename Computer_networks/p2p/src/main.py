@@ -23,6 +23,7 @@ import time
 
 import PyQt4.uic
 from PyQt4 import QtGui, QtCore
+from PyQt4.Qt import Qt
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -34,6 +35,21 @@ class RouterItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super(RouterItem, self).__init__(parent)
 
+    def boundingRect(self):
+        adjust = 2
+        return QtCore.QRectF(-10, -10, 20, 20).adjusted(
+            -adjust, -adjust, adjust, adjust)
+
+    def shape(self):
+        path = QtGui.QPainterPath()
+        path.addEllipse(-10, -10, 20, 20)
+        return path
+
+    def paint(self, painter, style_option, widget):
+        painter.setPen(QtGui.QPen(Qt.black, 0))
+        painter.setBrush(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+        painter.drawEllipse(-10, -10, 20, 20)
+
 def main():
     app = QtGui.QApplication(sys.argv)
 
@@ -41,6 +57,7 @@ def main():
 
     scene = QtGui.QGraphicsScene()
     scene.addText("Hello, world!")
+    scene.addItem(RouterItem())
 
     w.graphicsView.setScene(scene)
 
