@@ -32,6 +32,23 @@ class MainWindow(QMainWindow):
 
         PyQt4.uic.loadUi('main_window.ui', self)
 
+        self.scene = QGraphicsScene()
+
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+        self.scene.setSceneRect(-150, -105, 300, 210)
+
+        self.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
+        self.graphicsView.setViewportUpdateMode(
+            QGraphicsView.BoundingRectViewportUpdate)
+        self.graphicsView.setRenderHint(QPainter.Antialiasing)
+        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+
+        self.scene.addText("Hello, world!")
+        self.scene.addItem(RouterItem())
+
+        self.graphicsView.setScene(self.scene)
+
 class RouterItem(QGraphicsItem):
     def __init__(self, parent=None):
         super(RouterItem, self).__init__(parent)
@@ -40,7 +57,7 @@ class RouterItem(QGraphicsItem):
         self.color = QColor(255, 0, 0)
 
         # Circle (width, height).
-        self.size = QSizeF(10, 10)
+        self.size = QSizeF(30, 30)
         self.size_rect = QRectF(
             QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
             self.size)
@@ -64,24 +81,6 @@ def main():
     app = QApplication(sys.argv)
 
     w = MainWindow()
-
-    scene = QGraphicsScene()
-
-    scene.setItemIndexMethod(QGraphicsScene.NoIndex)
-    scene.setSceneRect(-150, -105, 300, 210)
-    
-    w.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
-    w.graphicsView.setViewportUpdateMode(
-        QGraphicsView.BoundingRectViewportUpdate)
-    w.graphicsView.setRenderHint(QPainter.Antialiasing)
-    w.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-    w.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
-
-    scene.addText("Hello, world!")
-    scene.addItem(RouterItem())
-
-    w.graphicsView.setScene(scene)
-
     w.show()
 
     sys.exit(app.exec_())
