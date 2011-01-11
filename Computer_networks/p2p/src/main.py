@@ -36,6 +36,9 @@ class RouterItem(QGraphicsItem):
     def __init__(self, parent=None):
         super(RouterItem, self).__init__(parent)
 
+        # Circle color
+        self.color = QColor(255, 0, 0)
+
         # Circle (width, height).
         self.size = QSizeF(10, 10)
         self.size_rect = QRectF(
@@ -54,7 +57,7 @@ class RouterItem(QGraphicsItem):
 
     def paint(self, painter, style_option, widget):
         painter.setPen(QPen(Qt.black, 0))
-        painter.setBrush(QBrush(QColor(255, 0, 0)))
+        painter.setBrush(QBrush(self.color))
         painter.drawEllipse(self.size_rect)
 
 def main():
