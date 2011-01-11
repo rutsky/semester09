@@ -22,40 +22,47 @@ import sys
 import time
 
 import PyQt4.uic
-from PyQt4 import QtGui, QtCore
-from PyQt4.Qt import Qt
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.Qt import *
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
         PyQt4.uic.loadUi('main_window.ui', self)
 
-class RouterItem(QtGui.QGraphicsItem):
+class RouterItem(QGraphicsItem):
     def __init__(self, parent=None):
         super(RouterItem, self).__init__(parent)
 
+        # Circle (width, height).
+        self.size = QSizeF(10, 10)
+        self.size_rect = QRectF(
+            QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
+            self.size)
+
     def boundingRect(self):
         adjust = 2
-        return QtCore.QRectF(-10, -10, 20, 20).adjusted(
-            -adjust, -adjust, adjust, adjust)
+
+        return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
 
     def shape(self):
-        path = QtGui.QPainterPath()
-        path.addEllipse(-10, -10, 20, 20)
+        path = QPainterPath()
+        path.addEllipse(self.size_rect)
         return path
 
     def paint(self, painter, style_option, widget):
-        painter.setPen(QtGui.QPen(Qt.black, 0))
-        painter.setBrush(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
-        painter.drawEllipse(-10, -10, 20, 20)
+        painter.setPen(QPen(Qt.black, 0))
+        painter.setBrush(QBrush(QColor(255, 0, 0)))
+        painter.drawEllipse(self.size_rect)
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     w = MainWindow()
 
-    scene = QtGui.QGraphicsScene()
+    scene = QGraphicsScene()
     scene.addText("Hello, world!")
     scene.addItem(RouterItem())
 
