@@ -30,18 +30,21 @@ class MainWindow(QtGui.QMainWindow):
 
         PyQt4.uic.loadUi('main_window.ui', self)
 
+class RouterItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None):
+        super(RouterItem, self).__init__(parent)
+
 def main():
     app = QtGui.QApplication(sys.argv)
 
     w = MainWindow()
-    #time.sleep(0.01)
+
+    scene = QtGui.QGraphicsScene()
+    scene.addText("Hello, world!")
+
+    w.graphicsView.setScene(scene)
+
     w.show()
-
-    #scene = QtGui.QGraphicsScene()
-    #scene.addText("Hello, world!")
-
-    #view = QtGui.QGraphicsView(scene)
-    #view.show()
 
     sys.exit(app.exec_())
     
