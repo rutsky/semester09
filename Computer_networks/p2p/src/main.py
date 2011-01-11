@@ -19,6 +19,7 @@ __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
 import sys
+import time
 
 from PyQt4 import QtGui, QtCore, uic
 
@@ -32,6 +33,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
 
     w = MainWindow()
+    #time.sleep(0.01)
     w.show()
 
     #scene = QtGui.QGraphicsScene()
