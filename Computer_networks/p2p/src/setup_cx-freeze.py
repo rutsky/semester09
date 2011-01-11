@@ -31,8 +31,13 @@ setup(
     description="Network emulation test model",
     author='Vladimir Rutsky',
     author_email='altsysrq@gmail.com',
-    options={'build_exe':
-        {'include_files':
-            [('main_window.ui', 'main_window.ui')]}},
+    options={
+        'build_exe': {
+            'include_files':
+                [('main_window.ui', 'main_window.ui')],
+            'includes':
+                ['encodings.ascii', 'encodings.utf_8'],
+            },
+        },
     executables=[Executable("main.py", base=base)],
     )
