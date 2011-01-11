@@ -21,13 +21,14 @@ __license__ = "GPL"
 import sys
 import time
 
-from PyQt4 import QtGui, QtCore, uic
+import PyQt4.uic
+from PyQt4 import QtGui, QtCore
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        uic.loadUi('main_window.ui', self)
+        PyQt4.uic.loadUi('main_window.ui', self)
 
 def main():
     app = QtGui.QApplication(sys.argv)
