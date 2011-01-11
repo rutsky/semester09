@@ -27,6 +27,11 @@ class RouterItem(QGraphicsItem):
     def __init__(self, parent=None):
         super(RouterItem, self).__init__(parent)
 
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
+        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setZValue(-1)
+
         # Circle color
         self.color = QColor(255, 0, 0)
 
