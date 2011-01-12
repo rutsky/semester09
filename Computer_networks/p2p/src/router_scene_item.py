@@ -1,3 +1,4 @@
+import timer
 #  This file is part of network emulation test model.
 #
 #  Copyright (C) 2010, 2011  Vladimir Rutsky <altsysrq@gmail.com>
@@ -20,13 +21,21 @@ __license__ = "GPL"
 
 __all__ = ["RouterItem"]
 
+from itertools import ifilter
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+
+from link_manager import RouterLinkManager
+from datagram import DatagramRouter
+from service_manager import RouterServiceManager
+from rip import RIPService
 
 class RouterItem(QGraphicsItem):
     def __init__(self, name, parent=None):
         super(RouterItem, self).__init__(parent)
 
+        assert isinstance(name, int) and 0 <= name < 2**32
         self.name = name
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
@@ -38,7 +47,7 @@ class RouterItem(QGraphicsItem):
         self.color = QColor(255, 0, 0)
 
         # Circle radius.
-        self.radius = 15.0
+        self.radius = 10.0
         # Circle (width, height).
         self.size = QSizeF(2 * self.radius, 2 * self.radius)
         self.size_rect = QRectF(
@@ -46,6 +55,36 @@ class RouterItem(QGraphicsItem):
             self.size)
 
         self.links = set()
+
+        self.link_manager = RouterLinkManager()
+        self.datagram_router = None
+        self.service_manager = None
+        self.rip_service_transmitter = None
+        self.rip_service = None
+
+    def start_networking(self):
+        self.datagram_router = DatagramRouter(
+            router_name=self.name,
+            link_manager=self.link_manager)
+        self.service_manager = RouterServiceManager(self.datagram_router)
+        self.rip_service_transmitter = self.service_manager.register_service(
+            RIPService.protocol)
+
+        self.rip_service = RIPService(self.name, self.link_manager,
+            self.rip_service_transmitter)
+
+        self.datagram_router.set_routing_table(
+            self.rip_service.dynamic_routing_table())
+
+    def stop_networking(self):
+        self.rip_service.terminate()
+        self.service_manager.terminate()
+        self.datagram_router.terminate()
+
+        self.datagram_router = None
+        self.service_manager = None
+        self.rip_service_transmitter = None
+        self.rip_service = None
 
     def boundingRect(self):
         adjust = 2
@@ -106,10 +145,22 @@ def _test():
         import unittest
     import logging
 
+    from timer import Timer
+
+    def process_events_with_timeout(timeout):
+        app = QCoreApplication.instance()
+        timer = Timer(timeout)
+        while any(map(lambda w: w.isVisible(),
+                app.topLevelWidgets())):
+            app.processEvents()
+            if timer.is_expired():
+                for w in ifilter(lambda w: w.isVisible(),
+                        app.topLevelWidgets()):
+                    w.close()
+
     class Tests(object):
         class TestRouterItemGUI(unittest.TestCase):
             def setUp(self):
-                self.app = QApplication(sys.argv)
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
                 self.scene.setSceneRect(-150, -105, 300, 210)
@@ -119,16 +170,14 @@ def _test():
                 self.finished = False
 
             def tearDown(self):
-                if self.finished:
-                    self.view.show()
-                    self.app.exec_()
+                self.view.show()
+
+                process_events_with_timeout(timeout)
 
             def test_main(self):
                 ri = RouterItem(1)
                 self.assertEqual(ri.name, 1)
                 self.scene.addItem(ri)
-
-                self.finished = True
 
             def test_change_position(self):
                 ri = RouterItem(1)
@@ -136,15 +185,11 @@ def _test():
 
                 ri.setPos(50, 50)
 
-                self.finished = True
-
             def test_add_link(self):
                 ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
                 self.assertEqual(ri.links, set([link]))
-
-                self.finished = True
 
             def _test_add_link_with_adjustment(self):
                 ri = RouterItem(1)
@@ -168,6 +213,23 @@ def _test():
                 
                 self.finished = True
 
+        class TestRouterItem(unittest.TestCase):
+            def tearDown(self):
+                process_events_with_timeout(timeout)
+
+            def test_start_stop_networking(self):
+                ri = RouterItem(1)
+
+                self.assertEqual(ri.rip_service, None)
+                ri.start_networking()
+                self.assertNotEqual(ri.rip_service, None)
+                ri.stop_networking()
+                self.assertEqual(ri.rip_service, None)
+
+    # Only one instance QApplication should exist.
+    app = QApplication(sys.argv)
+    timeout = 1
+
     logging.basicConfig(level=logging.DEBUG)
 
     suite = unittest.TestSuite()
@@ -176,6 +238,8 @@ def _test():
             suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
     unittest.TextTestRunner(verbosity=2).run(suite)
+
+    app.exit()
 
 if __name__ == "__main__":
     _test()
