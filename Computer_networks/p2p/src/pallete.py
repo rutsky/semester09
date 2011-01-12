@@ -18,7 +18,7 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["Pallete"]
+__all__ = ["Palette", "palette"]
 
 import random
 
@@ -31,10 +31,10 @@ def random_color(generator=random):
     return color
 
 class Palette(object):
-    def __init__(self):
+    def __init__(self, seed=0):
         super(Palette, self).__init__()
 
-        self._generator = random.Random(0)
+        self._generator = random.Random(seed)
 
         self._palette = []
         
@@ -44,6 +44,8 @@ class Palette(object):
             self._palette.append(random_color(self._generator))
 
         return self._palette[idx]
+
+palette = Palette()
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
