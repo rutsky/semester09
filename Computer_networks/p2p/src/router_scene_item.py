@@ -116,14 +116,19 @@ def _test():
                 self.scene.addRect(-150, -105, 300 - 1, 210 - 1, QPen(Qt.black))
                 self.view.setScene(self.scene)
 
+                self.finished = False
+
             def tearDown(self):
-                self.view.show()
-                self.app.exec_()
+                if self.finished:
+                    self.view.show()
+                    self.app.exec_()
 
             def test_main(self):
                 ri = RouterItem(1)
                 self.assertEqual(ri.name, 1)
                 self.scene.addItem(ri)
+
+                self.finished = True
 
             def test_change_position(self):
                 ri = RouterItem(1)
@@ -131,11 +136,15 @@ def _test():
 
                 ri.setPos(50, 50)
 
+                self.finished = True
+
             def test_add_link(self):
                 ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
                 self.assertEqual(ri.links, set([link]))
+
+                self.finished = True
 
             def _test_add_link_with_adjustment(self):
                 ri = RouterItem(1)
@@ -156,6 +165,8 @@ def _test():
                 # TODO
                 #ri.setPos(10, 10)
                 #self.assertTrue(link.adjusted)
+                
+                self.finished = True
 
     logging.basicConfig(level=logging.DEBUG)
 

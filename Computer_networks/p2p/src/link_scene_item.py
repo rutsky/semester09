@@ -105,15 +105,17 @@ def _test():
                 self.scene.addRect(-150, -105, 300 - 1, 210 - 1, QPen(Qt.black))
                 self.view.setScene(self.scene)
 
+                self.finished = False
+
             def tearDown(self):
-                self.view.show()
-                self.app.exec_()
+                if self.finished:
+                    self.view.show()
+                    self.app.exec_()
 
             def test_main(self):
-                ri1 = RouterItem()
-                ri2 = RouterItem()
+                ri1 = RouterItem(1)
+                ri2 = RouterItem(2)
                 
-
                 self.scene.addItem(ri1)
                 self.scene.addItem(ri2)
 
@@ -122,6 +124,8 @@ def _test():
 
                 li = LinkItem(ri1, ri2)
                 self.scene.addItem(li)
+
+                self.finished = True
 
     logging.basicConfig(level=logging.DEBUG)
 

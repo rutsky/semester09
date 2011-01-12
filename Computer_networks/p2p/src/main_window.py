@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         self.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.scene.addText("Hello, world!")
+        #self.scene.addText("Hello, world!")
 
         # debug
         self.scene_rect_item = self.scene.addRect(
@@ -63,21 +63,23 @@ class MainWindow(QMainWindow):
                 scene_rect.height() - 1)))
 
         self.graphicsView.setScene(self.scene)
-        self.graphicsView.fitInView(self.scene.sceneRect(),
-            Qt.KeepAspectRatio)
+        #self.graphicsView.fitInView(self.scene.sceneRect(),
+        #    Qt.KeepAspectRatio)
+        #self.graphicsView.fitInView(self.scene_rect_item, Qt.KeepAspectRatio)
+
+        #self.graphicsView.scale(3, 3)
 
         self.routers = set()
 
         self.timer_id = self.startTimer(1000 / 25)
 
     def resizeEvent(self, event):
-        scene_rect = self.scene.sceneRect()
+        #scene_rect = self.scene.sceneRect()
         #self.graphicsView.fitInView(
         #    QRectF(scene_rect.topLeft(), QSizeF(
         #        scene_rect.width() - 2,
         #        scene_rect.height() - 2)),
         #    Qt.KeepAspectRatio)
-
         self.graphicsView.fitInView(self.scene_rect_item, Qt.KeepAspectRatio)
 
     def timerEvent(self, event):
