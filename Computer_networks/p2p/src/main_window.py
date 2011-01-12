@@ -21,6 +21,8 @@ __license__ = "GPL"
 __all__ = ["MainWindow"]
 
 import random
+import logging
+import threading
 
 import PyQt4.uic
 from PyQt4.QtGui import *
@@ -69,6 +71,20 @@ class MainWindow(QMainWindow):
 
         self.timer_id = self.startTimer(1000 / 25.0)
 
+        # If working thread will be able to acquire the lock, then it should
+        # terminate himself.
+        self._exit_lock = threading.RLock()
+        self._exit_lock.acquire()
+
+        self._working_thread = threading.Thread(target=self._work)
+        self._working_thread.start()
+
+    def closeEvent(self, event):
+        # Release exit lock and wait until working thread will not terminate.
+        self._exit_lock.release()
+        self._working_thread.join()
+        super(MainWindow, self).closeEvent(event)
+
     def showEvent(self, event):
         super(MainWindow, self).showEvent(event)
         self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
@@ -97,6 +113,20 @@ class MainWindow(QMainWindow):
         router.setPos(router_pos)
         self.routers.add(router)
 
+    def _work(self):
+        logger = logging.getLogger("{0}._work".format(self))
+
+        logger.info("Working thread started")
+
+        while True:
+            if self._exit_lock.acquire(False):
+                # Obtained exit lock. Terminate.
+
+                self._exit_lock.release()
+                logger.info("Exit working thread")
+                return
+
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
@@ -119,7 +149,7 @@ def _test():
                 self.w.add_router(3)
 
     timeout = 1
-    do_tests(Tests, qt=True)
+    do_tests(Tests, qt=True, level=0)
 
 if __name__ == "__main__":
     _test()
