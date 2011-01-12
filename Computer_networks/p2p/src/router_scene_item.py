@@ -41,7 +41,7 @@ class RouterItem(QGraphicsItem):
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setZValue(-1)
 
-        # Circle color
+        # Circle color.
         self.color = QColor(255, 0, 0)
 
         # Circle radius.
