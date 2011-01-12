@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
                 
         self.routers = set()
 
-        self.timer_id = self.startTimer(1000 / 25)
+        self.timer_id = self.startTimer(1000 / 25.0)
 
     def showEvent(self, event):
         super(MainWindow, self).showEvent(event)
