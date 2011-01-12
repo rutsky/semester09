@@ -21,8 +21,6 @@ __license__ = "GPL"
 
 __all__ = ["RouterItem"]
 
-from itertools import ifilter
-
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
@@ -144,6 +142,7 @@ def _test():
     else:
         import unittest
     import logging
+    from itertools import ifilter
 
     from timer import Timer
 

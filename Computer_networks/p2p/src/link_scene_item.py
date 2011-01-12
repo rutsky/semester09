@@ -92,25 +92,35 @@ def _test():
     else:
         import unittest
     import logging
+    from itertools import ifilter
 
     from router_scene_item import RouterItem
+    from timer import Timer
+
+    def process_events_with_timeout(timeout):
+        app = QCoreApplication.instance()
+        timer = Timer(timeout)
+        while any(map(lambda w: w.isVisible(),
+                app.topLevelWidgets())):
+            app.processEvents()
+            if timer.is_expired():
+                for w in ifilter(lambda w: w.isVisible(),
+                        app.topLevelWidgets()):
+                    w.close()
 
     class Tests(object):
         class TestLinkItem(unittest.TestCase):
             def setUp(self):
-                self.app = QApplication(sys.argv)
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
                 self.scene.setSceneRect(-150, -105, 300, 210)
                 self.scene.addRect(-150, -105, 300 - 1, 210 - 1, QPen(Qt.black))
                 self.view.setScene(self.scene)
 
-                self.finished = False
-
             def tearDown(self):
-                if self.finished:
-                    self.view.show()
-                    self.app.exec_()
+                self.view.show()
+
+                process_events_with_timeout(timeout)
 
             def test_main(self):
                 ri1 = RouterItem(1)
@@ -127,6 +137,10 @@ def _test():
 
                 self.finished = True
 
+    # Only one instance QApplication should exist.
+    app = QApplication(sys.argv)
+    timeout = 1
+
     logging.basicConfig(level=logging.DEBUG)
 
     suite = unittest.TestSuite()
@@ -135,6 +149,8 @@ def _test():
             suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
     unittest.TextTestRunner(verbosity=2).run(suite)
+
+    app.exit()
 
 if __name__ == "__main__":
     _test()

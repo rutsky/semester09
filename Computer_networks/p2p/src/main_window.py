@@ -107,16 +107,28 @@ def _test():
     else:
         import unittest
     import logging
+    from itertools import ifilter
+
+    from timer import Timer
+
+    def process_events_with_timeout(timeout):
+        app = QCoreApplication.instance()
+        timer = Timer(timeout)
+        while any(map(lambda w: w.isVisible(),
+                app.topLevelWidgets())):
+            app.processEvents()
+            if timer.is_expired():
+                for w in ifilter(lambda w: w.isVisible(),
+                        app.topLevelWidgets()):
+                    w.close()
 
     class Tests(object):
         class TestMainWindow(unittest.TestCase):
             def setUp(self):
-                self.app = QApplication(sys.argv)
-                self.finished = False
-
+                pass
+            
             def tearDown(self):
-                if self.finished:
-                    self.app.exec_()
+                process_events_with_timeout(timeout)
 
             def test_main(self):
                 self.w = MainWindow()
@@ -126,7 +138,9 @@ def _test():
                 self.w.add_router(2)
                 self.w.add_router(3)
 
-                self.finished = True
+    # Only one instance QApplication should exist.
+    app = QApplication(sys.argv)
+    timeout = 1
 
     #logging.basicConfig(level=logging.DEBUG)
     logging.basicConfig(level=logging.CRITICAL)
@@ -137,6 +151,8 @@ def _test():
             suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
 
     unittest.TextTestRunner(verbosity=2).run(suite)
+
+    app.exit()
 
 if __name__ == "__main__":
     _test()
