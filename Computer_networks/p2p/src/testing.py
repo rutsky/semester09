@@ -59,3 +59,5 @@ def do_tests(tests_class, qt=False, level=logging.CRITICAL):
 
     if qt:
         app.exit()
+
+# TODO: Add tests for this module.
