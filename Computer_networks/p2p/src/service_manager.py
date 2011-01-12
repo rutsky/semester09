@@ -177,6 +177,8 @@ def _test():
         import unittest
     import logging
 
+    from testing import unittest, do_tests
+    
     from duplex_link import FullDuplexLink, LossFunc
     from frame import SimpleFrameTransmitter
     from sliding_window import FrameTransmitter
@@ -431,16 +433,7 @@ def _test():
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-    #logging.basicConfig(level=logging.DEBUG)
-    #logging.basicConfig(level=logging.INFO)
-    logging.basicConfig(level=logging.CRITICAL)
-    
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests, level=0)
 
 if __name__ == "__main__":
     _test()
