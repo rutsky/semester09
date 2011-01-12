@@ -43,7 +43,7 @@ class RouterItem(QGraphicsItem):
         self.setZValue(-1)
 
         # Circle color.
-        self.color = pallete.palette[self.name]
+        self.color = palette.palette[self.name]
 
         # Circle radius.
         self.radius = 10.0

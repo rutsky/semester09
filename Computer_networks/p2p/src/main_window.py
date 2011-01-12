@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
         router.setPos(router_pos)
         self.routers.append(router)
 
+        return name
+
     def is_connections_by_distance_enabled(self):
         return self.connection_distance is not None
 
@@ -143,20 +145,23 @@ def _test():
     class Tests(object):
         class TestMainWindow(unittest.TestCase):
             def setUp(self):
-                pass
+                self.finished = False
             
             def tearDown(self):
-                process_events_with_timeout(timeout)
+                if self.finished:
+                    process_events_with_timeout(timeout)
 
             def test_main(self):
                 self.w = MainWindow()
                 self.w.show()
 
-                self.w.add_router(1)
-                self.w.add_router(2)
-                self.w.add_router(3)
+                self.w.add_router()
+                self.w.add_router()
+                self.w.add_router()
 
-    timeout = 1
+                self.finished = True
+
+    timeout = None
     do_tests(Tests, qt=True, level=0)
 
 if __name__ == "__main__":
