@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.scene.addText("Hello, world!")
 
         # debug
-        self.scene.addRect(
+        self.scene_rect_item = self.scene.addRect(
             QRectF(scene_rect.topLeft(), QSizeF(
                 scene_rect.width() - 1,
                 scene_rect.height() - 1)))
@@ -72,11 +72,13 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         scene_rect = self.scene.sceneRect()
-        self.graphicsView.fitInView(
-            QRectF(scene_rect.topLeft(), QSizeF(
-                scene_rect.width() - 2,
-                scene_rect.height() - 2)),
-            Qt.KeepAspectRatio)
+        #self.graphicsView.fitInView(
+        #    QRectF(scene_rect.topLeft(), QSizeF(
+        #        scene_rect.width() - 2,
+        #        scene_rect.height() - 2)),
+        #    Qt.KeepAspectRatio)
+
+        self.graphicsView.fitInView(self.scene_rect_item, Qt.KeepAspectRatio)
 
     def timerEvent(self, event):
         pass
