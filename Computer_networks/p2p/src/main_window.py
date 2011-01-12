@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         self.graphicsView.setViewportUpdateMode(
             QGraphicsView.BoundingRectViewportUpdate)
         self.graphicsView.setRenderHint(QPainter.Antialiasing)
-        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        #self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
 
         self.scene.addText("Hello, world!")
