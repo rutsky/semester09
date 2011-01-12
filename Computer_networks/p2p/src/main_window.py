@@ -23,6 +23,7 @@ __all__ = ["MainWindow"]
 import random
 import logging
 import threading
+import itertools
 
 import PyQt4.uic
 from PyQt4.QtGui import *
@@ -66,8 +67,14 @@ class MainWindow(QMainWindow):
             QRectF(self.scene_rect.topLeft(), QSizeF(
                 self.scene_rect.width() - 1,
                 self.scene_rect.height() - 1)))
-                
-        self.routers = set()
+
+        self.name_it = itertools.count(1)
+        self.routers = []
+
+        # Set `self.connection_distance' to None to disable connections by
+        # distance.
+        self.connection_distance = 10
+        self.disconnection_distance = 15
 
         self.timer_id = self.startTimer(1000 / 25.0)
 
@@ -96,9 +103,8 @@ class MainWindow(QMainWindow):
     def timerEvent(self, event):
         pass
 
-    def add_router(self, name, pos=None):
-        assert isinstance(name, int) and 0 <= name < 2**32
-        assert self.scene
+    def add_router(self, pos=None):
+        name = self.name_it.next()
 
         if pos is None:
             scene_rect = self.scene.sceneRect()
@@ -111,7 +117,10 @@ class MainWindow(QMainWindow):
         router = RouterItem(name)
         self.scene.addItem(router)
         router.setPos(router_pos)
-        self.routers.add(router)
+        self.routers.append(router)
+
+    def is_connections_by_distance_enabled(self):
+        return self.connection_distance is not None
 
     def _work(self):
         logger = logging.getLogger("{0}._work".format(self))
@@ -125,7 +134,6 @@ class MainWindow(QMainWindow):
                 self._exit_lock.release()
                 logger.info("Exit working thread")
                 return
-
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

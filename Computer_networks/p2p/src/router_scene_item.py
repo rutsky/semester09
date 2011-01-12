@@ -28,6 +28,7 @@ from link_manager import RouterLinkManager
 from datagram import DatagramRouter
 from service_manager import RouterServiceManager
 from rip import RIPService
+import palette
 
 class RouterItem(QGraphicsItem):
     def __init__(self, name, parent=None):
@@ -42,7 +43,7 @@ class RouterItem(QGraphicsItem):
         self.setZValue(-1)
 
         # Circle color.
-        self.color = QColor(255, 0, 0)
+        self.color = pallete.palette[self.name]
 
         # Circle radius.
         self.radius = 10.0
@@ -149,14 +150,17 @@ def _test():
                 self.finished = False
 
             def tearDown(self):
-                self.view.show()
+                if self.finished:
+                    self.view.show()
 
-                process_events_with_timeout(timeout)
+                    process_events_with_timeout(timeout)
 
             def test_main(self):
                 ri = RouterItem(1)
                 self.assertEqual(ri.name, 1)
                 self.scene.addItem(ri)
+
+                self.finished = True
 
             def test_change_position(self):
                 ri = RouterItem(1)
@@ -164,11 +168,15 @@ def _test():
 
                 ri.setPos(50, 50)
 
+                self.finished = True
+
             def test_add_link(self):
                 ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
                 self.assertEqual(ri.links, set([link]))
+
+                self.finished = True
 
             def _test_add_link_with_adjustment(self):
                 ri = RouterItem(1)
