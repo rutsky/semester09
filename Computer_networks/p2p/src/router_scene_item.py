@@ -63,13 +63,35 @@ class RouterItem(QGraphicsItem):
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionHasChanged:
-            for link in self.links:
-                link.adjust()
+            assert self.scene()
+
+            self.adjust_links()
+
+            # Value is the new position.
+            new_pos = value.toPointF();
+
+            scene_rect = self.scene().sceneRect();
+            if not scene_rect.contains(new_pos):
+                # Keep the item inside the scene rect.
+                new_pos.setX(min(scene_rect.right(),
+                    max(new_pos.x(), scene_rect.left())))
+                new_pos.setY(min(scene_rect.bottom(),
+                    max(new_pos.y(), scene_rect.top())))
+
+                # FIXME: Return value not respected in PyQt (this is a bug).
+                self.setPos(new_pos)
+                
+                return new_pos
+            
         return super(RouterItem, self).itemChange(change, value)
 
     def add_link(self, link):
         self.links.add(link)
 
+    def adjust_links(self):
+        for link in self.links:
+            link.adjust()
+            
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
@@ -88,6 +110,7 @@ def _test():
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
                 self.scene.setSceneRect(-150, -105, 300, 210)
+                self.scene.addRect(-150, -105, 300 - 1, 210 - 1, QPen(Qt.black))
                 self.view.setScene(self.scene)
 
             def tearDown(self):
