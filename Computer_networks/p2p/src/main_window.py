@@ -100,27 +100,7 @@ class MainWindow(QMainWindow):
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
-    import logging
-    from itertools import ifilter
-
-    from timer import Timer
-
-    def process_events_with_timeout(timeout):
-        app = QCoreApplication.instance()
-        timer = Timer(timeout)
-        while any(map(lambda w: w.isVisible(),
-                app.topLevelWidgets())):
-            app.processEvents()
-            if timer.is_expired():
-                for w in ifilter(lambda w: w.isVisible(),
-                        app.topLevelWidgets()):
-                    w.close()
+    from testing import unittest, do_tests, process_events_with_timeout
 
     class Tests(object):
         class TestMainWindow(unittest.TestCase):
@@ -138,21 +118,8 @@ def _test():
                 self.w.add_router(2)
                 self.w.add_router(3)
 
-    # Only one instance QApplication should exist.
-    app = QApplication(sys.argv)
     timeout = 1
-
-    #logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.CRITICAL)
-
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-    app.exit()
+    do_tests(Tests, qt=True)
 
 if __name__ == "__main__":
     _test()
