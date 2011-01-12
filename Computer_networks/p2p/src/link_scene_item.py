@@ -102,6 +102,7 @@ def _test():
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
                 self.scene.setSceneRect(-150, -105, 300, 210)
+                self.scene.addRect(-150, -105, 300 - 1, 210 - 1, QPen(Qt.black))
                 self.view.setScene(self.scene)
 
             def tearDown(self):
