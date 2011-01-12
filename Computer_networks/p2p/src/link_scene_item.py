@@ -86,6 +86,7 @@ def _test():
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
+    
     from router_scene_item import RouterItem
 
     class Tests(object):
