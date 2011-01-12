@@ -24,8 +24,10 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 class RouterItem(QGraphicsItem):
-    def __init__(self, parent=None):
+    def __init__(self, name, parent=None):
         super(RouterItem, self).__init__(parent)
+
+        self.name = name
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
@@ -62,20 +64,21 @@ class RouterItem(QGraphicsItem):
         painter.drawEllipse(self.size_rect)
 
     def itemChange(self, change, value):
-        if change == QGraphicsItem.ItemPositionHasChanged:
-            assert self.scene()
-
+        if change == QGraphicsItem.ItemPositionHasChanged and self.scene():
             self.adjust_links()
 
             # Value is the new position.
-            new_pos = value.toPointF();
+            new_pos = value.toPointF()
 
-            scene_rect = self.scene().sceneRect();
+            scene_rect = self.scene().sceneRect()
+            scene_rect.adjust(
+                self.radius, self.radius, -self.radius, -self.radius)
+            assert scene_rect.isValid()
             if not scene_rect.contains(new_pos):
                 # Keep the item inside the scene rect.
-                new_pos.setX(min(scene_rect.right(),
+                new_pos.setX(min(scene_rect.right() - 1,
                     max(new_pos.x(), scene_rect.left())))
-                new_pos.setY(min(scene_rect.bottom(),
+                new_pos.setY(min(scene_rect.bottom() - 1,
                     max(new_pos.y(), scene_rect.top())))
 
                 # FIXME: Return value not respected in PyQt (this is a bug).
@@ -118,22 +121,24 @@ def _test():
                 self.app.exec_()
 
             def test_main(self):
-                self.scene.addItem(RouterItem())
+                ri = RouterItem(1)
+                self.assertEqual(ri.name, 1)
+                self.scene.addItem(ri)
 
             def test_change_position(self):
-                ri = RouterItem()
+                ri = RouterItem(1)
                 self.scene.addItem(ri)
 
                 ri.setPos(50, 50)
 
             def test_add_link(self):
-                ri = RouterItem()
+                ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
                 self.assertEqual(ri.links, set([link]))
 
             def _test_add_link_with_adjustment(self):
-                ri = RouterItem()
+                ri = RouterItem(1)
                 class Link(object):
                     def __init__(self):
                         self.adjusted = False

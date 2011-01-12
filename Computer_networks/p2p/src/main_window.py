@@ -20,6 +20,8 @@ __license__ = "GPL"
 
 __all__ = ["MainWindow"]
 
+import random
+
 import PyQt4.uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -35,8 +37,10 @@ class MainWindow(QMainWindow):
 
         self.scene = QGraphicsScene()
 
+        scene_rect = QRectF(-150, -105, 300, 210)
+
         self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
-        self.scene.setSceneRect(-150, -105, 300, 210)
+        self.scene.setSceneRect(scene_rect)
 
         self.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
         self.graphicsView.setViewportUpdateMode(
@@ -44,16 +48,55 @@ class MainWindow(QMainWindow):
         self.graphicsView.setRenderHint(QPainter.Antialiasing)
         #self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+        
+        # Disable scrollbars. Seems this is required for correct fitInView()
+        # work in resizeEvent(). See fitInView() documentation for details.
+        self.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.scene.addText("Hello, world!")
-        self.scene.addItem(RouterItem())
+
+        # debug
+        self.scene.addRect(
+            QRectF(scene_rect.topLeft(), QSizeF(
+                scene_rect.width() - 1,
+                scene_rect.height() - 1)))
 
         self.graphicsView.setScene(self.scene)
+        self.graphicsView.fitInView(self.scene.sceneRect(),
+            Qt.KeepAspectRatio)
+
+        self.routers = set()
 
         self.timer_id = self.startTimer(1000 / 25)
 
+    def resizeEvent(self, event):
+        scene_rect = self.scene.sceneRect()
+        self.graphicsView.fitInView(
+            QRectF(scene_rect.topLeft(), QSizeF(
+                scene_rect.width() - 2,
+                scene_rect.height() - 2)),
+            Qt.KeepAspectRatio)
+
     def timerEvent(self, event):
         pass
+
+    def add_router(self, name, pos=None):
+        assert isinstance(name, int) and 0 <= name < 2**32
+        assert self.scene
+
+        if pos is None:
+            scene_rect = self.scene.sceneRect()
+            router_pos = QPointF(
+                random.randrange(scene_rect.left(), scene_rect.width()),
+                random.randrange(scene_rect.top(), scene_rect.height()))
+        else:
+            router_pos = pos
+
+        router = RouterItem(name)
+        self.scene.addItem(router)
+        router.setPos(router_pos)
+        self.routers.add(router)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -70,13 +113,21 @@ def _test():
         class TestMainWindow(unittest.TestCase):
             def setUp(self):
                 self.app = QApplication(sys.argv)
+                self.finished = False
 
             def tearDown(self):
-                self.app.exec_()
+                if self.finished:
+                    self.app.exec_()
 
             def test_main(self):
                 self.w = MainWindow()
                 self.w.show()
+
+                self.w.add_router(1)
+                self.w.add_router(2)
+                self.w.add_router(3)
+
+                self.finished = True
 
     #logging.basicConfig(level=logging.DEBUG)
     logging.basicConfig(level=logging.CRITICAL)
