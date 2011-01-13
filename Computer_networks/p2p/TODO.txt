@@ -16,3 +16,4 @@ GUI:
  * Manual adding of persistent links.
  * Add buttons to stop/shake all routers.
  * Links always drawing above routers - this is not always correct.
+ * File->Quit (or Ctrl+Q) don't work on recent Python 2.7 and PyQt.
