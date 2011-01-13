@@ -58,7 +58,7 @@ class RouterItem(QGraphicsItem):
 
         self.links = {}
 
-        self.link_manager = RouterLinkManager()
+        self._link_manager = RouterLinkManager()
         self.datagram_router = None
         self.service_manager = None
         self.rip_service_transmitter = None
@@ -72,12 +72,12 @@ class RouterItem(QGraphicsItem):
     def start_networking(self):
         self.datagram_router = DatagramRouter(
             router_name=self.name,
-            link_manager=self.link_manager)
+            link_manager=self._link_manager)
         self.service_manager = RouterServiceManager(self.datagram_router)
         self.rip_service_transmitter = self.service_manager.register_service(
             RIPService.protocol)
 
-        self.rip_service = RIPService(self.name, self.link_manager,
+        self.rip_service = RIPService(self.name, self._link_manager,
             self.rip_service_transmitter)
 
         self.datagram_router.set_routing_table(
@@ -92,6 +92,10 @@ class RouterItem(QGraphicsItem):
         self.service_manager = None
         self.rip_service_transmitter = None
         self.rip_service = None
+
+    @property
+    def link_manager(self):
+        return self._link_manager
 
     def boundingRect(self):
         adjust = 2
