@@ -127,8 +127,10 @@ class MainWindow(QMainWindow):
         if pos is None:
             scene_rect = self.scene.sceneRect()
             router_pos = QPointF(
-                random.randrange(scene_rect.left(), scene_rect.width()),
-                random.randrange(scene_rect.top(), scene_rect.height()))
+                random.uniform(
+                    scene_rect.left(), scene_rect.left() + scene_rect.width()),
+                random.uniform(
+                    scene_rect.top(),  scene_rect.top()  + scene_rect.height()))
         else:
             router_pos = pos
 
@@ -182,7 +184,7 @@ def _test():
                 self.w = MainWindow()
                 self.w.show()
 
-                for i in xrange(20):
+                for i in xrange(10):
                     self.w.add_router()
 
                 self.w.shake_routers()

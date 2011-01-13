@@ -33,7 +33,7 @@ from service_manager import RouterServiceManager
 from rip import RIPService
 import palette
 
-class RouterItem(QGraphicsItem):
+class RouterItem(QGraphicsObject):
     def __init__(self, name, parent=None):
         super(RouterItem, self).__init__(parent)
 

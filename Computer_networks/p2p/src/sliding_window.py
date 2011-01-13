@@ -127,6 +127,13 @@ class Frame(object):
 
     # TODO: Implement __eq__(), __ne__().
 
+def clear_queue(q):
+    while True:
+        try:
+            q.get(block=False)
+        except Queue.Empty:
+            break
+
 class FrameTransmitter(object):
     #_frame_id_period = 32768
     _frame_id_period = 200 # DEBUG
@@ -153,31 +160,76 @@ class FrameTransmitter(object):
         self._working_thread = threading.Thread(target=self._work)
         self._working_thread.start()
 
+        self._enabled = True
+        self._enabled_lock = threading.RLock()
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        with self._enabled_lock:
+            if self._enabled != bool(value):
+                self._enabled = bool(value)
+
+                if self._enabled:
+                    # Link up.
+                    self._link_up()
+                else:
+                    # Link down.
+                    self._link_down()
+
+    def _link_up(self):
+        pass
+
+    def _link_down(self):
+        clear_queue(self._frames_data_to_send)
+        clear_queue(self._received_data)
+
     # TODO
     def terminate(self):
         # Release exit lock and wait until working thread will not terminate.
+
+        # If _exit_lock already released then somebody already called
+        # terminate().
         self._exit_lock.release()
         self._working_thread.join()
 
     def send(self, data_string):
-        # Subdivide data string on frames and put them into working queue.
-        frame_data_parts = [data_string[i:i + self._max_frame_data]
-                for i in xrange(0, len(data_string), self._max_frame_data)]
-        for frame_data_part in frame_data_parts[:-1]:
-            self._frames_data_to_send.put((False, frame_data_part))
-        self._frames_data_to_send.put((True, frame_data_parts[-1]))
+        with self._enabled_lock:
+            if self._enabled:
+                # Subdivide data string on frames and put them into working
+                # queue.
+                frame_data_parts = \
+                    [data_string[i:i + self._max_frame_data]
+                        for i in xrange(
+                            0, len(data_string), self._max_frame_data)]
+                for frame_data_part in frame_data_parts[:-1]:
+                    self._frames_data_to_send.put((False, frame_data_part))
+                self._frames_data_to_send.put((True, frame_data_parts[-1]))
+            else:
+                # Link is down.
+                pass
 
     def receive(self, block=True):
-        while True:
-            try:
-                is_last, frame = self._received_data.get(block)
-                self._received_frames_buffer.append(frame)
-                if is_last:
-                    data_string = "".join(self._received_frames_buffer)
-                    self._received_frames_buffer = []
-                    return data_string
-            except Queue.Empty:
-                break
+        with self._enabled_lock:
+            if self._enabled:
+                while True:
+                    try:
+                        is_last, frame = self._received_data.get(block)
+                        self._received_frames_buffer.append(frame)
+                        if is_last:
+                            data_string = "".join(self._received_frames_buffer)
+                            self._received_frames_buffer = []
+                            return data_string
+                    except Queue.Empty:
+                        break
+            else:
+                # Link is down.
+                assert self._received_data.empty()
+                assert not self._received_frames_buffer
+                return None
 
     def _work(self):
         class SendWindow(object):
@@ -343,12 +395,7 @@ class FrameTransmitter(object):
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
+    from testing import unittest, do_tests
     
     from duplex_link import FullDuplexLink, LossFunc
 
@@ -371,100 +418,142 @@ def _test():
                 self.assertEqual(p.id, np.id)
                 self.assertEqual("", np.data)
 
+        class TestFrameTransmitterConstructor(unittest.TestCase):
+            def setUp(self):
+                self.a, self.b = FullDuplexLink()
+
+                self.at = SimpleFrameTransmitter(node=self.a)
+                self.bt = SimpleFrameTransmitter(node=self.b)
+
+            def test_constructor(self):
+                aft = FrameTransmitter(simple_frame_transmitter=self.at)
+                bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+
+                aft.terminate()
+                bft.terminate()
+
+            @unittest.expectedFailure
+            def test_terminate(self):
+                aft = FrameTransmitter(simple_frame_transmitter=self.at)
+                aft.terminate()
+                aft.terminate()
+
         class TestFrameTransmitter(unittest.TestCase):
+            def setUp(self):
+                self.a, self.b = FullDuplexLink()
+
+                self.at = SimpleFrameTransmitter(node=self.a)
+                self.bt = SimpleFrameTransmitter(node=self.b)
+
+                self.aft = FrameTransmitter(simple_frame_transmitter=self.at)
+                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+
+            def tearDown(self):
+                self.aft.terminate()
+                self.bft.terminate()
+
             def test_transmit(self):
-                a, b = FullDuplexLink()
-
-                at = SimpleFrameTransmitter(node=a)
-                bt = SimpleFrameTransmitter(node=b)
-
-                aft = FrameTransmitter(simple_frame_transmitter=at)
-                bft = FrameTransmitter(simple_frame_transmitter=bt)
-
                 text = "Test!"
-                aft.send(text)
-                self.assertEqual(bft.receive(), text)
+                self.aft.send(text)
+                self.assertEqual(self.bft.receive(), text)
 
-                self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(self.bft.receive(block=False), None)
 
                 text2 = "".join(map(chr, xrange(256)))
-                bft.send(text2)
-                self.assertEqual(aft.receive(), text2)
+                self.bft.send(text2)
+                self.assertEqual(self.aft.receive(), text2)
 
-                self.assertEqual(aft.receive(block=False), None)
+                self.assertEqual(self.aft.receive(block=False), None)
 
                 text3 = "test"
-                bft.send(text3)
+                self.bft.send(text3)
 
                 text_a = text2
                 text_b = "".join(reversed(text2))
-                aft.send(text_a)
-                aft.send(text_b)
-                self.assertEqual(aft.receive(), text3)
-                self.assertEqual(bft.receive(), text_a)
-                self.assertEqual(bft.receive(), text_b)
+                self.aft.send(text_a)
+                self.aft.send(text_b)
+                self.assertEqual(self.aft.receive(), text3)
+                self.assertEqual(self.bft.receive(), text_a)
+                self.assertEqual(self.bft.receive(), text_b)
 
                 text4 = text2 * 10
-                aft.send(text4)
-                self.assertEqual(bft.receive(), text4)
+                self.aft.send(text4)
+                self.assertEqual(self.bft.receive(), text4)
 
-                self.assertEqual(aft.receive(block=False), None)
-                self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(self.aft.receive(block=False), None)
+                self.assertEqual(self.bft.receive(block=False), None)
 
-                aft.terminate()
-                bft.terminate()
-
-            def test_transmit_with_losses(self):
-                a, b = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
-
-                at = SimpleFrameTransmitter(node=a)
-                bt = SimpleFrameTransmitter(node=b)
-
-                aft = FrameTransmitter(simple_frame_transmitter=at)
-                bft = FrameTransmitter(simple_frame_transmitter=bt)
+            def test_enabled(self):
+                self.assertTrue(self.aft.enabled)
 
                 text = "Test!"
-                aft.send(text)
-                self.assertEqual(bft.receive(), text)
+                self.aft.send(text)
+                self.assertEqual(self.bft.receive(), text)
 
-                self.assertEqual(bft.receive(block=False), None)
+                self.aft.enabled = False
+                self.assertFalse(self.aft.enabled)
+
+                self.aft.send(text)
+                self.assertEqual(self.bft.receive(block=False), None)
+
+                self.aft.enabled = True
+
+                self.aft.send(text)
+                self.assertEqual(self.bft.receive(block=False), None)
+
+                self.aft.send(text)
+                self.aft.enabled = False
+                self.assertFalse(self.aft.enabled)
+
+                self.aft.enabled = True
+                self.assertEqual(self.bft.receive(block=False), None)
+                
+        class TestFrameTransmitterWithLosses(unittest.TestCase):
+            def setUp(self):
+                self.a, self.b = FullDuplexLink()
+
+                self.at = SimpleFrameTransmitter(node=self.a)
+                self.bt = SimpleFrameTransmitter(node=self.b)
+
+                self.aft = FrameTransmitter(simple_frame_transmitter=self.at)
+                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+
+            def tearDown(self):
+                self.aft.terminate()
+                self.bft.terminate()
+
+            def test_transmit_with_losses(self):
+                text = "Test!"
+                self.aft.send(text)
+                self.assertEqual(self.bft.receive(), text)
+
+                self.assertEqual(self.bft.receive(block=False), None)
 
                 text2 = "".join(map(chr, xrange(256)))
-                bft.send(text2)
-                self.assertEqual(aft.receive(), text2)
+                self.bft.send(text2)
+                self.assertEqual(self.aft.receive(), text2)
 
-                self.assertEqual(aft.receive(block=False), None)
+                self.assertEqual(self.aft.receive(block=False), None)
 
                 text3 = "test"
-                bft.send(text3)
+                self.bft.send(text3)
 
                 text_a = text2
                 text_b = "".join(reversed(text2))
-                aft.send(text_a)
-                aft.send(text_b)
-                self.assertEqual(aft.receive(), text3)
-                self.assertEqual(bft.receive(), text_a)
-                self.assertEqual(bft.receive(), text_b)
+                self.aft.send(text_a)
+                self.aft.send(text_b)
+                self.assertEqual(self.aft.receive(), text3)
+                self.assertEqual(self.bft.receive(), text_a)
+                self.assertEqual(self.bft.receive(), text_b)
 
                 #text4 = text2 * 10
-                #aft.send(text4)
-                #self.assertEqual(bft.receive(), text4)
+                #self.aft.send(text4)
+                #self.assertEqual(self.bft.receive(), text4)
 
-                self.assertEqual(aft.receive(block=False), None)
-                self.assertEqual(bft.receive(block=False), None)
+                self.assertEqual(self.aft.receive(block=False), None)
+                self.assertEqual(self.bft.receive(block=False), None)
 
-                aft.terminate()
-                bft.terminate()
-
-    logging.basicConfig(level=logging.DEBUG)
-    #logging.basicConfig(level=logging.INFO)
-
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests)
 
 if __name__ == "__main__":
     _test()

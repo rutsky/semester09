@@ -27,7 +27,7 @@ from duplex_link import FullDuplexLink
 from frame import SimpleFrameTransmitter
 from sliding_window import FrameTransmitter
 
-class LinkItem(QGraphicsItem):
+class LinkItem(QGraphicsObject):
     def __init__(self, src_router, dest_router, enabled=False,
             loss_func=None, parent=None):
         super(LinkItem, self).__init__(parent)
@@ -44,30 +44,47 @@ class LinkItem(QGraphicsItem):
         # Edge color.
         self.color = Qt.black
 
-        self.loss_func = loss_func
-
         # Initial state is disabled.
         self._enabled = False
-        self._src_frame_transmitter = None
-        self._dest_frame_transmitter = None
         self.hide()
+        l1, l2 = FullDuplexLink(loss_func=loss_func)
+        sft1 = SimpleFrameTransmitter(node=l1)
+        sft2 = SimpleFrameTransmitter(node=l2)
+        self._src_frame_transmitter = \
+            FrameTransmitter(simple_frame_transmitter=sft1)
+        self._dest_frame_transmitter = \
+            FrameTransmitter(simple_frame_transmitter=sft2)
 
         self.enabled = enabled
+
+        self.destroyed.connect(self.on_destroy)
+
+    @pyqtSlot()
+    def on_destroy(self):
+        # FIXME: never called.
+        print "{0}.on_destroy()".format(self)
+        self._src_frame_transmitter.terminate()
+        self._dest_frame_transmitter.terminate()
 
     @property
     def enabled(self):
         return self._enabled
 
+    @enabled.setter
+    def enabled(self, value):
+        if self._enabled != bool(value):
+            self._enabled = bool(value)
+
+            if self._enabled:
+                # Link up.
+                self._link_up()
+            else:
+                # Link down.
+                self._link_down()
+                
     def _link_up(self):
-        l1, l2 = FullDuplexLink(loss_func=self.loss_func)
-
-        sft1 = SimpleFrameTransmitter(node=l1)
-        sft2 = SimpleFrameTransmitter(node=l2)
-
-        self._src_frame_transmitter = \
-            FrameTransmitter(simple_frame_transmitter=sft1)
-        self._dest_frame_transmitter = \
-            FrameTransmitter(simple_frame_transmitter=sft2)
+        self._src_frame_transmitter.enabled = True
+        self._dest_frame_transmitter.enabled = True
 
         self.src.link_manager.add_link(self.dest.name,
             self._src_frame_transmitter)
@@ -78,6 +95,9 @@ class LinkItem(QGraphicsItem):
         self.show()
 
     def _link_down(self):
+        self._src_frame_transmitter.enabled = False
+        self._dest_frame_transmitter.enabled = False
+
         self.src.link_manager.remove_link(self.dest.name)
         self.dest.link_manager.remove_link(self.src.name)
 
@@ -88,18 +108,6 @@ class LinkItem(QGraphicsItem):
         self._dest_frame_transmitter = None
 
         self.hide()
-    
-    @enabled.setter
-    def enabled(self, value):
-        if self._enabled != value:
-            self._enabled = value
-
-            if self._enabled:
-                # Link up.
-                self._link_up()
-            else:
-                # Link down.
-                self._link_down()
 
     def length(self):
         return QLineF(
