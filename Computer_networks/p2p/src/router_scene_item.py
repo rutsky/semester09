@@ -21,6 +21,9 @@ __license__ = "GPL"
 
 __all__ = ["RouterItem"]
 
+import time
+from collections import deque
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
@@ -61,7 +64,10 @@ class RouterItem(QGraphicsItem):
         self.rip_service_transmitter = None
         self.rip_service = None
 
-        self.velocity = QVector2D()
+        self.velocity = QPointF()
+        self.max_mouse_move_velocity = 100
+
+        self._drag_points = deque(maxlen=10)
 
     def start_networking(self):
         self.datagram_router = DatagramRouter(
@@ -119,13 +125,34 @@ class RouterItem(QGraphicsItem):
             
         return super(RouterItem, self).itemChange(change, value)
 
-    #def mouseReleaseEvent(self, event):
-    def mouseMoveEvent(self, event):
-        print event.pos(), event.scenePos(), event.screenPos()
-        print event.lastPos(), event.lastScenePos(), event.lastScreenPos()
-        self.velocity = event.scenePos() - event.lastScenePos()
+    def mousePressEvent(self, event):
+        self._drag_points.clear()
+        self.velocity = QPointF()
 
-        #super(RouterItem, self).mouseReleaseEvent(event)
+        #self._timer_id = self.startTimer(int(1000 / 10))
+
+        super(RouterItem, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        t = time.time()
+        while self._drag_points and self._drag_points[0][0] + 0.1 < t:
+            self._drag_points.popleft()
+
+        if len(self._drag_points) >= 2:
+            new_velocity = \
+                ((self._drag_points[-1][1] - self._drag_points[0][1]) /
+                 (self._drag_points[-1][0] - self._drag_points[0][0]))
+
+            l = QVector2D(new_velocity).length()
+            if l > self.max_mouse_move_velocity:
+                new_velocity *= self.max_mouse_move_velocity / l
+
+            self.velocity = new_velocity
+        super(RouterItem, self).mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        self._drag_points.append((time.time(), event.scenePos()))
+
         super(RouterItem, self).mouseMoveEvent(event)
 
     def _return_to_scene(self, pos):
@@ -172,7 +199,7 @@ def _test():
     from testing import unittest, do_tests, process_events_with_timeout
 
     class Tests(object):
-        class TestRouterItemGUI(unittest.TestCase):
+        class _TestRouterItemGUI(unittest.TestCase):
             def setUp(self):
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
@@ -233,7 +260,7 @@ def _test():
                 
                 self.finished = True
 
-        class TestRouterItem(unittest.TestCase):
+        class _TestRouterItem(unittest.TestCase):
             def tearDown(self):
                 process_events_with_timeout(timeout)
 
@@ -246,7 +273,35 @@ def _test():
                 ri.stop_networking()
                 self.assertEqual(ri.rip_service, None)
 
-    timeout = 1
+        class TestRouterItemGUIMoving(unittest.TestCase):
+            def setUp(self):
+                self.view = QGraphicsView()
+                self.scene = QGraphicsScene()
+                self.scene.setSceneRect(-150, -105, 300, 210)
+                self.scene.addRect(self.scene.sceneRect(), QPen(Qt.black))
+                self.view.setScene(self.scene)
+
+                self.finished = False
+
+            def tearDown(self):
+                if self.finished:
+                    self.view.show()
+
+                    self.lastUpdate = time.time()
+                    def update():
+                        t = time.time()
+                        self.ri.advance(t - self.lastUpdate)
+                        self.lastUpdate = t
+
+                    process_events_with_timeout(timeout, callback=update)
+
+            def test_start_stop_networking(self):
+                self.ri = RouterItem(1)
+                self.scene.addItem(self.ri)
+
+                self.finished = True
+
+    timeout = None
     do_tests(Tests, qt=True)
 
 if __name__ == "__main__":

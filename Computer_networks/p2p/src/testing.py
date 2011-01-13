@@ -30,13 +30,16 @@ from itertools import ifilter
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-def process_events_with_timeout(timeout=None):
+def process_events_with_timeout(timeout=None, callback=None):
     from timer import Timer, DummyTimer
 
     app = QCoreApplication.instance()
     timer = Timer(timeout) if timeout is not None else DummyTimer()
     while any(map(lambda w: w.isVisible(),
             app.topLevelWidgets())):
+        if callback is not None:
+            callback()
+
         app.processEvents()
         if timer.is_expired():
             for w in ifilter(lambda w: w.isVisible(),
