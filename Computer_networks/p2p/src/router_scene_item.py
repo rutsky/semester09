@@ -61,6 +61,8 @@ class RouterItem(QGraphicsItem):
         self.rip_service_transmitter = None
         self.rip_service = None
 
+        self.velocity = QVector2D()
+
     def start_networking(self):
         self.datagram_router = DatagramRouter(
             router_name=self.name,
@@ -106,25 +108,32 @@ class RouterItem(QGraphicsItem):
             self.adjust_links()
 
             # Value is the new position.
-            new_pos = value.toPointF()
+            pos = value.toPointF()
 
-            scene_rect = self.scene().sceneRect()
-            scene_rect.adjust(
-                self.radius, self.radius, -self.radius, -self.radius)
-            assert scene_rect.isValid()
-            if not scene_rect.contains(new_pos):
-                # Keep the item inside the scene rect.
-                new_pos.setX(min(scene_rect.right() - 1,
-                    max(new_pos.x(), scene_rect.left())))
-                new_pos.setY(min(scene_rect.bottom() - 1,
-                    max(new_pos.y(), scene_rect.top())))
-
+            pos_in_scene = self._return_to_scene(pos)
+            if pos_in_scene != pos:
                 # FIXME: Return value not respected in PyQt (this is a bug).
-                self.setPos(new_pos)
+                self.setPos(pos_in_scene)
                 
-                return new_pos
+                return pos_in_scene
             
         return super(RouterItem, self).itemChange(change, value)
+
+    def _return_to_scene(self, pos):
+        new_pos = QPointF(pos)
+        
+        scene_rect = self.scene().sceneRect()
+        scene_rect.adjust(
+            self.radius, self.radius, -self.radius, -self.radius)
+        assert scene_rect.isValid()
+        if not scene_rect.contains(new_pos):
+            # Keep the item inside the scene rect.
+            new_pos.setX(min(scene_rect.right(),
+                max(new_pos.x(), scene_rect.left())))
+            new_pos.setY(min(scene_rect.bottom(),
+                max(new_pos.y(), scene_rect.top())))
+            assert scene_rect.contains(new_pos)
+        return new_pos
 
     def add_link(self, link):
         self.links.add(link)
@@ -132,6 +141,21 @@ class RouterItem(QGraphicsItem):
     def adjust_links(self):
         for link in self.links:
             link.adjust()
+
+    def advance(self, dt):
+        new_pos = self.pos() + self.velocity * dt
+        new_pos_in_scene = self._return_to_scene(new_pos)
+
+        if new_pos.x() != new_pos_in_scene.x():
+            self.velocity.setX(-self.velocity.x())
+        if new_pos.y() != new_pos_in_scene.y():
+            self.velocity.setY(-self.velocity.y())
+       
+        if self.pos() != new_pos_in_scene:
+            self.setPos(new_pos_in_scene)
+
+        # Returns is something changed.
+        return self.velocity != 0 and dt != 0
             
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -213,7 +237,7 @@ def _test():
                 ri.stop_networking()
                 self.assertEqual(ri.rip_service, None)
 
-    timeout = None
+    timeout = 1
     do_tests(Tests, qt=True)
 
 if __name__ == "__main__":

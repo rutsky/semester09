@@ -32,6 +32,10 @@ from PyQt4.Qt import *
 
 from router_scene_item import RouterItem
 
+def random_velocity(min, max):
+    return QLineF.fromPolar(random.uniform(min, max),
+        random.uniform(0, 360.0)).p2()
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -63,10 +67,7 @@ class MainWindow(QMainWindow):
         #self.scene.addText("Hello, world!")
 
         # debug
-        self.scene_rect_item = self.scene.addRect(
-            QRectF(self.scene_rect.topLeft(), QSizeF(
-                self.scene_rect.width() - 1,
-                self.scene_rect.height() - 1)))
+        self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
         self.name_it = itertools.count(1)
         self.routers = []
@@ -76,7 +77,11 @@ class MainWindow(QMainWindow):
         self.connection_distance = 10
         self.disconnection_distance = 15
 
-        self.timer_id = self.startTimer(1000 / 25.0)
+        # Routers
+        self.router_velocity_range = (0.0, 7.0)
+
+        self.dt = 1 / 30.0
+        self.timer_id = self.startTimer(int(1000 * self.dt))
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
@@ -101,7 +106,8 @@ class MainWindow(QMainWindow):
         self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
 
     def timerEvent(self, event):
-        pass
+        for router in self.routers:
+            router.advance(self.dt)
 
     def add_router(self, pos=None):
         name = self.name_it.next()
@@ -123,6 +129,10 @@ class MainWindow(QMainWindow):
 
     def is_connections_by_distance_enabled(self):
         return self.connection_distance is not None
+
+    def shake_routers(self):
+        for router in self.routers:
+            router.velocity = random_velocity(*self.router_velocity_range)
 
     def _work(self):
         logger = logging.getLogger("{0}._work".format(self))
@@ -156,8 +166,10 @@ def _test():
                 self.w.show()
 
                 self.w.add_router()
-                self.w.add_router()
-                self.w.add_router()
+                #self.w.add_router()
+                #self.w.add_router()
+
+                self.w.shake_routers()
 
                 self.finished = True
 
