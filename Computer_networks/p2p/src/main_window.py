@@ -77,8 +77,8 @@ class MainWindow(QMainWindow):
         # (src, dest) -> link
         self.links = {}
 
-        self.connection_distance = 40
-        self.disconnection_distance = 50
+        self.connection_distance = 50
+        self.disconnection_distance = 70
 
         # Routers
         self.router_velocity_range = (0.0, 20.0)
@@ -182,9 +182,8 @@ def _test():
                 self.w = MainWindow()
                 self.w.show()
 
-                self.w.add_router()
-                self.w.add_router()
-                self.w.add_router()
+                for i in xrange(20):
+                    self.w.add_router()
 
                 self.w.shake_routers()
 
