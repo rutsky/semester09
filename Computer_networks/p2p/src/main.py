@@ -28,6 +28,12 @@ def main():
     app = QApplication(sys.argv)
 
     w = MainWindow()
+
+    for i in xrange(20):
+        w.add_router()
+
+    w.shake_routers()
+
     w.show()
 
     sys.exit(app.exec_())
