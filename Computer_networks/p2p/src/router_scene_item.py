@@ -119,6 +119,15 @@ class RouterItem(QGraphicsItem):
             
         return super(RouterItem, self).itemChange(change, value)
 
+    #def mouseReleaseEvent(self, event):
+    def mouseMoveEvent(self, event):
+        print event.pos(), event.scenePos(), event.screenPos()
+        print event.lastPos(), event.lastScenePos(), event.lastScreenPos()
+        self.velocity = event.scenePos() - event.lastScenePos()
+
+        #super(RouterItem, self).mouseReleaseEvent(event)
+        super(RouterItem, self).mouseMoveEvent(event)
+
     def _return_to_scene(self, pos):
         new_pos = QPointF(pos)
         

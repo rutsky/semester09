@@ -24,6 +24,7 @@ import random
 import logging
 import threading
 import itertools
+import time
 
 import PyQt4.uic
 from PyQt4.QtGui import *
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
         self.disconnection_distance = 15
 
         # Routers
-        self.router_velocity_range = (0.0, 7.0)
+        self.router_velocity_range = (0.0, 20.0)
 
         self.dt = 1 / 30.0
         self.timer_id = self.startTimer(int(1000 * self.dt))
@@ -147,6 +148,8 @@ class MainWindow(QMainWindow):
                 logger.info("Exit working thread")
                 return
 
+            time.sleep(1e-3)
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
@@ -166,8 +169,8 @@ def _test():
                 self.w.show()
 
                 self.w.add_router()
-                #self.w.add_router()
-                #self.w.add_router()
+                self.w.add_router()
+                self.w.add_router()
 
                 self.w.shake_routers()
 
