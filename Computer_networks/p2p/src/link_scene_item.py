@@ -24,7 +24,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 class LinkItem(QGraphicsItem):
-    def __init__(self, src_router, dest_router, parent=None):
+    def __init__(self, src_router, dest_router, enabled=False, parent=None):
         super(LinkItem, self).__init__(parent)
 
         self.src = src_router
@@ -39,23 +39,57 @@ class LinkItem(QGraphicsItem):
         # Circle color
         self.color = Qt.black
 
+        self._enabled = enabled
+        if self._enabled:
+            self.show()
+        else:
+            self.hide()
+    
         self.adjust()
 
-    def adjust(self):
-        line = QLineF(
+    @property
+    def enabled(self):
+        return self._enabled
+    
+    @enabled.setter
+    def enabled(self, value):
+        if self._enabled != value:
+            self._enabled = value
+
+            if self._enabled:
+                self.adjust()
+                self.show()
+            else:
+                self.hide()
+
+    def length(self):
+        return QLineF(
             self.mapFromItem(self.src, 0, 0),
-            self.mapFromItem(self.dest, 0, 0))
-        length = line.length()
+            self.mapFromItem(self.dest, 0, 0)).length()
 
-        self.prepareGeometryChange()
+    def adjust(self):
+        if self._enabled:
+            line = QLineF(
+                self.mapFromItem(self.src, 0, 0),
+                self.mapFromItem(self.dest, 0, 0))
+            self.length = line.length()
 
-        if length > self.src.radius + self.dest.radius:
-            unit = QVector2D(line.p2() - line.p1()).normalized()
-            self.src_point  = line.p1() + (unit * self.src.radius).toPointF()
-            self.dest_point = line.p2() - (unit * self.dest.radius).toPointF()
+            self.prepareGeometryChange()
+
+            if self.length > self.src.radius + self.dest.radius:
+                unit = QVector2D(line.p2() - line.p1()).normalized()
+                self.src_point  = line.p1() + (unit * self.src.radius).toPointF()
+                self.dest_point = line.p2() - (unit * self.dest.radius).toPointF()
+            else:
+                self.src_point  = None
+                self.dest_point = None
+
+    def link_end(self, src):
+        if self.src == src:
+            return self.dest
         else:
-            self.src_point  = None
-            self.dest_point = None
+            assert self.dest == src
+            return self.src
 
     def is_singular(self):
         return self.src_point is None or self.dest_point is None
@@ -113,12 +147,12 @@ def _test():
                 ri1.setPos(-100, -50)
                 ri2.setPos(100, 50)
 
-                li = LinkItem(ri1, ri2)
+                li = LinkItem(ri1, ri2, enabled=True)
                 self.scene.addItem(li)
 
                 self.finished = True
 
-    timeout = 1
+    timeout = None
     do_tests(Tests, qt=True)
 
 if __name__ == "__main__":

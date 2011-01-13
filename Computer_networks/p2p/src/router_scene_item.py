@@ -49,14 +49,14 @@ class RouterItem(QGraphicsItem):
         self.color = palette.palette[self.name]
 
         # Circle radius.
-        self.radius = 10.0
+        self.radius = 5.0
         # Circle (width, height).
         self.size = QSizeF(2 * self.radius, 2 * self.radius)
         self.size_rect = QRectF(
             QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
             self.size)
 
-        self.links = set()
+        self.links = {}
 
         self.link_manager = RouterLinkManager()
         self.datagram_router = None
@@ -172,10 +172,10 @@ class RouterItem(QGraphicsItem):
         return new_pos
 
     def add_link(self, link):
-        self.links.add(link)
+        self.links[link.link_end(self)] = link
 
     def adjust_links(self):
-        for link in self.links:
+        for dest, link in self.links.iteritems():
             link.adjust()
 
     def advance(self, dt):
@@ -192,6 +192,12 @@ class RouterItem(QGraphicsItem):
 
         # Returns is something changed.
         return self.velocity != 0 and dt != 0
+
+    def distance(self, other_router):
+        return QLineF(
+            self.mapFromItem(self, 0, 0),
+            self.mapFromItem(other_router, 0, 0)).length()
+
             
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -199,7 +205,7 @@ def _test():
     from testing import unittest, do_tests, process_events_with_timeout
 
     class Tests(object):
-        class _TestRouterItemGUI(unittest.TestCase):
+        class TestRouterItemGUI(unittest.TestCase):
             def setUp(self):
                 self.view = QGraphicsView()
                 self.scene = QGraphicsScene()
@@ -230,7 +236,7 @@ def _test():
 
                 self.finished = True
 
-            def test_add_link(self):
+            def _test_add_link(self):
                 ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
@@ -260,7 +266,7 @@ def _test():
                 
                 self.finished = True
 
-        class _TestRouterItem(unittest.TestCase):
+        class TestRouterItem(unittest.TestCase):
             def tearDown(self):
                 process_events_with_timeout(timeout)
 

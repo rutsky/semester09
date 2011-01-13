@@ -32,6 +32,7 @@ from PyQt4.QtCore import *
 from PyQt4.Qt import *
 
 from router_scene_item import RouterItem
+from link_scene_item import LinkItem
 
 def random_velocity(min, max):
     return QLineF.fromPolar(random.uniform(min, max),
@@ -70,13 +71,16 @@ class MainWindow(QMainWindow):
         # debug
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
-        self.name_it = itertools.count(1)
+        self.name_it = itertools.count(0)
         self.routers = []
+
+        # (src, dest) -> link
+        self.links = {}
 
         # Set `self.connection_distance' to None to disable connections by
         # distance.
-        self.connection_distance = 10
-        self.disconnection_distance = 15
+        self.connection_distance = 40
+        self.disconnection_distance = 50
 
         # Routers
         self.router_velocity_range = (0.0, 20.0)
@@ -110,6 +114,15 @@ class MainWindow(QMainWindow):
         for router in self.routers:
             router.advance(self.dt)
 
+        for (r1, r2), link in self.links.iteritems():
+            if r1.distance(r2) >= self.disconnection_distance:
+                link.enabled = False
+
+        for idx, r1 in enumerate(self.routers):
+            for r2 in self.routers[idx + 1:]:
+                if r1.distance(r2) <= self.connection_distance:
+                    self.links[(r1, r2)].enabled = True
+
     def add_router(self, pos=None):
         name = self.name_it.next()
 
@@ -124,6 +137,12 @@ class MainWindow(QMainWindow):
         router = RouterItem(name)
         self.scene.addItem(router)
         router.setPos(router_pos)
+
+        for r in self.routers:
+            link = LinkItem(r, router)
+            self.scene.addItem(link)
+            self.links[(r, router)] = link
+
         self.routers.append(router)
 
         return name
