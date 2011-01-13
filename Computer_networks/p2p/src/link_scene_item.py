@@ -101,12 +101,6 @@ class LinkItem(QGraphicsObject):
         self.src.link_manager.remove_link(self.dest.name)
         self.dest.link_manager.remove_link(self.src.name)
 
-        self._src_frame_transmitter.terminate()
-        self._src_frame_transmitter = None
-
-        self._dest_frame_transmitter.terminate()
-        self._dest_frame_transmitter = None
-
         self.hide()
 
     def length(self):

@@ -34,6 +34,7 @@ import StringIO
 from collections import deque
 from recordtype import recordtype
 
+import config
 from frame import SimpleFrameTransmitter
 
 class FrameType(object):
@@ -390,7 +391,7 @@ class FrameTransmitter(object):
                     else:
                         assert False
                         
-            time.sleep(1e-3)
+            time.sleep(config.thread_sleep_time)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

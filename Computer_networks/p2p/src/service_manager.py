@@ -32,6 +32,7 @@ from collections import namedtuple
 
 from recordtype import recordtype
 
+import config
 from datagram import datagram
 
 class Packet(recordtype('Packet', 'src dest data')):
@@ -164,7 +165,7 @@ class RouterServiceManager(object):
             deliver_to_network()
             deliver_from_network()
 
-            time.sleep(1e-3)
+            time.sleep(config.thread_sleep_time)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

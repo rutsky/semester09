@@ -31,6 +31,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.Qt import *
 
+import config
 from router_scene_item import RouterItem
 from link_scene_item import LinkItem
 
@@ -164,7 +165,7 @@ class MainWindow(QMainWindow):
                 logger.info("Exit working thread")
                 return
 
-            time.sleep(1e-3)
+            time.sleep(config.thread_sleep_time)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

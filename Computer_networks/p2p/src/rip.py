@@ -30,6 +30,7 @@ import logging
 
 from recordtype import recordtype
 
+import config
 from routing_table import DynamicRoutingTable
 from service_manager import Packet
 from timer import Timer, DummyTimer
@@ -276,7 +277,7 @@ class RIPService(object):
 
             update_routing_table()
 
-            time.sleep(1e-3)
+            time.sleep(config.thread_sleep_time)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

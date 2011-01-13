@@ -33,6 +33,7 @@ import pprint
 import time
 from recordtype import recordtype
 
+import config
 from sliding_window import FrameTransmitter
 from routing_table import loopback_routing_table
 
@@ -248,7 +249,7 @@ class DatagramRouter(object):
             handle_in_traffic()
             handle_send_requests()
 
-            time.sleep(1e-3)
+            time.sleep(config.thread_sleep_time)
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
