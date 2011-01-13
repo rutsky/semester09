@@ -15,3 +15,4 @@ GUI:
  * Add/remove router.
  * Manual adding of persistent links.
  * Add buttons to stop/shake all routers.
+ * Links always drawing above routers - this is not always correct.
