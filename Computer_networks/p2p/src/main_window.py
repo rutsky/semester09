@@ -77,8 +77,6 @@ class MainWindow(QMainWindow):
         # (src, dest) -> link
         self.links = {}
 
-        # Set `self.connection_distance' to None to disable connections by
-        # distance.
         self.connection_distance = 40
         self.disconnection_distance = 50
 
@@ -146,9 +144,6 @@ class MainWindow(QMainWindow):
         self.routers.append(router)
 
         return name
-
-    def is_connections_by_distance_enabled(self):
-        return self.connection_distance is not None
 
     def shake_routers(self):
         for router in self.routers:
