@@ -41,8 +41,6 @@ class LinkItem(QGraphicsObject):
         self.src_point = None
         self.dest_point = None
 
-        self.setZValue(-min(int(self.src.name), int(self.dest.name)))
-
         # Edge color.
         self.color = Qt.black
 
