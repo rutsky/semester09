@@ -53,14 +53,14 @@ def _test():
     from testing import unittest, do_tests, process_events_with_timeout
 
     class Tests(object):
-        class TestPallete(unittest.TestCase):
+        class TestPalette(unittest.TestCase):
             def test_main(self):
-                p = Pallete()
+                p = Palette()
                 p[10]
 
             def test_deterministic(self):
-                p1 = Pallete()
-                p2 = Pallete()
+                p1 = Palette()
+                p2 = Palette()
                 p1[100]
                 p2[200]
                 self.assertEqual(p1[30], p2[30])
