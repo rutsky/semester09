@@ -43,7 +43,7 @@ class RouterItem(QGraphicsObject):
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        self.setZValue(-1)
+        self.setZValue(-int(name))
 
         # Circle color.
         self.color = palette.palette[self.name]
