@@ -69,6 +69,7 @@ class LinkItem(QGraphicsObject):
 
         self.src_table = self.src.rip_service.dynamic_routing_table().table()
         self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
+        self._recalculate_routes()
 
         self.destroyed.connect(self.on_destroy)
 
@@ -186,30 +187,16 @@ class LinkItem(QGraphicsObject):
         painter.drawLine(line_to_draw)
 
     def _paint_next_routers(self, painter):
-        through_dest_routers = \
-            routing_table.routes_through(self.src_table, self.dest.name)
-        through_src_routers = \
-            routing_table.routes_through(self.dest_table, self.src.name)
-
-        through_dest = [(dest, self.src_table[dest]) \
-            for dest in through_dest_routers]
-        through_src = [(dest, self.dest_table[dest]) \
-            for dest in through_src_routers]
-
-        # Sort by destination.
-        through_dest.sort(cmp=lambda a, b: cmp(a[0], b[0]))
-        through_src.sort (cmp=lambda a, b: cmp(a[0], b[0]))
-
         # From source to destination.
         line = QLineF(self.src_point, self.dest_point)
-        for idx, (dest, route) in enumerate(through_dest):
+        for idx, (dest, route) in enumerate(self._routes_through_dest):
             offset = self._visual_route_start_offset + \
                 idx * self._visual_route_offset_step
             self._paint_next_router(painter, line, offset, dest, route.distance)
 
         # From destination to source.
         line = QLineF(line.p2(), line.p1())
-        for idx, (dest, route) in enumerate(through_src):
+        for idx, (dest, route) in enumerate(self._routes_through_src):
             offset = self._visual_route_start_offset + \
                 idx * self._visual_route_offset_step
             self._paint_next_router(painter, line, offset, dest, route.distance)
@@ -226,6 +213,21 @@ class LinkItem(QGraphicsObject):
 
         self._paint_next_routers(painter)
 
+    def _recalculate_routes(self):
+        through_dest_routers = \
+                routing_table.routes_through(self.src_table, self.dest.name)
+        through_src_routers = \
+            routing_table.routes_through(self.dest_table, self.src.name)
+
+        self._routes_through_dest = [(dest, self.src_table[dest]) \
+            for dest in through_dest_routers]
+        self._routes_through_src = [(dest, self.dest_table[dest]) \
+            for dest in through_src_routers]
+
+        # Sort by destination.
+        self._routes_through_dest.sort(cmp=lambda a, b: cmp(a[0], b[0]))
+        self._routes_through_src.sort (cmp=lambda a, b: cmp(a[0], b[0]))
+
     def timerEvent(self, event):
         old_src_table = self.src_table
         old_dest_table = self.dest_table
@@ -233,6 +235,7 @@ class LinkItem(QGraphicsObject):
         self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
 
         if old_src_table != self.src_table or old_dest_table != self.dest_table:
+            self._recalculate_routes()
             self.update()
 
 def _test(timeout=1):
