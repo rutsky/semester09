@@ -19,6 +19,9 @@ import os.path
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
+__all__ = ["unittest",
+    "process_events_with_timeout", "do_tests"]
+
 import sys
 if sys.version_info[:2] < (2, 7):
     # Backports.
