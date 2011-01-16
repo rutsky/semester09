@@ -18,8 +18,8 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["RoutingTable", "StaticRoutingTable", "loopback_routing_table",
-    "LocalRoutingTable"]
+__all__ = ["RoutingTable", "routes_through", "StaticRoutingTable",
+    "loopback_routing_table", "LocalRoutingTable"]
 
 """Routing table implementation.
 
