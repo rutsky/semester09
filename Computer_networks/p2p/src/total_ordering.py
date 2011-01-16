@@ -41,3 +41,16 @@ else:
                 setattr(cls, opname, opfunc)
         return cls
 
+def _test():
+    from testing import unittest, do_tests
+
+    class Tests:
+        class TestTotalOrdering(unittest.TestCase):
+            def test_main(self):
+                # TODO
+                pass
+
+    do_tests(Tests)
+
+if __name__ == '__main__':
+    _test()
