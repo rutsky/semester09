@@ -44,6 +44,9 @@ class RouteToDestination(object):
     def __lt__(self, other):
         return self.next_router < other.next_router
 
+    def __str__(self):
+        return "RouteToDestination(next_router={0})".format(self.next_router)
+
 class RoutingTable(object):
     def __init__(self):
         super(RoutingTable, self).__init__()
@@ -121,6 +124,11 @@ def _test():
     from link_manager import RouterLinkManager
 
     class Tests(object):
+        class TestRouteToDestination(unittest.TestCase):
+            def test_str(self):
+                r = RouteToDestination(next_router=1)
+                self.assertEqual(str(r), "RouteToDestination(next_router=1)")
+
         class TestStaticRoutingTable(unittest.TestCase):
             def test_routing(self):
                 table = {
