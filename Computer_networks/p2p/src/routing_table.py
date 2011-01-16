@@ -29,12 +29,27 @@ When router receives packet (src, dest, data) it looks up next router in
 routing table and retransmits packet there.
 """
 
+from total_ordering import total_ordering
+
+@total_ordering
+class RouteToDestination(object):
+    def __init__(self, next_router=None):
+        super(RouteToDestination, self).__init__()
+
+        self.next_router = next_router
+
+    def __eq__(self, other):
+        return self.next_router == other.next_router
+
+    def __lt__(self, other):
+        return self.next_router < other.next_router
+
 class RoutingTable(object):
     def __init__(self):
         super(RoutingTable, self).__init__()
 
     def table(self):
-        """Returns dictionary: { destination router: next_router }.
+        """Returns dictionary: { destination router: RouteToDestination() }.
 
         Note: subsequent calls can return different table on dynamically
         updated routing table, so use caching.
@@ -48,15 +63,15 @@ class RoutingTable(object):
         Returns None in case when next hop is undefined (and datagram should
         be destroyed).
         """
-        return self.table().setdefault(dest, None)
+        return self.table().setdefault(dest, RouteToDestination()).next_router
 
 def routes_through(table, next_router_name):
     """Returns list of destination routers accessible through passed next
     router name.
     """
 
-    return [dest for (dest, next) in  table.items() \
-        if next == next_router_name]
+    return [dest for (dest, route) in  table.items() \
+        if route.next_router == next_router_name]
 
 class StaticRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router):
@@ -78,7 +93,7 @@ class DynamicRoutingTable(RoutingTable):
             return self.dest_to_next_router.copy()        
 
 def loopback_routing_table(router_name):
-    return StaticRoutingTable({router_name: router_name})
+    return StaticRoutingTable({router_name: RouteToDestination(router_name)})
 
 class LocalRoutingTable(RoutingTable):
     def __init__(self, router_name, router_link_manager):
@@ -89,7 +104,8 @@ class LocalRoutingTable(RoutingTable):
     def table(self):
         routers = self._link_manager.connected_routers()
         routers.append(self._router_name)
-        return dict(zip(routers, routers))
+        return dict([
+            (router, RouteToDestination(router)) for router in routers])
 
 def _test():
     # TODO: Use in separate file to test importing functionality.
@@ -107,7 +123,12 @@ def _test():
     class Tests(object):
         class TestStaticRoutingTable(unittest.TestCase):
             def test_routing(self):
-                table = {1: 1, 2: 2, 3: 3, 6: 2}
+                table = {
+                    1: RouteToDestination(1),
+                    2: RouteToDestination(2),
+                    3: RouteToDestination(3),
+                    6: RouteToDestination(2),
+                    }
                 rt = StaticRoutingTable(table)
 
                 self.assertItemsEqual(rt.table(), table)
@@ -122,7 +143,12 @@ def _test():
 
         class TestRoutesThrough(unittest.TestCase):
             def test_main(self):
-                table = {1: 1, 2: 2, 3: 3, 6: 2}
+                table = {
+                    1: RouteToDestination(1),
+                    2: RouteToDestination(2),
+                    3: RouteToDestination(3),
+                    6: RouteToDestination(2),
+                    }
 
                 self.assertItemsEqual(routes_through(table, 2), [2, 6])
                 self.assertItemsEqual(routes_through(table, 7), [])
