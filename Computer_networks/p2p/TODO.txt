@@ -19,3 +19,5 @@ GUI:
  * Links always drawing above routers - this is not always correct.
  * File->Quit (or Ctrl+Q) don't work on recent Python 2.7 and PyQt.
  * Add window with statistics about loss packets etc.
+ * Add zooming.
+
