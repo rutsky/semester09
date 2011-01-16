@@ -147,7 +147,7 @@ class RouterServiceManager(object):
                         else:
                             logger.warning(
                                 "Packet for unregistered service {0} "
-                                "unhandled:\n{1}".format(
+                                "unhandled:\n  {1}".format(
                                     protocol, packet))
 
         logger = logging.getLogger("{0}._work".format(self))
@@ -167,16 +167,8 @@ class RouterServiceManager(object):
 
             time.sleep(config.thread_sleep_time)
 
-def _test():
+def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
-
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
-    import logging
 
     from testing import unittest, do_tests
     
@@ -364,7 +356,7 @@ def _test():
 
         class TestRouterServiceManager2WithLosses(unittest.TestCase):
             def setUp(self):
-                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
 
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
@@ -434,7 +426,7 @@ def _test():
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-    do_tests(Tests, level=0)
+    do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    _test()
+    _test(level=0)
