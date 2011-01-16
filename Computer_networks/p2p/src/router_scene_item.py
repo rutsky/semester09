@@ -203,7 +203,7 @@ class RouterItem(QGraphicsObject):
             self.mapFromItem(other_router, 0, 0)).length()
 
             
-def _test():
+def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
@@ -311,8 +311,7 @@ def _test():
 
                 self.finished = True
 
-    timeout = None
     do_tests(Tests, qt=True)
 
 if __name__ == "__main__":
-    _test()
+    _test(None)
