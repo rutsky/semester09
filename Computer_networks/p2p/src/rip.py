@@ -51,6 +51,7 @@ class RIPData(recordtype('RIPDataBase', 'distances')):
 
 class RIPService(object):
     protocol = 520
+    inf_distance = 16
 
     @total_ordering
     class RIPRouteToDestination(RouteToDestination):
@@ -79,7 +80,6 @@ class RIPService(object):
 
     def __init__(self, router_name, router_link_manager, service_transmitter,
             **kwargs):
-        self._inf_dist       = kwargs.pop('inf_dist',       16)
         self._update_period  = kwargs.pop('update_period',   1)
         self._inf_timeout    = kwargs.pop('inf_timeout',     2)
         self._remove_timeout = kwargs.pop('remove_timeout', 12)
@@ -94,7 +94,7 @@ class RIPService(object):
 
         self._dynamic_routing_table = DynamicRoutingTable(
             {router_name: RIPService.RIPRouteToDestination(router_name, 0)})
-        
+
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
         self._exit_lock = threading.RLock()
@@ -135,7 +135,7 @@ class RIPService(object):
             # leaded through disconnected routers.
             for to_router, dest_router_info in dest_routers_info.iteritems():
                 if dest_router_info.next_router in new_disconnected_routers:
-                    dest_router_info.dist = self._inf_dist
+                    dest_router_info.dist = RIPService.inf_distance
                     self._logger.debug(
                         "Remove route: Due to disconnection: "
                         "{dest}:(d={dist}, n={next})".format(
@@ -173,9 +173,9 @@ class RIPService(object):
         def set_infinite_timeout_distances():
             routing_table_updated = False
             for dest, dest_router_info in dest_routers_info.iteritems():
-                if (dest_router_info.dist < self._inf_dist and 
+                if (dest_router_info.dist < RIPService.inf_distance and
                         dest_router_info.timer.is_expired()):
-                    dest_router_info.dist = self._inf_dist
+                    dest_router_info.dist = RIPService.inf_distance
                     dest_router_info.timer = Timer(self._remove_timeout)
                     routing_table_updated = True
 
@@ -191,7 +191,7 @@ class RIPService(object):
         def remove_timeout_distances():
             routing_table_updated = False
             for dest, dest_router_info in dest_routers_info.items():
-                if (dest_router_info.dist == self._inf_dist and
+                if (dest_router_info.dist == RIPService.inf_distance and
                         dest_router_info.timer.is_expired()):
                     del dest_routers_info[dest]
 
@@ -217,7 +217,7 @@ class RIPService(object):
                     #   R ----------------- G - ... - X
                     #       X:(inf, G) ->
                     #
-                    d = (self._inf_dist, dest)
+                    d = (RIPService.inf_distance, dest)
                     distances.append(d)
                 else:
                     d = (dest_router_info.dist, dest)
@@ -255,12 +255,12 @@ class RIPService(object):
 
                 routing_table_updated = False
                 for dist, dest in rip_data.distances:
-                    dist = min(dist + 1, self._inf_dist)
+                    dist = min(dist + 1, RIPService.inf_distance)
 
                     if dest not in dest_routers_info:
                         # Route to new router.
 
-                        if dist < self._inf_dist:
+                        if dist < RIPService.inf_distance:
                             dest_routers_info[dest] = DestRouterInfo(
                                 dist=dist, next_router=src,
                                 timer=Timer(self._inf_timeout))
@@ -299,7 +299,7 @@ class RIPService(object):
                         dest_routers_info[dest].dist = dist
 
                         timer = Timer(self._inf_timeout) \
-                            if dist < self._inf_dist \
+                            if dist < RIPService.inf_distance \
                             else Timer(self._remove_timeout)
                         dest_routers_info[dest].timer = timer
 
@@ -311,7 +311,7 @@ class RIPService(object):
                                 dest=dest, dist=dist,
                                 next=src))
                     else:
-                        if dist < self._inf_dist:
+                        if dist < RIPService.inf_distance:
                             # Update timer.
                             dest_routers_info[dest].timer.restart()
                         else:
@@ -327,7 +327,7 @@ class RIPService(object):
             new_routing_table = {}
 
             for dest, dest_rr_info in dest_routers_info.iteritems():
-                if dest_rr_info.dist < self._inf_dist:
+                if dest_rr_info.dist < RIPService.inf_distance:
                     assert dest not in new_routing_table
                     new_routing_table[dest] = \
                         RIPService.RIPRouteToDestination(
