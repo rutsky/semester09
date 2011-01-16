@@ -1,3 +1,4 @@
+import os.path
 #  This file is part of network emulation test model.
 #
 #  Copyright (C) 2010, 2011  Vladimir Rutsky <altsysrq@gmail.com>
@@ -46,12 +47,14 @@ def process_events_with_timeout(timeout=None, callback=None):
                     app.topLevelWidgets()):
                 w.close()
 
-def do_tests(tests_class, qt=False, level=logging.CRITICAL):
+def do_tests(tests_class, qt=False, init_logging=True,
+        level=logging.CRITICAL):
     if qt:
         # Only one instance QApplication should exist.
         app = QApplication(sys.argv)
 
-    logging.basicConfig(level=level)
+    if init_logging:
+        logging.basicConfig(level=level)
 
     suite = unittest.TestSuite()
     for k, v in tests_class.__dict__.iteritems():
@@ -63,4 +66,46 @@ def do_tests(tests_class, qt=False, level=logging.CRITICAL):
     if qt:
         app.exit()
 
+def _main_test():
+    import glob
+    import re
+    import traceback
+    import multiprocessing
+
+    def test_file(file_name):
+        module_name = re.match("(.*)\.py", file_name).group(1)
+
+        print "Testing {0}.".format(module_name)
+        m = __import__(module_name, globals().copy(), locals().copy())
+        try:
+            test_func = m._test
+        except AttributeError:
+            print "Note: {0}._test() not found. Skipping.".format(module_name)
+        else:
+            try:
+                #print test_func
+                test_func()
+            except:
+                traceback.print_exc()
+
+    # Run all modules.
+    ignore_files = frozenset([os.path.basename(__file__), "setup.py",
+        "setup_cx-freeze.py", "main.py"])
+    for file_name in glob.iglob("*.py"):
+        if file_name in ignore_files:
+            continue
+
+        # TODO: Mess with output from different processes.
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        p = multiprocessing.Process(target=lambda: test_file(file_name))
+        p.start()
+        p.join()
+        
+        sys.stdout.flush()
+        sys.stderr.flush()
+
 # TODO: Add tests for this module.
+if __name__ == "__main__":
+    _main_test()
