@@ -29,6 +29,8 @@ When router receives packet (src, dest, data) it looks up next router in
 routing table and retransmits packet there.
 """
 
+import threading
+
 from total_ordering import total_ordering
 
 @total_ordering
@@ -44,7 +46,7 @@ class RouteToDestination(object):
     def __lt__(self, other):
         return self.next_router < other.next_router
 
-    def __str__(self):
+    def __repr__(self):
         return "RouteToDestination(next_router={0})".format(self.next_router)
 
 class RoutingTable(object):
@@ -81,19 +83,43 @@ class StaticRoutingTable(RoutingTable):
         super(StaticRoutingTable, self).__init__()
         self.dest_to_next_router = dest_to_next_router
 
+        assert all(map(
+                    lambda x: isinstance(x, RouteToDestination),
+                    self.table().values()))
+
     def table(self):
         return self.dest_to_next_router
 
 # TODO: Add tests.
 class DynamicRoutingTable(RoutingTable):
-    def __init__(self, dest_to_next_router, lock):
+    def __init__(self, dest_to_next_router={}, lock=None):
         super(DynamicRoutingTable, self).__init__()
-        self.dest_to_next_router = dest_to_next_router
-        self.lock = lock
+        self._dest_to_next_router = dest_to_next_router
+
+        if lock is not None:
+            self._lock = lock
+        else:
+            self._lock = threading.RLock()
+
+        assert all(map(
+            lambda x: isinstance(x, RouteToDestination),
+            self.table().values()))
+
+    @property
+    def lock(self):
+        return self._lock
 
     def table(self):
-        with self.lock:
-            return self.dest_to_next_router.copy()        
+        with self._lock:
+            return self._dest_to_next_router.copy()
+
+    def update(self, new_dest_to_next_router):
+        assert all(map(
+            lambda x: isinstance(x, RouteToDestination),
+            new_dest_to_next_router.values()))
+
+        with self._lock:
+            self._dest_to_next_router = new_dest_to_next_router
 
 def loopback_routing_table(router_name):
     return StaticRoutingTable({router_name: RouteToDestination(router_name)})

@@ -30,9 +30,10 @@ import logging
 import pprint
 
 from recordtype import recordtype
+from total_ordering import total_ordering
 
 import config
-from routing_table import DynamicRoutingTable
+from routing_table import DynamicRoutingTable, RouteToDestination
 from service_manager import Packet
 from timer import Timer, DummyTimer
 
@@ -51,6 +52,31 @@ class RIPData(recordtype('RIPDataBase', 'distances')):
 class RIPService(object):
     protocol = 520
 
+    @total_ordering
+    class RIPRouteToDestination(RouteToDestination):
+        def __init__(self, next_router=None, distance=None):
+            super(RIPService.RIPRouteToDestination, self).\
+                __init__(next_router=next_router)
+
+            self.distance = distance
+
+        def __eq__(self, other):
+            return (super(RIPService.RIPRouteToDestination, self).
+                    __eq__(other) and
+                self.distance == other.distance)
+
+        def __lt__(self, other):
+            if (super(RIPService.RIPRouteToDestination, self).
+                    __eq__(other)):
+                return self.distance < other.distance
+            else:
+                return super(RIPService.RIPRouteToDestination, self).\
+                    __lt__(other)
+
+        def __repr__(self):
+            return "RIPRouteToDestination(next_router={0}, dist={1})".\
+                format(self.next_router, self.distance)
+
     def __init__(self, router_name, router_link_manager, service_transmitter,
             **kwargs):
         self._inf_dist       = kwargs.pop('inf_dist',       16)
@@ -66,9 +92,9 @@ class RIPService(object):
         self._logger = logging.getLogger("RIPService.router={0}".format(
             self._router_name))
 
-        self._dest_to_next_router = {router_name: router_name}
-        self._dest_to_next_router_lock = threading.Lock()
-
+        self._dynamic_routing_table = DynamicRoutingTable(
+            {router_name: RIPService.RIPRouteToDestination(router_name, 0)})
+        
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
         self._exit_lock = threading.RLock()
@@ -84,8 +110,7 @@ class RIPService(object):
         self._working_thread.join()
 
     def dynamic_routing_table(self):
-        return DynamicRoutingTable(self._dest_to_next_router,
-            self._dest_to_next_router_lock)
+        return self._dynamic_routing_table
 
     def _work(self):
         def update_connected_routers_info():
@@ -297,20 +322,22 @@ class RIPService(object):
                     update_routing_table()
 
         def update_routing_table():
-            with self._dest_to_next_router_lock:
-                old_routing_table = self._dest_to_next_router.copy()
-                
-                self._dest_to_next_router.clear()
+            old_routing_table = self._dynamic_routing_table.table().copy()
 
-                for dest, dest_rr_info in dest_routers_info.iteritems():
-                    if dest_rr_info.dist < self._inf_dist:
-                        assert dest not in self._dest_to_next_router
-                        self._dest_to_next_router[dest] = \
-                            dest_rr_info.next_router
+            new_routing_table = {}
 
-                if old_routing_table != self._dest_to_next_router:
-                    self._logger.debug("New routing table:\n  {0}".format(
-                        pprint.pformat(self._dest_to_next_router)))
+            for dest, dest_rr_info in dest_routers_info.iteritems():
+                if dest_rr_info.dist < self._inf_dist:
+                    assert dest not in new_routing_table
+                    new_routing_table[dest] = \
+                        RIPService.RIPRouteToDestination(
+                            dest_rr_info.next_router, dest_rr_info.dist)
+
+            if old_routing_table != new_routing_table:
+                self._logger.debug("New routing table:\n  {0}".format(
+                    pprint.pformat(new_routing_table)))
+
+                self._dynamic_routing_table.update(new_routing_table)
 
         self._logger.info("Working thread started")
 
@@ -565,7 +592,8 @@ def _test(init_logging=True, level=None, disabled_loggers=None):
 
         class TestRIPService2WithLosses(TestRIPService2):
             def setUp(self):
-                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
+                l1, l2 = FullDuplexLink(
+                    loss_func=LossFunc(0.0008, 0.0008, 0.0008))
 
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
