@@ -47,6 +47,12 @@ class LinkItem(QGraphicsObject):
         # Edge color.
         self.color = Qt.black
 
+        self._visual_link_width = 2
+        self._visual_route_start_offset = 2.5
+        self._visual_route_offset_step = 0.8
+        self._visual_route_line_width = 0.5
+        self._visual_route_draw_fraction = 2.0 / 3
+
         # Initial state is disabled.
         self._enabled = False
         self.hide()
@@ -66,7 +72,8 @@ class LinkItem(QGraphicsObject):
 
         self.destroyed.connect(self.on_destroy)
 
-        self._timer_id = self.startTimer(int(1000.0 / 20))
+        update_rate = 20 # frames per second
+        self._timer_id = self.startTimer(int(1000.0 / update_rate))
 
     @pyqtSlot()
     def on_destroy(self):
@@ -158,9 +165,6 @@ class LinkItem(QGraphicsObject):
                         .adjusted(-extra, -extra, extra, extra)
 
     def _paint_next_router(self, painter, line, offset, dest_router, distance):
-        draw_fraction = 5.0 / 6
-        line_width = 0.5
-
         unit_vector = line.unitVector().p2() - line.unitVector().p1()
         normal_vector = line.normalVector().unitVector().p1() - \
             line.normalVector().unitVector().p2()
@@ -168,33 +172,28 @@ class LinkItem(QGraphicsObject):
         line_to_draw = QLineF(
             line.unitVector().p1(),
             line.unitVector().p1() + 
-                unit_vector * line.length() * draw_fraction)
+                unit_vector * line.length() * self._visual_route_draw_fraction)
         line_to_draw.translate(normal_vector * offset)
 
         color = palette.palette[dest_router]
-        value = \
+        saturation = \
             (1.0 * (RIPService.inf_distance - distance) /
                 float(RIPService.inf_distance))
-        color.setHsvF(color.hueF(), color.saturationF(), value)
+        color.setHsvF(color.hueF(), saturation, color.valueF())
 
-        painter.setPen(QPen(color, line_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setPen(QPen(color, self._visual_route_line_width,
+            Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line_to_draw)
 
     def _paint_next_routers(self, painter):
-        start_offset = 2.5
-        offset_step = 0.8
-
-        src_table = self.src.rip_service.dynamic_routing_table().table()
-        dest_table = self.dest.rip_service.dynamic_routing_table().table()
-
         through_dest_routers = \
-            routing_table.routes_through(src_table, self.dest.name)
+            routing_table.routes_through(self.src_table, self.dest.name)
         through_src_routers = \
-            routing_table.routes_through(dest_table, self.src.name)
+            routing_table.routes_through(self.dest_table, self.src.name)
 
-        through_dest = [(dest, src_table[dest]) \
+        through_dest = [(dest, self.src_table[dest]) \
             for dest in through_dest_routers]
-        through_src = [(dest, dest_table[dest]) \
+        through_src = [(dest, self.dest_table[dest]) \
             for dest in through_src_routers]
 
         # Sort by destination.
@@ -204,13 +203,15 @@ class LinkItem(QGraphicsObject):
         # From source to destination.
         line = QLineF(self.src_point, self.dest_point)
         for idx, (dest, route) in enumerate(through_dest):
-            offset = start_offset + idx * offset_step
+            offset = self._visual_route_start_offset + \
+                idx * self._visual_route_offset_step
             self._paint_next_router(painter, line, offset, dest, route.distance)
 
         # From destination to source.
         line = QLineF(line.p2(), line.p1())
         for idx, (dest, route) in enumerate(through_src):
-            offset = start_offset + idx * offset_step
+            offset = self._visual_route_start_offset + \
+                idx * self._visual_route_offset_step
             self._paint_next_router(painter, line, offset, dest, route.distance)
 
     def paint(self, painter, style_option, widget):
@@ -220,7 +221,7 @@ class LinkItem(QGraphicsObject):
         line = QLineF(self.src_point, self.dest_point)
         assert not qFuzzyCompare(line.length(), 0.)
 
-        painter.setPen(QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setPen(QPen(Qt.black, self._visual_link_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line)
 
         self._paint_next_routers(painter)
