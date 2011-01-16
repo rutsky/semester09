@@ -180,8 +180,6 @@ class DatagramRouter(object):
                 next_router = self._routing_table.next_router(datagram.dest)
             self._logger.debug("  next router is {0}".format(next_router))
 
-            # TODO: Duplicating functionality - at least RIP routing table
-            # contains entries for directly connected routers.
             if next_router == self._router_name:
                 self._logger.debug("  datagram is addressed for this router, "
                     "pass it up for processing ")
