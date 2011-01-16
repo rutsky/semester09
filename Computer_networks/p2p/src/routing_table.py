@@ -50,13 +50,13 @@ class RoutingTable(object):
         """
         return self.table().setdefault(dest, None)
 
-    def routes_through(self, next_router_name):
-        """Returns list of destination routers accessible through passed next
-        router name.
-        """
+def routes_through(table, next_router_name):
+    """Returns list of destination routers accessible through passed next
+    router name.
+    """
 
-        return [dest for (dest, next) in  self.table().items() \
-            if next == next_router_name]
+    return [dest for (dest, next) in  table.items() \
+        if next == next_router_name]
 
 class StaticRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router):
@@ -107,20 +107,25 @@ def _test():
     class Tests(object):
         class TestStaticRoutingTable(unittest.TestCase):
             def test_routing(self):
-                table = {1: 1, 2: 2, 3: 3, 6:2}
+                table = {1: 1, 2: 2, 3: 3, 6: 2}
                 rt = StaticRoutingTable(table)
 
                 self.assertItemsEqual(rt.table(), table)
                 self.assertEqual(rt.next_router(2), 2)
                 self.assertEqual(rt.next_router(4), None)
-                self.assertItemsEqual(rt.routes_through(2), [2, 6])
-                self.assertItemsEqual(rt.routes_through(7), [])
 
             def test_loopback(self):
                 rt = loopback_routing_table(1)
 
                 self.assertEqual(rt.next_router(1), 1)
                 self.assertEqual(rt.next_router(2), None)
+
+        class TestRoutesThrough(unittest.TestCase):
+            def test_main(self):
+                table = {1: 1, 2: 2, 3: 3, 6: 2}
+
+                self.assertItemsEqual(routes_through(table, 2), [2, 6])
+                self.assertItemsEqual(routes_through(table, 7), [])
 
         class TestLocalRoutingTable(unittest.TestCase):
             def test_routing(self):
