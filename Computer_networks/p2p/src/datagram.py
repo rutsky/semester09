@@ -356,8 +356,10 @@ def _test(level=None):
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()
@@ -426,8 +428,10 @@ def _test(level=None):
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()
