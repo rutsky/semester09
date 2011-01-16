@@ -51,7 +51,8 @@ class LinkItem(QGraphicsObject):
         sft1 = SimpleFrameTransmitter(node=l1)
         sft2 = SimpleFrameTransmitter(node=l2)
         self._src_frame_transmitter = \
-            FrameTransmitter(simple_frame_transmitter=sft1)
+            FrameTransmitter(simple_frame_transmitter=sft1,
+            debug_src=self.src, debug_dest=self.dest)
         self._dest_frame_transmitter = \
             FrameTransmitter(simple_frame_transmitter=sft2)
 

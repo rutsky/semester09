@@ -196,4 +196,4 @@ def _test(timeout=1, level=None):
     do_tests(Tests, qt=True, level=level)
 
 if __name__ == "__main__":
-    _test(timeout=None, level=0)
+    _test(timeout=None, level=50)

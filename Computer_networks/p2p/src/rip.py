@@ -256,7 +256,7 @@ class RIPService(object):
                         
                         dest_routers_info[dest].dist = dist
                         dest_routers_info[dest].next_router = src
-                        dest_routers_info[dest].timeout = \
+                        dest_routers_info[dest].timer = \
                             Timer(self._inf_timeout)
 
                         routing_table_updated = True
@@ -276,7 +276,7 @@ class RIPService(object):
                         timer = Timer(self._inf_timeout) \
                             if dist < self._inf_dist \
                             else Timer(self._remove_timeout)
-                        dest_routers_info[dest].timeout = timer
+                        dest_routers_info[dest].timer = timer
 
                         routing_table_updated = True
 
@@ -305,8 +305,6 @@ class RIPService(object):
                 for dest, dest_rr_info in dest_routers_info.iteritems():
                     if dest_rr_info.dist < self._inf_dist:
                         assert dest not in self._dest_to_next_router
-                        assert (dest_rr_info.next_router in connected_routers or
-                            dest_rr_info.next_router == self._router_name)
                         self._dest_to_next_router[dest] = \
                             dest_rr_info.next_router
 

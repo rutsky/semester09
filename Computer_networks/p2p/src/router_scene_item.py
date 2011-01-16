@@ -69,7 +69,18 @@ class RouterItem(QGraphicsObject):
 
         self._drag_points = deque(maxlen=10)
 
-    def start_networking(self):
+        self._start_networking()
+
+        self.destroyed.connect(self.on_destroy)
+
+    @pyqtSlot()
+    def on_destroy(self):
+        # FIXME: never called.
+        print "{0}.on_destroy()".format(self)
+
+        self._stop_networking()
+
+    def _start_networking(self):
         self.datagram_router = DatagramRouter(
             router_name=self.name,
             link_manager=self._link_manager)
@@ -83,7 +94,7 @@ class RouterItem(QGraphicsObject):
         self.datagram_router.set_routing_table(
             self.rip_service.dynamic_routing_table())
 
-    def stop_networking(self):
+    def _stop_networking(self):
         self.rip_service.terminate()
         self.service_manager.terminate()
         self.datagram_router.terminate()
@@ -277,11 +288,11 @@ def _test(timeout=1):
             def test_start_stop_networking(self):
                 ri = RouterItem(1)
 
-                self.assertEqual(ri.rip_service, None)
-                ri.start_networking()
+                #self.assertEqual(ri.rip_service, None)
+                #ri.start_networking()
                 self.assertNotEqual(ri.rip_service, None)
-                ri.stop_networking()
-                self.assertEqual(ri.rip_service, None)
+                #ri.stop_networking()
+                #self.assertEqual(ri.rip_service, None)
 
         class TestRouterItemGUIMoving(unittest.TestCase):
             def setUp(self):
@@ -305,7 +316,7 @@ def _test(timeout=1):
 
                     process_events_with_timeout(timeout, callback=update)
 
-            def test_start_stop_networking(self):
+            def test_main(self):
                 self.ri = RouterItem(1)
                 self.scene.addItem(self.ri)
 
