@@ -146,15 +146,8 @@ def recordtype(typename, field_names, verbose=False, **default_kwds):
     return cls
 
 def _test():
-    import sys
+    from testing import unittest, do_tests
     
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
-
     class Tests:
         class TestRecordtypeInheritance(unittest.TestCase):
             def setUp(self):
@@ -193,12 +186,7 @@ def _test():
             def test_kwargs(self):
                 a = self.A(a=1, b=2, c=3)
 
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests)
 
 if __name__ == '__main__':
     import doctest
