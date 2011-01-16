@@ -114,6 +114,7 @@ def _test():
                 self.assertEqual(rt.next_router(2), 2)
                 self.assertEqual(rt.next_router(4), None)
                 self.assertItemsEqual(rt.routes_through(2), [2, 6])
+                self.assertItemsEqual(rt.routes_through(7), [])
 
             def test_loopback(self):
                 rt = loopback_routing_table(1)
