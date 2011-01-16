@@ -157,7 +157,12 @@ class LinkItem(QGraphicsObject):
         if self.is_singular():
             return QRectF()
 
-        extra = 5 # FIXME: should be calculated according to drawing stuff.
+        routes_count = max(len(self._routes_through_dest),
+            len(self._routes_through_src))
+        extra = max(self._visual_link_width,
+            self._visual_route_start_offset +
+                routes_count * self._visual_route_offset_step +
+                    self._visual_route_line_width)
 
         return QRectF(self.src_point,
             QSizeF(self.dest_point.x() - self.src_point.x(),
