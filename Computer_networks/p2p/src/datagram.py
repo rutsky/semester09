@@ -131,6 +131,9 @@ class DatagramRouter(object):
 
         super(DatagramRouter, self).__init__(*args, **kwargs)
 
+        self._logger = logging.getLogger("DatagramRouter.router={0}".format(
+            self._router_name))
+
         # Queue of Datagram's.
         self._datagrams_to_send = Queue.Queue()
         # Queue of Datagram's.
@@ -175,12 +178,12 @@ class DatagramRouter(object):
             with self._routing_table_lock:
                 routing_table = self._routing_table.table()
                 next_router = self._routing_table.next_router(datagram.dest)
-            logger.debug("  next router is {0}".format(next_router))
+            self._logger.debug("  next router is {0}".format(next_router))
 
             # TODO: Duplicating functionality - at least RIP routing table
             # contains entries for directly connected routers.
             if next_router == self._router_name:
-                logger.debug("  datagram is addressed for this router, "
+                self._logger.debug("  datagram is addressed for this router, "
                     "pass it up for processing ")
 
                 # Diagram addressed to current host.
@@ -189,19 +192,19 @@ class DatagramRouter(object):
                 if next_router in connected_routers:
                     # Retransmit to next router
 
-                    logger.debug("  retransmit datagram")
+                    self._logger.debug("  retransmit datagram")
 
                     connected_routers[next_router].send(
                         datagram.serialize())
                 else:
                     # Next host is unreachable. Destroy datagram.
-                    logger.warning(
+                    self._logger.warning(
                         "Datagram next router is unreachable. "
                         "Received from {0}, "
                         "next router {1}, "
-                        "datagram:\n{2}".
+                        "datagram:\n  {2}".
                             format(from_router, next_router, str(datagram)))
-                    logger.debug("Routing table:\n{0}".format(
+                    self._logger.debug("Routing table:\n  {0}".format(
                         pprint.pformat(routing_table)))
 
         def handle_in_traffic():
@@ -213,7 +216,7 @@ class DatagramRouter(object):
 
                     datagram = Datagram.deserialize(raw_datagram)
 
-                    logger.debug("Received datagram from {0}:\n{1}".format(
+                    self._logger.debug("Received datagram from {0}:\n  {1}".format(
                         from_router, str(datagram)))
 
                     handle_datagram(from_router, datagram)
@@ -223,25 +226,22 @@ class DatagramRouter(object):
                 try:
                     datagram = self._datagrams_to_send.get(block=False)
 
-                    logger.debug(
-                        "Handling send request for datagram:\n{0}".format(
+                    self._logger.debug(
+                        "Handling send request for datagram:\n  {0}".format(
                             str(datagram)))
 
                     handle_datagram(self._router_name, datagram)
                 except Queue.Empty:
                     break
 
-        logger = logging.getLogger("{0}._work<router={1}>".format(
-            self, self._router_name))
-
-        logger.info("Working thread started")
+        self._logger.info("Working thread started")
 
         while True:
             if self._exit_lock.acquire(False):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.info("Exit working thread")
+                self._logger.info("Exit working thread")
                 return
 
             connected_routers = dict(self._link_manager.connected_links())
@@ -390,7 +390,7 @@ def _test():
                 self.assertEqual(self.dr1.receive(), d21)
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = datagram(130, 1, 2, text * 10)
+                d_big = datagram(130, 1, 2, text * 5)
                 self.dr1.send(d_big)
                 self.assertEqual(self.dr2.receive(), d_big)
 
@@ -413,7 +413,7 @@ def _test():
 
         class TestDatagramRouter2WithLosses(unittest.TestCase):
             def setUp(self):
-                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
 
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
@@ -452,7 +452,7 @@ def _test():
                 self.assertEqual(self.dr1.receive(), d21)
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = datagram(130, 1, 2, text * 10)
+                d_big = datagram(130, 1, 2, text * 5)
                 self.dr1.send(d_big)
                 self.assertEqual(self.dr2.receive(), d_big)
 
