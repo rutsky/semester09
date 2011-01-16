@@ -1,5 +1,9 @@
-# Downloaded from http://code.activestate.com/recipes/576555/
-# Created by George Sakkis on Tue, 4 Nov 2008, distributed under MIT License.
+"""
+Records recipe
+
+Downloaded from http://code.activestate.com/recipes/576555/
+Created by George Sakkis on Tue, 4 Nov 2008, distributed under MIT License.
+"""
 
 __all__ = ['recordtype']
 
