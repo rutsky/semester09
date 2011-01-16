@@ -448,7 +448,7 @@ def _test(level=None):
                 self.assertEqual(self.dr1.receive(), d21)
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = datagram(130, 1, 2, text * 5)
+                d_big = datagram(130, 1, 2, text * 3)
                 self.dr1.send(d_big)
                 self.assertEqual(self.dr2.receive(), d_big)
 

@@ -85,6 +85,8 @@ def do_tests(tests_class, qt=False, init_logging=True, disabled_loggers=None,
         app.exit()
 
 def _main_test():
+    # TODO: Output at end total results on testing.
+
     import glob
     import re
     import traceback
