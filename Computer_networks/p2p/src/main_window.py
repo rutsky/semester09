@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
             router.velocity = random_velocity(*self.router_velocity_range)
 
     def _work(self):
+        # TODO: move to __init__()
         logger = logging.getLogger("{0}._work".format(self))
 
         logger.info("Working thread started")
@@ -167,7 +168,7 @@ class MainWindow(QMainWindow):
 
             time.sleep(config.thread_sleep_time)
 
-def _test():
+def _test(timeout=1, level=None):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
@@ -192,8 +193,7 @@ def _test():
 
                 self.finished = True
 
-    timeout = None
-    do_tests(Tests, qt=True, level=0)
+    do_tests(Tests, qt=True, level=level)
 
 if __name__ == "__main__":
-    _test()
+    _test(timeout=None, level=0)
