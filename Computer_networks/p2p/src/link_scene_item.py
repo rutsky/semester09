@@ -23,9 +23,12 @@ __all__ = ["LinkItem"]
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import routing_table
+import palette
 from duplex_link import FullDuplexLink
 from frame import SimpleFrameTransmitter
 from sliding_window import FrameTransmitter
+from rip import RIPService
 
 class LinkItem(QGraphicsObject):
     def __init__(self, src_router, dest_router, enabled=False,
@@ -58,7 +61,12 @@ class LinkItem(QGraphicsObject):
 
         self.enabled = enabled
 
+        self.src_table = self.src.rip_service.dynamic_routing_table().table()
+        self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
+
         self.destroyed.connect(self.on_destroy)
+
+        self._timer_id = self.startTimer(int(1000.0 / 20))
 
     @pyqtSlot()
     def on_destroy(self):
@@ -141,7 +149,7 @@ class LinkItem(QGraphicsObject):
         if self.is_singular():
             return QRectF()
 
-        extra = 1
+        extra = 5 # FIXME: should be calculated according to drawing stuff.
 
         return QRectF(self.src_point,
             QSizeF(self.dest_point.x() - self.src_point.x(),
@@ -149,13 +157,61 @@ class LinkItem(QGraphicsObject):
                         .normalized() \
                         .adjusted(-extra, -extra, extra, extra)
 
-    def _paint_next_router(self):
-        pass
+    def _paint_next_router(self, painter, line, offset, dest_router, distance):
+        draw_fraction = 5.0 / 6
+        line_width = 0.5
 
-    def _paint_next_routers(self):
+        unit_vector = line.unitVector().p2() - line.unitVector().p1()
+        normal_vector = line.normalVector().unitVector().p1() - \
+            line.normalVector().unitVector().p2()
+
+        line_to_draw = QLineF(
+            line.unitVector().p1(),
+            line.unitVector().p1() + 
+                unit_vector * line.length() * draw_fraction)
+        line_to_draw.translate(normal_vector * offset)
+
+        color = palette.palette[dest_router]
+        value = \
+            (1.0 * (RIPService.inf_distance - distance) /
+                float(RIPService.inf_distance))
+        color.setHsvF(color.hueF(), color.saturationF(), value)
+
+        painter.setPen(QPen(color, line_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.drawLine(line_to_draw)
+
+    def _paint_next_routers(self, painter):
+        start_offset = 2.5
+        offset_step = 0.8
+
+        src_table = self.src.rip_service.dynamic_routing_table().table()
+        dest_table = self.dest.rip_service.dynamic_routing_table().table()
+
+        through_dest_routers = \
+            routing_table.routes_through(src_table, self.dest.name)
+        through_src_routers = \
+            routing_table.routes_through(dest_table, self.src.name)
+
+        through_dest = [(dest, src_table[dest]) \
+            for dest in through_dest_routers]
+        through_src = [(dest, dest_table[dest]) \
+            for dest in through_src_routers]
+
+        # Sort by destination.
+        through_dest.sort(cmp=lambda a, b: cmp(a[0], b[0]))
+        through_src.sort (cmp=lambda a, b: cmp(a[0], b[0]))
+
         # From source to destination.
-        #self.src.
-        pass
+        line = QLineF(self.src_point, self.dest_point)
+        for idx, (dest, route) in enumerate(through_dest):
+            offset = start_offset + idx * offset_step
+            self._paint_next_router(painter, line, offset, dest, route.distance)
+
+        # From destination to source.
+        line = QLineF(line.p2(), line.p1())
+        for idx, (dest, route) in enumerate(through_src):
+            offset = start_offset + idx * offset_step
+            self._paint_next_router(painter, line, offset, dest, route.distance)
 
     def paint(self, painter, style_option, widget):
         if self.is_singular():
@@ -166,6 +222,17 @@ class LinkItem(QGraphicsObject):
 
         painter.setPen(QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line)
+
+        self._paint_next_routers(painter)
+
+    def timerEvent(self, event):
+        old_src_table = self.src_table
+        old_dest_table = self.dest_table
+        self.src_table = self.src.rip_service.dynamic_routing_table().table()
+        self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
+
+        if old_src_table != self.src_table or old_dest_table != self.dest_table:
+            self.update()
 
 def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.
