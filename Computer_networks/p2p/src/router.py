@@ -20,6 +20,7 @@ __license__ = "GPL"
 
 __all__ = ["Router"]
 
+import router_name
 from link_manager import RouterLinkManager
 from datagram import DatagramRouter
 from rip import RIPService
@@ -29,7 +30,7 @@ class Router(object):
     def __init__(self, name):
         super(Router, self).__init__()
 
-        assert isinstance(name, int) and 0 <= name < 2**32
+        assert router_name.is_valid(name)
         self._name = name
 
         self._link_manager = RouterLinkManager()
@@ -63,16 +64,10 @@ class Router(object):
     def link_manager(self):
         return self._link_manager
 
-def _test():
+def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
 
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
-    import logging
+    from testing import unittest, do_tests
 
     class Tests(object):
         class TestRouter(unittest.TestCase):
@@ -85,14 +80,7 @@ def _test():
 
                 rr.terminate()
 
-    logging.basicConfig(level=logging.DEBUG)
-
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    _test()
+    _test(0)

@@ -145,6 +145,7 @@ class FrameTransmitter(object):
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.5)
         self._debug_src = kwargs.pop('debug_src', 'None')
+        
         self._debug_dest = kwargs.pop('debug_dest', 'None')
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 

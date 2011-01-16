@@ -27,17 +27,18 @@ from collections import deque
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import palette
+import router_name
 from link_manager import RouterLinkManager
 from datagram import DatagramRouter
 from service_manager import RouterServiceManager
 from rip import RIPService
-import palette
 
 class RouterItem(QGraphicsObject):
     def __init__(self, name, parent=None):
         super(RouterItem, self).__init__(parent)
 
-        assert isinstance(name, int) and 0 <= name < 2**32
+        assert router_name.is_valid(name)
         self.name = name
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
@@ -59,10 +60,10 @@ class RouterItem(QGraphicsObject):
         self.links = {}
 
         self._link_manager = RouterLinkManager()
-        self.datagram_router = None
-        self.service_manager = None
-        self.rip_service_transmitter = None
-        self.rip_service = None
+        self._datagram_router = None
+        self._service_manager = None
+        self._rip_service_transmitter = None
+        self._rip_service = None
 
         self.velocity = QPointF()
         self.max_mouse_move_velocity = 100
@@ -81,32 +82,36 @@ class RouterItem(QGraphicsObject):
         self._stop_networking()
 
     def _start_networking(self):
-        self.datagram_router = DatagramRouter(
+        self._datagram_router = DatagramRouter(
             router_name=self.name,
             link_manager=self._link_manager)
-        self.service_manager = RouterServiceManager(self.datagram_router)
-        self.rip_service_transmitter = self.service_manager.register_service(
+        self._service_manager = RouterServiceManager(self._datagram_router)
+        self._rip_service_transmitter = self._service_manager.register_service(
             RIPService.protocol)
 
-        self.rip_service = RIPService(self.name, self._link_manager,
-            self.rip_service_transmitter)
+        self._rip_service = RIPService(self.name, self._link_manager,
+            self._rip_service_transmitter)
 
-        self.datagram_router.set_routing_table(
-            self.rip_service.dynamic_routing_table())
+        self._datagram_router.set_routing_table(
+            self._rip_service.dynamic_routing_table())
 
     def _stop_networking(self):
-        self.rip_service.terminate()
-        self.service_manager.terminate()
-        self.datagram_router.terminate()
+        self._rip_service.terminate()
+        self._service_manager.terminate()
+        self._datagram_router.terminate()
 
-        self.datagram_router = None
-        self.service_manager = None
-        self.rip_service_transmitter = None
-        self.rip_service = None
+        self._datagram_router = None
+        self._service_manager = None
+        self._rip_service_transmitter = None
+        self._rip_service = None
 
     @property
     def link_manager(self):
         return self._link_manager
+
+    @property
+    def rip_service(self):
+        return self._rip_service
 
     def boundingRect(self):
         adjust = 2
@@ -288,11 +293,11 @@ def _test(timeout=1):
             def test_start_stop_networking(self):
                 ri = RouterItem(1)
 
-                #self.assertEqual(ri.rip_service, None)
+                #self.assertEqual(ri._rip_service, None)
                 #ri.start_networking()
-                self.assertNotEqual(ri.rip_service, None)
+                self.assertNotEqual(ri._rip_service, None)
                 #ri.stop_networking()
-                #self.assertEqual(ri.rip_service, None)
+                #self.assertEqual(ri._rip_service, None)
 
         class TestRouterItemGUIMoving(unittest.TestCase):
             def setUp(self):

@@ -522,29 +522,23 @@ def _test(init_logging=True, level=None, disabled_loggers=None):
 
                 d12 = Packet(1, 2, "test")
                 s1_77.send(d12)
-                print 1
                 self.assertEqual(s2_77.receive(), d12)
-                print 2
                 s2_77.send(d12)
                 self.assertEqual(s2_77.receive(), d12)
-                print 3
 
                 s1_33 = self.sm1.register_service(33)
                 s2_33 = self.sm2.register_service(33)
 
                 d21 = Packet(2, 1, "test 2")
                 s2_33.send(d21)
-                print 4
                 self.assertEqual(s1_33.receive(), d21)
                 s1_33.send(d21)
                 self.assertEqual(s1_33.receive(), d21)
-                print 5
 
                 text = "".join(map(chr, xrange(256)))
                 d_big = Packet(1, 2, text * 5)
                 s1_33.send(d_big)
                 self.assertEqual(s2_33.receive(), d_big)
-                print 6
 
                 d12_2 = Packet(1, 2, "test 2")
                 d12_3 = Packet(1, 2, "test 3")
@@ -552,12 +546,9 @@ def _test(init_logging=True, level=None, disabled_loggers=None):
                 s1_33.send(d12)
                 s1_33.send(d12_2)
                 self.assertEqual(s2_33.receive(), d12)
-                print 7
                 s1_77.send(d12_3)
                 self.assertEqual(s2_77.receive(), d12_3)
-                print 8
                 self.assertEqual(s2_33.receive(), d12_2)
-                print 10
 
             def tearDown(self):
                 self.rs1.terminate()

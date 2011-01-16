@@ -52,7 +52,7 @@ class LinkItem(QGraphicsObject):
         sft2 = SimpleFrameTransmitter(node=l2)
         self._src_frame_transmitter = \
             FrameTransmitter(simple_frame_transmitter=sft1,
-            debug_src=self.src, debug_dest=self.dest)
+            debug_src=self.src.name, debug_dest=self.dest.name)
         self._dest_frame_transmitter = \
             FrameTransmitter(simple_frame_transmitter=sft2)
 
@@ -148,6 +148,14 @@ class LinkItem(QGraphicsObject):
                    self.dest_point.y() - self.src_point.y())) \
                         .normalized() \
                         .adjusted(-extra, -extra, extra, extra)
+
+    def _paint_next_router(self):
+        pass
+
+    def _paint_next_routers(self):
+        # From source to destination.
+        #self.src.
+        pass
 
     def paint(self, painter, style_option, widget):
         if self.is_singular():
