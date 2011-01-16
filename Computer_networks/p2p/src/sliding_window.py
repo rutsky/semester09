@@ -144,7 +144,12 @@ class FrameTransmitter(object):
         self._max_frame_data = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.5)
+        self._debug_src = kwargs.pop('debug_src', 'None')
+        self._debug_dest = kwargs.pop('debug_dest', 'None')
         super(FrameTransmitter, self).__init__(*args, **kwargs)
+
+        self._logger = logging.getLogger("FrameTransmitter.{0}->{1}".format(
+            self._debug_src, self._debug_dest))
 
         # Queue of tuples (is_last, frame_data).
         self._frames_data_to_send = Queue.Queue()
@@ -239,7 +244,7 @@ class FrameTransmitter(object):
             def __init__(self, logger, maxlen, frame_id_it, timeout):
                 super(SendWindow, self).__init__()
 
-                self.logger = logger
+                self._logger = logger
                 self.maxlen = maxlen
                 self.queue = deque(maxlen=maxlen)
                 self.frame_id_it = frame_id_it
@@ -274,7 +279,7 @@ class FrameTransmitter(object):
                         item.ack_received = True
                         break
                 else:
-                    self.logger.warning(
+                    self._logger.warning(
                         "Received ack for frame outside working window: {0}".
                             format(frame_id))
 
@@ -287,7 +292,7 @@ class FrameTransmitter(object):
             def __init__(self, logger, maxlen, frame_id_it):
                 super(ReceiveWindow, self).__init__()
 
-                self.logger = logger
+                self._logger = logger
                 self.queue = deque(maxlen=maxlen)
                 self.frame_id_it = frame_id_it
                 
@@ -303,7 +308,7 @@ class FrameTransmitter(object):
                         item.frame = frame
                         break
                 else:
-                    self.logger.warning(
+                    self._logger.warning(
                         "Received frame outside working window: {0}".
                             format(frame))
 
@@ -314,14 +319,12 @@ class FrameTransmitter(object):
                     new_item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
                     self.queue.append(new_item)
 
-        logger = logging.getLogger("{0}._work".format(self))
+        self._logger.info("Working thread started")
 
-        logger.info("Working thread started")
-
-        send_window = SendWindow(logger, self._window_size,
+        send_window = SendWindow(self._logger, self._window_size,
             itertools.cycle(xrange(self._frame_id_period)),
             self._ack_timeout)
-        receive_window = ReceiveWindow(logger, self._window_size,
+        receive_window = ReceiveWindow(self._logger, self._window_size,
             itertools.cycle(xrange(self._frame_id_period)))
 
         while True:
@@ -329,7 +332,7 @@ class FrameTransmitter(object):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.info("Exit working thread")
+                self._logger.info("Exit working thread")
                 return
 
             # Send frames.
@@ -342,7 +345,7 @@ class FrameTransmitter(object):
 
                 item = send_window.add_next(is_last, frame_data)
 
-                logger.debug("Sending:\n{0}".format(str(item.frame)))
+                self._logger.debug("Sending:\n  {0}".format(str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
                     item.frame.serialize())
 
@@ -351,7 +354,7 @@ class FrameTransmitter(object):
             for item in send_window.timeout_items(curtime):
                 # TODO: Currently it is selective repeat.
 
-                logger.warning("Resending due to timeout:\n{0}".format(
+                self._logger.warning("Resending due to timeout:\n  {0}".format(
                     str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
                     item.frame.serialize())
@@ -366,17 +369,17 @@ class FrameTransmitter(object):
                 try:
                     p = Frame.deserialize(frame)
                 except InvalidFrameException as ex:
-                    logger.warning("Received invalid frame: {0}".format(
+                    self._logger.warning("Received invalid frame: {0}".format(
                         str(ex)))
                 else:
-                    logger.debug("Received:\n{0}".format(p))
+                    self._logger.debug("Received:\n  {0}".format(p))
 
                     if p.type == FrameType.data:
                         # Received data.
 
                         # Send ACK (even if frame already received before).
                         ack = Frame(type=FrameType.ack, id=p.id, data="")
-                        logger.debug("Sending acknowledge:\n{0}".format(ack))
+                        self._logger.debug("Sending acknowledge:\n  {0}".format(ack))
                         self._simple_frame_transmitter.write_frame(
                             ack.serialize())
 
