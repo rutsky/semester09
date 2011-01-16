@@ -33,6 +33,14 @@ class RoutingTable(object):
     def __init__(self):
         super(RoutingTable, self).__init__()
 
+    def table(self):
+        """Returns dictionary: { destination router: next_router }.
+
+        Note: subsequent calls can return different table on dynamically
+        updated routing table, so use caching.
+        """
+        pass
+
     def next_router(self, dest):
         """By destination router name returns name of next router to which
         datagram should be retransmitted.
@@ -40,18 +48,20 @@ class RoutingTable(object):
         Returns None in case when next hop is undefined (and datagram should
         be destroyed).
         """
-        pass
+        return self.table().setdefault(dest, None)
 
-    def table(self):
-        pass
+    def routes_through(self, next_router_name):
+        """Returns list of destination routers accessible through passed next
+        router name.
+        """
+
+        return [dest for (dest, next) in  self.table().items() \
+            if next == next_router_name]
 
 class StaticRoutingTable(RoutingTable):
     def __init__(self, dest_to_next_router):
         super(StaticRoutingTable, self).__init__()
         self.dest_to_next_router = dest_to_next_router
-
-    def next_router(self, dest):
-        return self.dest_to_next_router.setdefault(dest, None)
 
     def table(self):
         return self.dest_to_next_router
@@ -63,13 +73,9 @@ class DynamicRoutingTable(RoutingTable):
         self.dest_to_next_router = dest_to_next_router
         self.lock = lock
 
-    def next_router(self, dest):
-        with self.lock:
-            return self.dest_to_next_router.setdefault(dest, None)
-
     def table(self):
         with self.lock:
-            return self.dest_to_next_router.copy()
+            return self.dest_to_next_router.copy()        
 
 def loopback_routing_table(router_name):
     return StaticRoutingTable({router_name: router_name})
@@ -79,14 +85,6 @@ class LocalRoutingTable(RoutingTable):
         super(LocalRoutingTable, self).__init__()
         self._router_name = router_name
         self._link_manager = router_link_manager
-
-    def next_router(self, dest):
-        return self.table().setdefault(dest, None)
-        if (dest == self._router_name or
-                dest in self._link_manager.connected_routers()):
-            return dest
-        else:
-            return None
 
     def table(self):
         routers = self._link_manager.connected_routers()
@@ -109,10 +107,13 @@ def _test():
     class Tests(object):
         class TestStaticRoutingTable(unittest.TestCase):
             def test_routing(self):
-                rt = StaticRoutingTable({1: 1, 2: 2, 3: 3})
+                table = {1: 1, 2: 2, 3: 3, 6:2}
+                rt = StaticRoutingTable(table)
 
+                self.assertItemsEqual(rt.table(), table)
                 self.assertEqual(rt.next_router(2), 2)
                 self.assertEqual(rt.next_router(4), None)
+                self.assertItemsEqual(rt.routes_through(2), [2, 6])
 
             def test_loopback(self):
                 rt = loopback_routing_table(1)
@@ -134,7 +135,7 @@ def _test():
 
                 self.assertEqual(rt.next_router(1), 1)
                 self.assertEqual(rt.next_router(3), None)
-
+                
     logging.basicConfig(level=logging.DEBUG)
 
     suite = unittest.TestSuite()
