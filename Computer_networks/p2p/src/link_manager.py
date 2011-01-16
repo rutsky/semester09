@@ -78,9 +78,9 @@ def _test():
                 m.add_link("2", 2)
                 m.add_link("3", 3)
 
-                self.assertEqual(set(m.connected_routers()), set(["1", "2", "3"]))
-                self.assertEqual(set(m.connected_links()),
-                                 set([("1", 1), ("2", 2), ("3", 3)]))
+                self.assertItemsEqual(m.connected_routers(), ["1", "2", "3"])
+                self.assertItemsEqual(m.connected_links(),
+                                 [("1", 1), ("2", 2), ("3", 3)])
 
                 m.remove_link("2")
                 self.assertEqual(set(m.connected_routers()), set(["1", "3"]))
