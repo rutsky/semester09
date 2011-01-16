@@ -48,6 +48,8 @@ class Palette(object):
 
 palette = Palette()
 
+# TODO: Implement binary division palette.
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
