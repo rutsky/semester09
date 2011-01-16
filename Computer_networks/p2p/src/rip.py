@@ -27,6 +27,7 @@ import threading
 import pickle
 import time
 import logging
+import pprint
 
 from recordtype import recordtype
 
@@ -132,17 +133,23 @@ class RIPService(object):
                         dist=dest_routers_info[router_name].dist,
                         next=dest_routers_info[router_name].next_router))
 
+            table_changed = new_connected_routers or new_disconnected_routers
+            if table_changed:
+                update_routing_table()
+
         def connected_routers_with_timeout():
             for rr_name, connected_rr_info in connected_rrs_info.iteritems():
                 if connected_rr_info.timer.is_expired():
                     yield rr_name
 
         def set_infinite_timeout_distances():
+            routing_table_updated = False
             for dest, dest_router_info in dest_routers_info.iteritems():
                 if (dest_router_info.dist < self._inf_dist and 
                         dest_router_info.timer.is_expired()):
                     dest_router_info.dist = self._inf_dist
                     dest_router_info.timer = Timer(self._remove_timeout)
+                    routing_table_updated = True
 
                     logger.debug(
                         "Remove route: Due to timeout: "
@@ -150,15 +157,25 @@ class RIPService(object):
                             dest=dest, dist=dest_router_info.dist,
                             next=dest_router_info.next_router))
 
+            if routing_table_updated:
+                update_routing_table()
+
         def remove_timeout_distances():
+            routing_table_updated = False
             for dest, dest_router_info in dest_routers_info.items():
                 if (dest_router_info.dist == self._inf_dist and
                         dest_router_info.timer.is_expired()):
                     del dest_routers_info[dest]
 
+                    routing_table_updated = True
+
                     logger.debug(
-                        "Due to big timout removing target: {dest}".format(
+                        "Due to big timeout removing target: {dest}".format(
                             dest=dest))
+
+            # TODO: Not actually needed.
+            if routing_table_updated:
+                update_routing_table()
 
         def distances_for_sending(to_router):
             distances = []
@@ -200,8 +217,14 @@ class RIPService(object):
 
                 rip_data = RIPData.deserialize(raw_data)
 
+                logger.debug(
+                    "Received vector from {0}:\n  {1}".format(
+                        src,
+                        pprint.pformat(rip_data.distances)))
+
+                routing_table_updated = False
                 for dist, dest in rip_data.distances:
-                    dist = max(dist + 1, self._inf_dist)
+                    dist = min(dist + 1, self._inf_dist)
                     if (dest not in dest_routers_info or
                             dest_routers_info[dest].dist > dist or
                             dest_routers_info[dest].next_router == src):
@@ -210,12 +233,15 @@ class RIPService(object):
                             timer=Timer(self._inf_timeout
                                 if dist != self._inf_dist
                                 else self._remove_timeout))
+                        routing_table_updated = True
 
                         logger.debug(
                             "Update route with received: "
                             "{dest}:(d={dist}, n={next})".format(
                                 dest=dest, dist=dist,
                                 next=src))
+                if routing_table_updated:
+                    update_routing_table()
 
         def update_routing_table():
             with self._dest_to_next_router_lock:
@@ -228,7 +254,10 @@ class RIPService(object):
                             dest_rr_info.next_router == self._router_name)
                         self._dest_to_next_router[dest] = \
                             dest_rr_info.next_router
+            logger.debug("New routing table:\n  {0}".format(
+                pprint.pformat(self._dest_to_next_router)))
 
+        # TODO: Move to __init__()
         logger = logging.getLogger("{0}._work<router={1}>".format(
             self, self._router_name))
 
@@ -276,8 +305,6 @@ class RIPService(object):
 
             set_infinite_timeout_distances()
             remove_timeout_distances()
-
-            update_routing_table()
 
             time.sleep(config.thread_sleep_time)
 
