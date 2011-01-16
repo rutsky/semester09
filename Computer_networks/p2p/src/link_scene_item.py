@@ -158,7 +158,7 @@ class LinkItem(QGraphicsObject):
         painter.setPen(QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line)
 
-def _test():
+def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
@@ -194,8 +194,7 @@ def _test():
 
                 self.finished = True
 
-    timeout = None
     do_tests(Tests, qt=True)
 
 if __name__ == "__main__":
-    _test()
+    _test(timeout=None)
