@@ -212,7 +212,13 @@ class DatagramRouter(object):
                     if raw_datagram is None:
                         break
 
-                    datagram = Datagram.deserialize(raw_datagram)
+                    try:
+                        datagram = Datagram.deserialize(raw_datagram)
+                    except InvalidDatagramException as ex:
+                        self._logger.warning(
+                            "Received invalid datagram: {0}:\n  0x{1}".format(
+                                str(ex), str(raw_datagram).encode('hex')))
+                        continue
 
                     self._logger.debug(
                         "Received datagram from {0}:\n  {1}".format(
@@ -397,6 +403,14 @@ def _test(level=None):
                 self.dr1.send(d12_3)
                 self.assertEqual(self.dr2.receive(), d12_2)
                 self.assertEqual(self.dr2.receive(), d12_3)
+
+            def test_invalid_datagram(self):
+                self.ft1.send("raw test!")
+                self.assertEqual(self.dr2.receive(block=False), None)
+
+                d12 = datagram(12, 1, 2, "test")
+                self.dr1.send(d12)
+                self.assertEqual(self.dr2.receive(), d12)
 
             def tearDown(self):
                 self.dr1.terminate()
