@@ -83,7 +83,7 @@ def _test():
                                  [("1", 1), ("2", 2), ("3", 3)])
 
                 m.remove_link("2")
-                self.assertEqual(set(m.connected_routers()), set(["1", "3"]))
+                self.assertItemsEqual(m.connected_routers(), ["1", "3"])
 
     logging.basicConfig(level=logging.DEBUG)
 
