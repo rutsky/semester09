@@ -30,6 +30,7 @@ def random_color(generator=random):
     color.setHsvF(generator.random(), 1.0, 1.0)
     return color
 
+# TODO: Not generic interface.
 class Palette(object):
     def __init__(self, seed=0):
         super(Palette, self).__init__()
@@ -64,6 +65,13 @@ def _test():
                 p1[100]
                 p2[200]
                 self.assertEqual(p1[30], p2[30])
+
+            def test_test(self):
+                p1 = Palette()
+                colors = [(p1[i].red(), p1[i].green(), p1[i].blue())
+                    for i in xrange(10)]
+                colors.sort()
+                print colors
 
     do_tests(Tests, qt=True)
 
