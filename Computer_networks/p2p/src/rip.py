@@ -108,7 +108,8 @@ class RIPService(object):
                 if dest_router_info.next_router in new_disconnected_routers:
                     dest_router_info.dist = self._inf_dist
                     logger.debug(
-                        "Remove route: Due to disconnection: {dest}:({dist}, {next})".format(
+                        "Remove route: Due to disconnection: "
+                        "{dest}:(d={dist}, n={next})".format(
                             dest=to_router, dist=dest_router_info.dist,
                             next=dest_router_info.next_router))
 
@@ -126,7 +127,7 @@ class RIPService(object):
                     timer=DummyTimer())
                 logger.debug(
                     "Add route: Directly connected: "
-                    "{dest}:({dist}, {next})".format(
+                    "{dest}:(d={dist}, n={next})".format(
                         dest=router_name,
                         dist=dest_routers_info[router_name].dist,
                         next=dest_routers_info[router_name].next_router))
@@ -145,7 +146,7 @@ class RIPService(object):
 
                     logger.debug(
                         "Remove route: Due to timeout: "
-                        "{dest}:({dist}, {next})".format(
+                        "{dest}:(d={dist}, n={next})".format(
                             dest=dest, dist=dest_router_info.dist,
                             next=dest_router_info.next_router))
 
@@ -212,7 +213,7 @@ class RIPService(object):
 
                         logger.debug(
                             "Update route with received: "
-                            "{dest}:({dist}, {next})".format(
+                            "{dest}:(d={dist}, n={next})".format(
                                 dest=dest, dist=dist,
                                 next=src))
 
@@ -228,7 +229,8 @@ class RIPService(object):
                         self._dest_to_next_router[dest] = \
                             dest_rr_info.next_router
 
-        logger = logging.getLogger("{0}._work".format(self))
+        logger = logging.getLogger("{0}._work<router={1}>".format(
+            self, self._router_name))
 
         logger.info("Working thread started")
 
@@ -279,16 +281,10 @@ class RIPService(object):
 
             time.sleep(config.thread_sleep_time)
 
-def _test():
+def _test(init_logging=True, level=None):
     # TODO: Use in separate file to test importing functionality.
 
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
-    import logging
+    from testing import unittest, do_tests
 
     from duplex_link import FullDuplexLink, LossFunc
     from frame import SimpleFrameTransmitter
@@ -408,8 +404,10 @@ def _test():
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()
@@ -438,7 +436,7 @@ def _test():
                     update_period=0.3, inf_timeout=0.6, remove_timeout=1)
 
                 self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
-                self.dr2.set_routing_table(self.rs1.dynamic_routing_table())
+                self.dr2.set_routing_table(self.rs2.dynamic_routing_table())
 
             def test_transmit(self):
                 s1_77 = self.sm1.register_service(77)
@@ -487,9 +485,9 @@ def _test():
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-        class TestRIPService2WithLosses(TestRIPService2):
+        class _TestRIPService2WithLosses(TestRIPService2):
             def setUp(self):
-                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.002, 0.002, 0.002))
+                l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
 
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
@@ -524,17 +522,28 @@ def _test():
                     update_period=0.3, inf_timeout=0.6, remove_timeout=1)
 
                 self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
-                self.dr2.set_routing_table(self.rs1.dynamic_routing_table())
+                self.dr2.set_routing_table(self.rs2.dynamic_routing_table())
 
-    logging.basicConfig(level=logging.DEBUG)
-    #logging.basicConfig(level=logging.CRITICAL)
-
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    _test()
+    import logging
+
+    class DisableFilter(logging.Filter):
+	def filter(self, rec):
+            return False
+
+    logging.basicConfig(level=0)
+
+    disable_logger_names = [
+        "DatagramRouter.router=1",
+        "DatagramRouter.router=2",
+        "FrameTransmitter.1->2",
+        "FrameTransmitter.2->1"
+        ]
+    disable_filter = DisableFilter()
+    for disable_logger_name in disable_logger_names:
+        logger = logging.getLogger(disable_logger_name)
+        logger.addFilter(disable_filter)
+    
+    _test(init_logging=False)
