@@ -63,6 +63,9 @@ class RIPService(object):
         self._link_manager = router_link_manager
         self._service_transmitter = service_transmitter
 
+        self._logger = logging.getLogger("RIPService.router={0}".format(
+            self._router_name))
+
         self._dest_to_next_router = {router_name: router_name}
         self._dest_to_next_router_lock = threading.Lock()
 
@@ -92,10 +95,10 @@ class RIPService(object):
                 prev_connected_routers - connected_routers
 
             if new_connected_routers:
-                logger.debug("Connected to routers: {0}".format(
+                self._logger.debug("Connected to routers: {0}".format(
                     list(new_connected_routers)))
             if new_disconnected_routers:
-                logger.debug("Disconnected from routers: {0}".format(
+                self._logger.debug("Disconnected from routers: {0}".format(
                     list(new_disconnected_routers)))
 
             # Remove disconnected routers from list.
@@ -108,7 +111,7 @@ class RIPService(object):
             for to_router, dest_router_info in dest_routers_info.iteritems():
                 if dest_router_info.next_router in new_disconnected_routers:
                     dest_router_info.dist = self._inf_dist
-                    logger.debug(
+                    self._logger.debug(
                         "Remove route: Due to disconnection: "
                         "{dest}:(d={dist}, n={next})".format(
                             dest=to_router, dist=dest_router_info.dist,
@@ -126,7 +129,7 @@ class RIPService(object):
                 dest_routers_info[router_name] = DestRouterInfo(
                     dist=1, next_router=router_name,
                     timer=DummyTimer())
-                logger.debug(
+                self._logger.debug(
                     "Add route: Directly connected: "
                     "{dest}:(d={dist}, n={next})".format(
                         dest=router_name,
@@ -151,7 +154,7 @@ class RIPService(object):
                     dest_router_info.timer = Timer(self._remove_timeout)
                     routing_table_updated = True
 
-                    logger.debug(
+                    self._logger.debug(
                         "Remove route: Due to timeout: "
                         "{dest}:(d={dist}, n={next})".format(
                             dest=dest, dist=dest_router_info.dist,
@@ -169,7 +172,7 @@ class RIPService(object):
 
                     routing_table_updated = True
 
-                    logger.debug(
+                    self._logger.debug(
                         "Due to big timeout removing target: {dest}".format(
                             dest=dest))
 
@@ -208,6 +211,9 @@ class RIPService(object):
                 # Mark time data was sent.
                 connected_rrs_info[to_router].timer.restart()
 
+                # TODO: Assume that computer is not slow.
+                assert not connected_rrs_info[to_router].timer.is_expired()
+
         def handle_receive():
             while True:
                 result = self._service_transmitter.receive_data(block=False)
@@ -217,7 +223,7 @@ class RIPService(object):
 
                 rip_data = RIPData.deserialize(raw_data)
 
-                logger.debug(
+                self._logger.debug(
                     "Received vector from {0}:\n  {1}".format(
                         src,
                         pprint.pformat(rip_data.distances)))
@@ -225,26 +231,75 @@ class RIPService(object):
                 routing_table_updated = False
                 for dist, dest in rip_data.distances:
                     dist = min(dist + 1, self._inf_dist)
-                    if (dest not in dest_routers_info or
-                            dest_routers_info[dest].dist > dist or
-                            dest_routers_info[dest].next_router == src):
-                        dest_routers_info[dest] = DestRouterInfo(
-                            dist=dist, next_router=src,
-                            timer=Timer(self._inf_timeout
-                                if dist != self._inf_dist
-                                else self._remove_timeout))
+
+                    if dest not in dest_routers_info:
+                        # Route to new router.
+
+                        if dist < self._inf_dist:
+                            dest_routers_info[dest] = DestRouterInfo(
+                                dist=dist, next_router=src,
+                                timer=Timer(self._inf_timeout))
+
+                            routing_table_updated = True
+
+                            self._logger.debug(
+                                "Received route to new router: "
+                                "{dest}:(d={dist}, n={next})".format(
+                                    dest=dest, dist=dist,
+                                    next=src))
+                        else:
+                            # Ignore.
+                            pass
+
+                    elif dist < dest_routers_info[dest].dist:
+                        # Received shorter then all known path to router.
+                        
+                        dest_routers_info[dest].dist = dist
+                        dest_routers_info[dest].next_router = src
+                        dest_routers_info[dest].timeout = \
+                            Timer(self._inf_timeout)
+
                         routing_table_updated = True
 
-                        logger.debug(
-                            "Update route with received: "
+                        self._logger.debug(
+                            "Found shorter path: "
                             "{dest}:(d={dist}, n={next})".format(
                                 dest=dest, dist=dist,
                                 next=src))
+
+                    elif (dest_routers_info[dest].next_router == src and
+                            dest_routers_info[dest].dist != dist):
+                        # Received route update from source.
+
+                        dest_routers_info[dest].dist = dist
+
+                        timer = Timer(self._inf_timeout) \
+                            if dist < self._inf_dist \
+                            else Timer(self._remove_timeout)
+                        dest_routers_info[dest].timeout = timer
+
+                        routing_table_updated = True
+
+                        self._logger.debug(
+                            "Received route update from source: "
+                            "{dest}:(d={dist}, n={next})".format(
+                                dest=dest, dist=dist,
+                                next=src))
+                    else:
+                        if dist < self._inf_dist:
+                            # Update timer.
+                            dest_routers_info[dest].timer.restart()
+                        else:
+                            # Don't update timer for infinite paths.
+                            pass
+
                 if routing_table_updated:
                     update_routing_table()
 
         def update_routing_table():
             with self._dest_to_next_router_lock:
+                old_routing_table = self._dest_to_next_router.copy()
+                
                 self._dest_to_next_router.clear()
 
                 for dest, dest_rr_info in dest_routers_info.iteritems():
@@ -254,14 +309,12 @@ class RIPService(object):
                             dest_rr_info.next_router == self._router_name)
                         self._dest_to_next_router[dest] = \
                             dest_rr_info.next_router
-            logger.debug("New routing table:\n  {0}".format(
-                pprint.pformat(self._dest_to_next_router)))
 
-        # TODO: Move to __init__()
-        logger = logging.getLogger("{0}._work<router={1}>".format(
-            self, self._router_name))
+                if old_routing_table != self._dest_to_next_router:
+                    self._logger.debug("New routing table:\n  {0}".format(
+                        pprint.pformat(self._dest_to_next_router)))
 
-        logger.info("Working thread started")
+        self._logger.info("Working thread started")
 
         DestRouterInfo = recordtype(
             'DestRouterInfo', 'dist next_router timer')
@@ -285,7 +338,7 @@ class RIPService(object):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.info("Exit working thread")
+                self._logger.info("Exit working thread")
                 return
 
             # Prepare data for detecting changes in current router connectivity.
@@ -308,7 +361,7 @@ class RIPService(object):
 
             time.sleep(config.thread_sleep_time)
 
-def _test(init_logging=True, level=None):
+def _test(init_logging=True, level=None, disabled_loggers=None):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests
@@ -458,9 +511,9 @@ def _test(init_logging=True, level=None):
                 self.rip_st2 = self.sm2.register_service(RIPService.protocol)
 
                 self.rs1 = RIPService(1, rlm1, self.rip_st1,
-                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                    update_period=0.5, inf_timeout=0.9, remove_timeout=1.6)
                 self.rs2 = RIPService(2, rlm2, self.rip_st2,
-                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                    update_period=0.5, inf_timeout=0.9, remove_timeout=1.6)
 
                 self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
                 self.dr2.set_routing_table(self.rs2.dynamic_routing_table())
@@ -471,23 +524,29 @@ def _test(init_logging=True, level=None):
 
                 d12 = Packet(1, 2, "test")
                 s1_77.send(d12)
+                print 1
                 self.assertEqual(s2_77.receive(), d12)
+                print 2
                 s2_77.send(d12)
                 self.assertEqual(s2_77.receive(), d12)
+                print 3
 
                 s1_33 = self.sm1.register_service(33)
                 s2_33 = self.sm2.register_service(33)
 
                 d21 = Packet(2, 1, "test 2")
                 s2_33.send(d21)
+                print 4
                 self.assertEqual(s1_33.receive(), d21)
                 s1_33.send(d21)
                 self.assertEqual(s1_33.receive(), d21)
+                print 5
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = Packet(1, 2, text * 10)
+                d_big = Packet(1, 2, text * 5)
                 s1_33.send(d_big)
                 self.assertEqual(s2_33.receive(), d_big)
+                print 6
 
                 d12_2 = Packet(1, 2, "test 2")
                 d12_3 = Packet(1, 2, "test 3")
@@ -495,9 +554,12 @@ def _test(init_logging=True, level=None):
                 s1_33.send(d12)
                 s1_33.send(d12_2)
                 self.assertEqual(s2_33.receive(), d12)
+                print 7
                 s1_77.send(d12_3)
                 self.assertEqual(s2_77.receive(), d12_3)
+                print 8
                 self.assertEqual(s2_33.receive(), d12_2)
+                print 10
 
             def tearDown(self):
                 self.rs1.terminate()
@@ -512,15 +574,17 @@ def _test(init_logging=True, level=None):
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-        class _TestRIPService2WithLosses(TestRIPService2):
+        class TestRIPService2WithLosses(TestRIPService2):
             def setUp(self):
                 l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
 
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()
@@ -544,33 +608,21 @@ def _test(init_logging=True, level=None):
                 self.rip_st2 = self.sm2.register_service(RIPService.protocol)
 
                 self.rs1 = RIPService(1, rlm1, self.rip_st1,
-                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                    update_period=0.5, inf_timeout=0.9, remove_timeout=1.6)
                 self.rs2 = RIPService(2, rlm2, self.rip_st2,
-                    update_period=0.3, inf_timeout=0.6, remove_timeout=1)
+                    update_period=0.5, inf_timeout=0.9, remove_timeout=1.6)
 
                 self.dr1.set_routing_table(self.rs1.dynamic_routing_table())
                 self.dr2.set_routing_table(self.rs2.dynamic_routing_table())
 
-    do_tests(Tests, level=level)
+    do_tests(Tests, level=level, disabled_loggers=disabled_loggers)
 
 if __name__ == "__main__":
-    import logging
-
-    class DisableFilter(logging.Filter):
-	def filter(self, rec):
-            return False
-
-    logging.basicConfig(level=0)
-
-    disable_logger_names = [
+    disable_loggers = [
         "DatagramRouter.router=1",
         "DatagramRouter.router=2",
         "FrameTransmitter.1->2",
         "FrameTransmitter.2->1"
         ]
-    disable_filter = DisableFilter()
-    for disable_logger_name in disable_logger_names:
-        logger = logging.getLogger(disable_logger_name)
-        logger.addFilter(disable_filter)
     
-    _test(init_logging=False)
+    _test(disabled_loggers=disable_loggers, level=0)

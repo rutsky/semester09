@@ -216,8 +216,9 @@ class DatagramRouter(object):
 
                     datagram = Datagram.deserialize(raw_datagram)
 
-                    self._logger.debug("Received datagram from {0}:\n  {1}".format(
-                        from_router, str(datagram)))
+                    self._logger.debug(
+                        "Received datagram from {0}:\n  {1}".format(
+                            from_router, str(datagram)))
 
                     handle_datagram(from_router, datagram)
 
@@ -251,15 +252,10 @@ class DatagramRouter(object):
 
             time.sleep(config.thread_sleep_time)
 
-def _test():
+def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
 
-    import sys
-    if sys.version_info[:2] < (2, 7):
-        # Backports.
-        import unittest2 as unittest
-    else:
-        import unittest
+    from testing import unittest, do_tests
     
     from duplex_link import FullDuplexLink, LossFunc
     from frame import SimpleFrameTransmitter
@@ -473,16 +469,7 @@ def _test():
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-    #logging.basicConfig(level=logging.DEBUG)
-    #logging.basicConfig(level=logging.INFO)
-    logging.basicConfig(level=logging.CRITICAL)
-
-    suite = unittest.TestSuite()
-    for k, v in Tests.__dict__.iteritems():
-        if k.startswith('Test'):
-            suite.addTests(unittest.TestLoader().loadTestsFromTestCase(v))
-
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    _test()
+    _test(level=0)

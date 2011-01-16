@@ -31,6 +31,8 @@ from itertools import ifilter
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import config
+
 def process_events_with_timeout(timeout=None, callback=None):
     from timer import Timer, DummyTimer
 
@@ -47,14 +49,30 @@ def process_events_with_timeout(timeout=None, callback=None):
                     app.topLevelWidgets()):
                 w.close()
 
-def do_tests(tests_class, qt=False, init_logging=True,
-        level=logging.CRITICAL):
+def do_tests(tests_class, qt=False, init_logging=True, disabled_loggers=None,
+        level=logging.CRITICAL, format=None):
     if qt:
         # Only one instance QApplication should exist.
         app = QApplication(sys.argv)
 
     if init_logging:
-        logging.basicConfig(level=level)
+        global default_log_format
+        using_format = format if format is not None else \
+            config.default_log_format
+        logging.basicConfig(
+            level=level,
+            format=using_format)
+
+    if disabled_loggers is not None:
+        # TODO: Add feature to ignore only specific levels of messages.
+        class DisableFilter(logging.Filter):
+            def filter(self, rec):
+                return False
+
+        disable_filter = DisableFilter()
+        for disable_logger_name in disabled_loggers:
+            logger = logging.getLogger(disable_logger_name)
+            logger.addFilter(disable_filter)
 
     suite = unittest.TestSuite()
     for k, v in tests_class.__dict__.iteritems():

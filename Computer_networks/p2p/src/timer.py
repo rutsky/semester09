@@ -51,8 +51,19 @@ class DummyTimer(object):
     def __init__(self):
         super(DummyTimer, self).__init__()
 
+    @property
+    def start_time(self):
+        return None
+
+    @property
+    def period(self):
+        return None
+
     def is_expired(self):
         return False
+
+    def restart(self):
+        pass
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

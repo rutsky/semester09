@@ -18,6 +18,8 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
+default_log_format = "%(asctime)-15s %(levelname)-8s %(name)-30s %(message)s"
+
 thread_sleep_time = 1e-1
 
 def _test():

@@ -48,6 +48,10 @@ class Packet(recordtype('Packet', 'src dest data')):
     def __ne__(self, other):
         return not self == other
 
+    def __str__(self):
+        return "Packet(src={src}, dest={dest}, data=0x{data})".format(
+            src=self.src, dest=self.dest, data=self.data.encode('hex'))
+
 def packet_to_datagram(packet, protocol):
     return datagram(type=protocol, src=packet.src,
         dest=packet.dest, data=packet.data)
@@ -87,6 +91,11 @@ class RouterServiceManager(object):
         super(RouterServiceManager, self).__init__()
 
         self._datagram_router = datagram_router
+
+        self._logger = logging.getLogger(
+            "RouterServiceManager.router={0}".format(
+                self._datagram_router.name))
+
         # { protocol: ServiceInfo() }
         self._services = {}
         self._services_lock = threading.Lock()
@@ -110,6 +119,7 @@ class RouterServiceManager(object):
         return self._datagram_router.name
 
     def register_service(self, protocol):
+        self._logger.info("Registering service {0}".format(protocol))
         service_info = \
             RouterServiceManager._ServiceInfo(self.name, Queue.Queue(), Queue.Queue())
 
@@ -123,15 +133,28 @@ class RouterServiceManager(object):
         def deliver_to_network():
             with self._services_lock:
                 services = self._services.items()[:]
+
+            for i in xrange(100):
+                sent_data = False
                 
-            for protocol, service_info in services:
-                while True:
+                for protocol, service_info in services:
                     try:
                         packet = service_info.send_queue.get(False)
                     except Queue.Empty:
-                        break
+                        continue
                     datagram = packet_to_datagram(packet, protocol)
+
+                    self._logger.info(
+                        "Client to network (protocol={0}):\n"
+                        "  {1}".format(
+                            protocol, packet))
+
                     self._datagram_router.send(datagram)
+
+                    sent_data = True
+
+                if not sent_data:
+                    break
 
         def deliver_from_network():
             while True:
@@ -143,23 +166,26 @@ class RouterServiceManager(object):
 
                     with self._services_lock:
                         if protocol in self._services:
+                            self._logger.info(
+                                "Network to client (protocol={0}):\n"
+                                "  {1}".format(
+                                    protocol, datagram))
+
                             self._services[protocol].receive_queue.put(packet)
                         else:
-                            logger.warning(
+                            self._logger.warning(
                                 "Packet for unregistered service {0} "
                                 "unhandled:\n  {1}".format(
                                     protocol, packet))
 
-        logger = logging.getLogger("{0}._work".format(self))
-
-        logger.info("Working thread started")
+        self._logger.info("Working thread started")
 
         while True:
             if self._exit_lock.acquire(False):
                 # Obtained exit lock. Terminate.
 
                 self._exit_lock.release()
-                logger.info("Exit working thread")
+                self._logger.info("Exit working thread")
                 return
 
             deliver_to_network()
@@ -330,7 +356,7 @@ def _test(level=None):
                 self.assertEqual(s1_33.receive(), d21)
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = Packet(1, 2, text * 10)
+                d_big = Packet(1, 2, text * 5)
                 s1_33.send(d_big)
                 self.assertEqual(s2_33.receive(), d_big)
 
@@ -402,7 +428,7 @@ def _test(level=None):
                 self.assertEqual(s1_33.receive(), d21)
 
                 text = "".join(map(chr, xrange(256)))
-                d_big = Packet(1, 2, text * 10)
+                d_big = Packet(1, 2, text * 5)
                 s1_33.send(d_big)
                 self.assertEqual(s2_33.receive(), d_big)
 
@@ -429,4 +455,6 @@ def _test(level=None):
     do_tests(Tests, level=level)
 
 if __name__ == "__main__":
+    
+
     _test(level=0)
