@@ -22,6 +22,7 @@ default_log_format = "%(asctime)-15s %(levelname)-8s %(name)-30s %(message)s"
 
 thread_sleep_time = 1e-1
 use_openGL = False
+packets_delivery_time_factor = 50
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

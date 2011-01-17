@@ -20,17 +20,26 @@ __license__ = "GPL"
 
 __all__ = ["LinkItem"]
 
+import time
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+from recordtype import recordtype
+
 import routing_table
 import palette
+import config
 from duplex_link import FullDuplexLink
 from frame import SimpleFrameTransmitter
 from sliding_window import FrameTransmitter
 from rip import RIPService
+from rip_packet_scene_item import RIPPacketItem
 
 class LinkItem(QGraphicsObject):
+    TransmittingPacket = recordtype('TransmittingPacket',
+            'packet start_time end_time packet_item')
+            
     def __init__(self, src_router, dest_router, enabled=False,
             loss_func=None, parent=None):
         super(LinkItem, self).__init__(parent)
@@ -43,6 +52,9 @@ class LinkItem(QGraphicsObject):
 
         self.src_point = None
         self.dest_point = None
+
+        # List of LinkItem.TransmittingPacket
+        self._transmitting_packets = []
 
         # Edge color.
         self.color = Qt.black
@@ -74,13 +86,13 @@ class LinkItem(QGraphicsObject):
 
         self.destroyed.connect(self.on_destroy)
 
-        update_rate = 20 # frames per second
+        update_rate = 25 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
 
     @pyqtSlot()
     def on_destroy(self):
         # FIXME: never called.
-        print "{0}.on_destroy()".format(self)
+        print "{0}.on_destroy()".format(self) # TODO: use logger
         self._src_frame_transmitter.terminate()
         self._dest_frame_transmitter.terminate()
 
@@ -120,6 +132,12 @@ class LinkItem(QGraphicsObject):
         self.dest.link_manager.remove_link(self.src.name)
 
         self.hide()
+
+        for tr_packet in self._transmitting_packets:
+            tr_packet.packet_item.setParent(None)
+            self.link_end_by_name(tr_packet.packet.dest).\
+                deliver_packet(tr_packet.packet, True)
+        self._transmitting_packets = []
 
     def length(self):
         return QLineF(
@@ -165,6 +183,8 @@ class LinkItem(QGraphicsObject):
         if self.is_singular():
             return QRectF()
 
+        # TODO: Take in count transmitting packets.
+
         routes_count = max(len(self._routes_through_dest),
             len(self._routes_through_src))
         extra = max(self._visual_link_width,
@@ -205,28 +225,33 @@ class LinkItem(QGraphicsObject):
         for idx, (dest, route) in enumerate(self._routes_through_dest):
             offset = self._visual_route_start_offset + \
                 idx * self._visual_route_offset_step
-            self._paint_next_router(painter, line, offset, dest, route.distance)
+            self._paint_next_router(painter,
+                line, offset, dest, route.distance)
 
         # From destination to source.
         line = QLineF(line.p2(), line.p1())
         for idx, (dest, route) in enumerate(self._routes_through_src):
             offset = self._visual_route_start_offset + \
                 idx * self._visual_route_offset_step
-            self._paint_next_router(painter, line, offset, dest, route.distance)
+            self._paint_next_router(painter,
+                line, offset, dest, route.distance)
 
     def paint(self, painter, style_option, widget):
         if self.is_singular():
-            return;
+            return
 
         line = QLineF(self.src_point, self.dest_point)
         assert not qFuzzyCompare(line.length(), 0.)
 
-        painter.setPen(QPen(Qt.black, self._visual_link_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setPen(QPen(Qt.black, self._visual_link_width,
+            Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         painter.drawLine(line)
 
         self._paint_next_routers(painter)
 
     def _recalculate_routes(self):
+        # TODO: may be call prepareGeometryChange()?
+        
         through_dest_routers = \
                 routing_table.routes_through(self.src_table, self.dest.name)
         through_src_routers = \
@@ -241,6 +266,30 @@ class LinkItem(QGraphicsObject):
         self._routes_through_dest.sort(cmp=lambda a, b: cmp(a[0], b[0]))
         self._routes_through_src.sort (cmp=lambda a, b: cmp(a[0], b[0]))
 
+    def _adjust_transmitting_packet(self, tr_packet):
+        # TODO: may be call prepareGeometryChange()?
+
+        if self.is_singular():
+            tr_packet.packet_item.hide()
+            return
+        else:
+            tr_packet.packet_item.show()
+
+        curtime = time.time()
+        progress = min(1.0, 
+            (curtime - tr_packet.start_time) /
+                (tr_packet.end_time - tr_packet.start_time))
+
+        line = QLineF(self.src_point, self.dest_point)
+        assert not qFuzzyCompare(line.length(), 0.)
+
+        unit_vector = line.unitVector().p2() - line.unitVector().p1()
+        normal_vector = line.normalVector().unitVector().p1() - \
+            line.normalVector().unitVector().p2()
+
+        position = line.p1() + unit_vector * line.length() * progress
+        tr_packet.packet_item.setPos(position)
+
     def timerEvent(self, event):
         old_src_table = self.src_table
         old_dest_table = self.dest_table
@@ -251,9 +300,31 @@ class LinkItem(QGraphicsObject):
             self._recalculate_routes()
             self.update()
 
-    def transmit_packet(self, packet):
-        # Dummy
-        self.link_end_by_name(packet.dest).deliver_packet(packet, False)
+        new_transmitting_packets = []
+        for transmitting_packet in self._transmitting_packets:
+            if transmitting_packet.end_time <= time.time():
+                # Packet delivered.
+                transmitting_packet.packet_item.setParent(None)
+                self.link_end_by_name(transmitting_packet.packet.dest).\
+                    deliver_packet(transmitting_packet.packet, False)
+            else:
+                new_transmitting_packets.append(transmitting_packet)
+        self._transmitting_packets = new_transmitting_packets
+
+        for tr_packet in self._transmitting_packets:
+            self._adjust_transmitting_packet(tr_packet)
+
+    def transmit_packet(self, protocol, packet):
+        transmit_time = packet.time * config.packets_delivery_time_factor
+
+        current_time = time.time()
+        if protocol == RIPService.protocol:
+            packet_item = RIPPacketItem(packet, self)
+            transmitting_packet = LinkItem.TransmittingPacket(
+                packet, current_time, current_time + transmit_time, packet_item)
+            self._transmitting_packets.append(transmitting_packet)
+
+            self._adjust_transmitting_packet(transmitting_packet)
 
 def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.

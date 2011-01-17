@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
 
             time.sleep(config.thread_sleep_time)
 
-def _test(timeout=1, level=None):
+def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
@@ -210,7 +210,18 @@ def _test(timeout=1, level=None):
 
                 self.finished = True
 
-    do_tests(Tests, qt=True, level=level)
+    do_tests(Tests, qt=True, disabled_loggers=disabled_loggers, level=level)
 
 if __name__ == "__main__":
-    _test(timeout=None, level=50)
+    disabled_loggers = []
+    for r in xrange(20):
+        disabled_loggers.append("DatagramRouter.router={0}".format(r))
+        disabled_loggers.append("RIPService.router={0}".format(r))
+        disabled_loggers.append("RouterServiceManager.router={0}".format(r))
+
+        for rr in xrange(20):
+            disabled_loggers.append("FrameTransmitter.{0}->{1}".format(r, rr))
+    
+    _test(timeout=None, disabled_loggers=disabled_loggers, level=0)
+
+    

@@ -22,6 +22,7 @@ __license__ = "GPL"
 __all__ = ["RouterItem"]
 
 import time
+import logging
 import Queue
 from collections import deque
 
@@ -77,7 +78,10 @@ class RouterItem(QGraphicsObject):
         super(RouterItem, self).__init__(parent)
 
         assert router_name.is_valid(name)
-        self.name = name
+        self.name = name # TODO: Use @property
+
+        self._logger = logging.getLogger("RouterItem.router={0}".format(
+            self.name))
 
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
@@ -122,7 +126,7 @@ class RouterItem(QGraphicsObject):
     @pyqtSlot()
     def on_destroy(self):
         # FIXME: never called.
-        print "{0}.on_destroy()".format(self)
+        self._logger.info("{0}.on_destroy()".format(self))
 
         self._stop_networking()
 
@@ -243,7 +247,7 @@ class RouterItem(QGraphicsObject):
                 self._packets_for_delivery[packet] = protocol
                 
                 link = self.link_to_router(packet.src)
-                link.transmit_packet(packet)
+                link.transmit_packet(protocol, packet)
 
     def deliver_packet(self, packet, is_failed):
         if not is_failed:
@@ -251,7 +255,14 @@ class RouterItem(QGraphicsObject):
             service_transmitter = self._service_manager.services[protocol]
             service_transmitter.actual_receive_queue.put(packet)
 
-            #print packet, len(self._packets_for_delivery)
+            self._logger.debug(
+                "Delivered packet (waiting queue len is {0}):\n"
+                "  {1}".format(len(self._packets_for_delivery), packet))
+        else:
+            self._logger.debug(
+                "Packet not delivered (waiting queue len is {0}):\n"
+                "  {1}".format(len(self._packets_for_delivery), packet))
+
         del self._packets_for_delivery[packet]
 
     def _return_to_scene(self, pos):
@@ -298,7 +309,7 @@ class RouterItem(QGraphicsObject):
             self.mapFromItem(other_router, 0, 0)).length()
 
             
-def _test(timeout=1):
+def _test(timeout=1, level=None):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
@@ -406,7 +417,7 @@ def _test(timeout=1):
 
                 self.finished = True
 
-    do_tests(Tests, qt=True)
+    do_tests(Tests, qt=True, level=level)
 
 if __name__ == "__main__":
-    _test(None)
+    _test(None, level=0)
