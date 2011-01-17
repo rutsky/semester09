@@ -35,6 +35,9 @@ import config
 from router_scene_item import RouterItem
 from link_scene_item import LinkItem
 
+if config.use_openGL:
+    from PyQt4.QtOpenGL import *
+
 def random_velocity(min, max):
     return QLineF.fromPolar(random.uniform(min, max),
         random.uniform(0, 360.0)).p2()
@@ -49,6 +52,9 @@ class GraphicsView(QGraphicsView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+
+        if config.use_openGL:
+            self.setViewport(QGLWidget())
 
         self._scale_view(2.0)
 
