@@ -20,7 +20,8 @@ __license__ = "GPL"
 
 default_log_format = "%(asctime)-15s %(levelname)-8s %(name)-30s %(message)s"
 
-thread_sleep_time = 1e-1
+thread_sleep_time = 0.1
+frame_transmitter_thread_sleep_time = 0.04
 use_openGL = False
 packets_delivery_time_factor = 10
 

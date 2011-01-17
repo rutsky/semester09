@@ -18,7 +18,7 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["FrameTransmitter"]
+__all__ = ["FrameTransmitter", "FrameTransmitterWorker", "worker"]
 
 """Transmit frame between two connected hosts with acknowledge.
 """
@@ -30,7 +30,6 @@ import threading
 import time
 import logging
 import Queue
-import StringIO
 from collections import deque
 from recordtype import recordtype
 
@@ -135,6 +134,64 @@ def clear_queue(q):
         except Queue.Empty:
             break
 
+class FrameTransmitterWorker(object):
+    def __init__(self):
+        super(FrameTransmitterWorker, self).__init__()
+
+        self._logger = logging.getLogger("FrameTransmitterWorker")
+
+        self._frame_transmitters = set()
+        self._frame_transmitters_lock = threading.Lock()
+
+        self._working_thread = None
+        self._exit_lock = threading.RLock()
+
+    def add_frame_transmitter(self, frame_transmitter):
+        with self._frame_transmitters_lock:
+            if self._working_thread is None:
+                # If working thread will be able to acquire the lock, then it
+                # should terminate himself.
+                self._exit_lock.acquire()
+
+                self._working_thread = threading.Thread(target=self._work)
+                self._working_thread.start()
+
+            self._frame_transmitters.add(frame_transmitter)
+
+    def remove_frame_transmitter(self, frame_transmitter):
+        with self._frame_transmitters_lock:
+            self._frame_transmitters.remove(frame_transmitter)
+
+            if not self._frame_transmitters:
+                # Release exit lock and wait until working thread will not
+                # terminate.
+
+                # If _exit_lock already released then somebody already called
+                # terminate().
+                self._exit_lock.release()
+                self._working_thread.join()
+
+                self._working_thread = None        
+
+    def _work(self):
+        self._logger.info("Working thread started")
+        
+        while True:
+            if self._exit_lock.acquire(False):
+                # Obtained exit lock. Terminate.
+
+                self._exit_lock.release()
+                self._logger.info("Exit working thread")
+                return
+
+            with self._frame_transmitters_lock:
+                for frame_transmitter in self._frame_transmitters:
+                    frame_transmitter.update()
+
+            time.sleep(config.frame_transmitter_thread_sleep_time)
+
+worker = FrameTransmitterWorker()
+
 class FrameTransmitter(object):
     #_frame_id_period = 32768
     _frame_id_period = 200 # DEBUG
@@ -228,6 +285,10 @@ class FrameTransmitter(object):
         self._max_frame_data = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.5)
+
+        global worker
+        self._worker = kwargs.pop('worker', worker)
+
         self._debug_src = kwargs.pop('debug_src', '?')
         self._debug_dest = kwargs.pop('debug_dest', '?')
         super(FrameTransmitter, self).__init__(*args, **kwargs)
@@ -250,17 +311,10 @@ class FrameTransmitter(object):
             self._logger, self._window_size,
             itertools.cycle(xrange(self._frame_id_period)))
 
-
-        # If working thread will be able to acquire the lock, then it should
-        # terminate himself.
-        self._exit_lock = threading.RLock()
-        self._exit_lock.acquire()
-
-        self._working_thread = threading.Thread(target=self._work)
-        self._working_thread.start()
-
         self._enabled = True
         self._enabled_lock = threading.RLock()
+
+        self._worker.add_frame_transmitter(self)
 
     @property
     def enabled(self):
@@ -288,12 +342,7 @@ class FrameTransmitter(object):
 
     # TODO
     def terminate(self):
-        # Release exit lock and wait until working thread will not terminate.
-
-        # If _exit_lock already released then somebody already called
-        # terminate().
-        self._exit_lock.release()
-        self._working_thread.join()
+        self._worker.remove_frame_transmitter(self)
 
     def send(self, data_string):
         with self._enabled_lock:
@@ -330,80 +379,67 @@ class FrameTransmitter(object):
                 assert not self._received_frames_buffer
                 return None
 
-    def _work(self):
-        
-        self._logger.info("Working thread started")
+    def update(self):
+        # Send frames.
+        if (not self._frames_data_to_send.empty() and
+                self._send_window.can_add_next()):
+            # Have frame for sending in queue and free space in send
+            # window. Send frame.
 
-        while True:
-            if self._exit_lock.acquire(False):
-                # Obtained exit lock. Terminate.
+            is_last, frame_data = self._frames_data_to_send.get()
 
-                self._exit_lock.release()
-                self._logger.info("Exit working thread")
-                return
+            item = self._send_window.add_next(is_last, frame_data)
 
-            # Send frames.
-            if (not self._frames_data_to_send.empty() and
-                    self._send_window.can_add_next()):
-                # Have frame for sending in queue and free space in send
-                # window. Send frame.
+            self._logger.debug("Sending:\n  {0}".format(str(item.frame)))
+            self._simple_frame_transmitter.write_frame(
+                item.frame.serialize())
 
-                is_last, frame_data = self._frames_data_to_send.get()
+        # Handle timeouts.
+        curtime = time.time()
+        for item in self._send_window.timeout_items(curtime):
+            # TODO: Currently it is selective repeat.
 
-                item = self._send_window.add_next(is_last, frame_data)
+            self._logger.warning("Resending due to timeout:\n  {0}".format(
+                str(item.frame)))
+            self._simple_frame_transmitter.write_frame(
+                item.frame.serialize())
+            item.time = curtime
+        assert len(list(self._send_window.timeout_items(curtime))) == 0
 
-                self._logger.debug("Sending:\n  {0}".format(str(item.frame)))
-                self._simple_frame_transmitter.write_frame(
-                    item.frame.serialize())
+        # Handle receiving data.
+        frame = self._simple_frame_transmitter.read_frame(block=False)
+        if frame is not None:
+            # Received frame.
 
-            # Handle timeouts.
-            curtime = time.time()
-            for item in self._send_window.timeout_items(curtime):
-                # TODO: Currently it is selective repeat.
+            try:
+                p = Frame.deserialize(frame)
+            except InvalidFrameException as ex:
+                self._logger.warning("Received invalid frame: {0}".format(
+                    str(ex)))
+            else:
+                self._logger.debug("Received:\n  {0}".format(p))
 
-                self._logger.warning("Resending due to timeout:\n  {0}".format(
-                    str(item.frame)))
-                self._simple_frame_transmitter.write_frame(
-                    item.frame.serialize())
-                item.time = curtime
-            assert len(list(self._send_window.timeout_items(curtime))) == 0
+                if p.type == FrameType.data:
+                    # Received data.
 
-            # Handle receiving data.
-            frame = self._simple_frame_transmitter.read_frame(block=False)
-            if frame is not None:
-                # Received frame.
+                    # Send ACK (even if frame already received before).
+                    ack = Frame(type=FrameType.ack, id=p.id, data="")
+                    self._logger.debug("Sending acknowledge:\n  {0}".format(ack))
+                    self._simple_frame_transmitter.write_frame(
+                        ack.serialize())
 
-                try:
-                    p = Frame.deserialize(frame)
-                except InvalidFrameException as ex:
-                    self._logger.warning("Received invalid frame: {0}".format(
-                        str(ex)))
+                    for frame in self._receive_window.receive_frame(p):
+                        self._received_data.put((frame.is_last, frame.data))
+
+                elif p.type == FrameType.ack:
+                    # Received ACK.
+
+                    self._send_window.ack_received(p.id)
+
                 else:
-                    self._logger.debug("Received:\n  {0}".format(p))
+                    assert False
 
-                    if p.type == FrameType.data:
-                        # Received data.
-
-                        # Send ACK (even if frame already received before).
-                        ack = Frame(type=FrameType.ack, id=p.id, data="")
-                        self._logger.debug("Sending acknowledge:\n  {0}".format(ack))
-                        self._simple_frame_transmitter.write_frame(
-                            ack.serialize())
-
-                        for frame in self._receive_window.receive_frame(p):
-                            self._received_data.put((frame.is_last, frame.data))
-
-                    elif p.type == FrameType.ack:
-                        # Received ACK.
-
-                        self._send_window.ack_received(p.id)
-
-                    else:
-                        assert False
-                        
-            time.sleep(config.thread_sleep_time)
-
-def _test():
+def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests
@@ -570,7 +606,7 @@ def _test():
                 self.assertEqual(self.aft.receive(block=False), None)
                 self.assertEqual(self.bft.receive(block=False), None)
 
-    do_tests(Tests)
+    do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    _test()
+    _test(level=None)
