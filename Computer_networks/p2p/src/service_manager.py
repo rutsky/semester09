@@ -28,6 +28,7 @@ import Queue
 import threading
 import time
 import logging
+import struct
 from collections import namedtuple
 
 from recordtype import recordtype
@@ -35,8 +36,11 @@ from recordtype import recordtype
 import config
 from datagram import datagram
 
-class Packet(recordtype('Packet', 'src dest data')):
+# TODO: Mess with `time'.
+class Packet(recordtype('PacketBase', 'src dest data time')):
     def __init__(self, *args, **kwargs):
+        if len(args) < 4 and 'time' not in kwargs:
+            kwargs['time'] = time.time()
         super(Packet, self).__init__(*args, **kwargs)
 
     def __eq__(self, other):
@@ -49,26 +53,30 @@ class Packet(recordtype('Packet', 'src dest data')):
         return not self == other
 
     def __str__(self):
-        return "Packet(src={src}, dest={dest}, data=0x{data})".format(
-            src=self.src, dest=self.dest, data=self.data.encode('hex'))
+        return "Packet(src={src}, dest={dest}, time={time}, "\
+            "data=0x{data})".format(
+                src=self.src, dest=self.dest, data=self.data.encode('hex'),
+                time=self.time)
 
-def packet_to_datagram(packet, protocol):
+def packet_to_datagram(packet, protocol, time_=None):
+    using_time = time_ if time_ is not None else time.time()
+    time_data = struct.pack("f", float(using_time))
     return datagram(type=protocol, src=packet.src,
-        dest=packet.dest, data=packet.data)
+        dest=packet.dest, data=packet.data + time_data)
 
 def datagram_to_packet(datagram):
+    time_data_len = struct.calcsize("f")
+    time_ = struct.unpack("f", datagram.data[-time_data_len:])[0]
+
     return datagram.type, Packet(src=datagram.src, dest=datagram.dest,
-        data=datagram.data)
+        data=datagram.data[:-time_data_len], time=time_)
 
 class RouterServiceManager(object):
     # `_receive_queue' and `_send_queue' are queues for received and send
-    # ServiceDatagram's accordingly.
+    # Packet's accordingly.
     # TODO: rename to something like `ServiceTransmitter'.
     class ServiceInfo(
-            namedtuple('_ServiceInfoBase', 'name receive_queue send_queue')):
-        # namedtuple don't respect __init__().
-        # def __init__(self):
-        #     pass
+            recordtype('ServiceInfoBase', 'name receive_queue send_queue')):
 
         def send(self, packet):
             assert isinstance(packet, Packet)
@@ -122,16 +130,19 @@ class RouterServiceManager(object):
     def name(self):
         return self._datagram_router.name
 
-    def register_service(self, protocol):
+    def _register_service_info(self, protocol, service_info):
         self._logger.info("Registering service {0}".format(protocol))
-        service_info = \
-            RouterServiceManager.ServiceInfo(
-                self.name, Queue.Queue(), Queue.Queue())
 
         with self._services_lock:
             assert protocol not in self._services
             self._services[protocol] = service_info
-        
+
+    def register_service(self, protocol):
+        service_info = \
+            RouterServiceManager.ServiceInfo(
+                self.name, Queue.Queue(), Queue.Queue())
+        self._register_service_info(protocol, service_info)
+
         return service_info
 
     def _work(self):
@@ -168,6 +179,7 @@ class RouterServiceManager(object):
                     break
                 else:
                     protocol, packet = datagram_to_packet(datagram)
+                    packet.time -= time.time()
 
                     with self._services_lock:
                         if protocol in self._services:
@@ -213,8 +225,9 @@ def _test(level=None):
     class Tests(object):
         class TestPacket(unittest.TestCase):
             def test_main(self):
-                p1 = Packet(    1,      2,      "3")
-                p2 = Packet(src=1, dest=2, data="3")
+                t = time.time()
+                p1 = Packet(    1,      2,      "3", t)
+                p2 = Packet(src=1, dest=2, data="3", time=t)
                 self.assertEqual(p1, p2)
                 self.assertEqual(p1.src,  1)
                 self.assertEqual(p1.dest, 2)
@@ -222,7 +235,8 @@ def _test(level=None):
 
                 d1 = packet_to_datagram(p1, 30)
                 self.assertEqual(d1,
-                    datagram(30, p1.src, p1.dest, p1.data))
+                    datagram(30, p1.src, p1.dest, p1.data +
+                        struct.pack("f", t)))
 
                 self.assertEqual(datagram_to_packet(d1), (d1.type, p1))
 
