@@ -56,6 +56,7 @@ class GraphicsView(QGraphicsView):
         self._scale_view(2 ** (-event.delta() / 240.0))
 
     def _scale_view(self, scale_factor):
+        # Number of pixels per unit?
         factor = self.matrix().scale(scale_factor, scale_factor).\
             mapRect(QRectF(0, 0, 1, 1)).width()
         if factor < 0.07 or factor > 100:
