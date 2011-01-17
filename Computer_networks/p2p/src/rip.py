@@ -149,7 +149,9 @@ class RIPService(object):
             for router_name in new_connected_routers:
                 router_name not in connected_rrs_info
                 connected_rrs_info[router_name] = \
-                    ConnectedRouterInfo(Timer(self._update_period))
+                    ConnectedRouterInfo(Timer(self._update_period,
+                        start_time=time.time() - self._update_period - 1.0))
+                assert connected_rrs_info[router_name].timer.is_expired()
 
             # Update routing information for directly connected destination
             # routers.
