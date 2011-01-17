@@ -64,8 +64,12 @@ class RouterServiceManager(object):
     # `_receive_queue' and `_send_queue' are queues for received and send
     # ServiceDatagram's accordingly.
     # TODO: rename to something like `ServiceTransmitter'.
-    class _ServiceInfo(
+    class ServiceInfo(
             namedtuple('_ServiceInfoBase', 'name receive_queue send_queue')):
+        # namedtuple don't respect __init__().
+        # def __init__(self):
+        #     pass
+
         def send(self, packet):
             assert isinstance(packet, Packet)
 
@@ -121,7 +125,8 @@ class RouterServiceManager(object):
     def register_service(self, protocol):
         self._logger.info("Registering service {0}".format(protocol))
         service_info = \
-            RouterServiceManager._ServiceInfo(self.name, Queue.Queue(), Queue.Queue())
+            RouterServiceManager.ServiceInfo(
+                self.name, Queue.Queue(), Queue.Queue())
 
         with self._services_lock:
             assert protocol not in self._services
@@ -223,7 +228,7 @@ def _test(level=None):
 
         class Test_ServiceInfo(unittest.TestCase):
             def test_main(self):
-                sm = RouterServiceManager._ServiceInfo(0, 1, 2)
+                sm = RouterServiceManager.ServiceInfo(0, 1, 2)
                 self.assertEqual(sm.name, 0)
                 self.assertEqual(sm.receive_queue, 1)
                 self.assertEqual(sm.send_queue, 2)
@@ -315,8 +320,10 @@ def _test(level=None):
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()
@@ -387,8 +394,10 @@ def _test(level=None):
                 sft1 = SimpleFrameTransmitter(node=l1)
                 sft2 = SimpleFrameTransmitter(node=l2)
 
-                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1)
-                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2)
+                self.ft1 = FrameTransmitter(simple_frame_transmitter=sft1,
+                    debug_src=1, debug_dest=2)
+                self.ft2 = FrameTransmitter(simple_frame_transmitter=sft2,
+                    debug_src=2, debug_dest=1)
 
                 rlm1 = RouterLinkManager()
                 rlm2 = RouterLinkManager()

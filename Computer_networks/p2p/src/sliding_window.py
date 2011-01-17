@@ -144,9 +144,8 @@ class FrameTransmitter(object):
         self._max_frame_data = kwargs.pop('max_frame_data', 100)
         self._window_size = kwargs.pop('window_size', 100)
         self._ack_timeout = kwargs.pop('ack_timeout', 0.5)
-        self._debug_src = kwargs.pop('debug_src', 'None')
-        
-        self._debug_dest = kwargs.pop('debug_dest', 'None')
+        self._debug_src = kwargs.pop('debug_src', '?')
+        self._debug_dest = kwargs.pop('debug_dest', '?')
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
         self._logger = logging.getLogger("FrameTransmitter.{0}->{1}".format(
@@ -431,8 +430,10 @@ def _test():
                 self.bt = SimpleFrameTransmitter(node=self.b)
 
             def test_constructor(self):
-                aft = FrameTransmitter(simple_frame_transmitter=self.at)
-                bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+                aft = FrameTransmitter(simple_frame_transmitter=self.at,
+                    debug_src=1, debug_dest=2)
+                bft = FrameTransmitter(simple_frame_transmitter=self.bt,
+                    debug_src=2, debug_dest=1)
 
                 aft.terminate()
                 bft.terminate()
@@ -450,8 +451,10 @@ def _test():
                 self.at = SimpleFrameTransmitter(node=self.a)
                 self.bt = SimpleFrameTransmitter(node=self.b)
 
-                self.aft = FrameTransmitter(simple_frame_transmitter=self.at)
-                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+                self.aft = FrameTransmitter(simple_frame_transmitter=self.at,
+                    debug_src=1, debug_dest=2)
+                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt,
+                    debug_src=2, debug_dest=1)
 
             def tearDown(self):
                 self.aft.terminate()
@@ -520,8 +523,10 @@ def _test():
                 self.at = SimpleFrameTransmitter(node=self.a)
                 self.bt = SimpleFrameTransmitter(node=self.b)
 
-                self.aft = FrameTransmitter(simple_frame_transmitter=self.at)
-                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt)
+                self.aft = FrameTransmitter(simple_frame_transmitter=self.at,
+                    debug_src=1, debug_dest=2)
+                self.bft = FrameTransmitter(simple_frame_transmitter=self.bt,
+                    debug_src=2, debug_dest=1)
 
             def tearDown(self):
                 self.aft.terminate()
