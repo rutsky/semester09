@@ -39,9 +39,16 @@ def random_velocity(min, max):
     return QLineF.fromPolar(random.uniform(min, max),
         random.uniform(0, 360.0)).p2()
 
+# TODO: Move almost all functionality from MainWindow to GraphicsView.
 class GraphicsView(QGraphicsView):
     def __init__(self):
         super(GraphicsView, self).__init__()
+
+        self.setCacheMode(QGraphicsView.CacheBackground)
+        self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
+        self.setRenderHint(QPainter.Antialiasing)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
 
         self._scale_view(2.0)
 
@@ -73,13 +80,6 @@ class MainWindow(QMainWindow):
 
         # Disable spatial indexing since all objects will be moving.
         self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
-
-        self.graphicsView.setCacheMode(QGraphicsView.CacheBackground)
-        self.graphicsView.setViewportUpdateMode(
-            QGraphicsView.BoundingRectViewportUpdate)
-        self.graphicsView.setRenderHint(QPainter.Antialiasing)
-        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         
         # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
