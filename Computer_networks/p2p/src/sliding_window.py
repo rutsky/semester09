@@ -139,6 +139,90 @@ class FrameTransmitter(object):
     #_frame_id_period = 32768
     _frame_id_period = 200 # DEBUG
 
+    class _SendWindow(object):
+        SendItem = recordtype('SendItem', 'id time frame ack_received')
+
+        def __init__(self, logger, maxlen, frame_id_it, timeout):
+            super(FrameTransmitter._SendWindow, self).__init__()
+
+            self._logger = logger
+            self.maxlen = maxlen
+            self.queue = deque(maxlen=maxlen)
+            self.frame_id_it = frame_id_it
+            self.timeout = timeout
+
+        def can_add_next(self):
+            return len(self.queue) < self.maxlen
+
+        def add_next(self, is_last, data, curtime=None):
+            assert self.can_add_next()
+
+            using_curtime = curtime if curtime is not None else time.time()
+
+            frame_id = self.frame_id_it.next()
+            p = Frame(type=FrameType.data, id=frame_id, is_last=is_last,
+                data=data)
+            item = FrameTransmitter._SendWindow.SendItem(
+                frame_id, using_curtime, p, False)
+            self.queue.append(item)
+
+            return item
+
+        def timeout_items(self, curtime=None):
+            using_curtime = curtime if curtime is not None else time.time()
+            for item in self.queue:
+                if item.time + self.timeout < using_curtime:
+                    yield item
+
+        def ack_received(self, frame_id):
+            # TODO: Performance issue.
+            for item in self.queue:
+                if item.id == frame_id:
+                    item.ack_received = True
+                    break
+            else:
+                self._logger.warning(
+                    "Received ack for frame outside working window: {0}".
+                        format(frame_id))
+
+            while len(self.queue) > 0 and self.queue[0].ack_received:
+                self.queue.popleft()
+
+    class _ReceiveWindow(object):
+        ReceiveItem = recordtype('ReceiveItem', 'id frame')
+
+        def __init__(self, logger, maxlen, frame_id_it):
+            super(FrameTransmitter._ReceiveWindow, self).__init__()
+
+            self._logger = logger
+            self.queue = deque(maxlen=maxlen)
+            self.frame_id_it = frame_id_it
+
+            # Fill receive window with placeholders for receiving frames.
+            for idx in xrange(maxlen):
+                item = FrameTransmitter._ReceiveWindow.ReceiveItem(
+                    self.frame_id_it.next(), None)
+                self.queue.append(item)
+
+        def receive_frame(self, frame):
+            # TODO: Performance issue.
+            for item in self.queue:
+                if item.id == frame.id:
+                    item.frame = frame
+                    break
+            else:
+                self._logger.warning(
+                    "Received frame outside working window: {0}".
+                        format(frame))
+
+            while self.queue[0].frame is not None:
+                yield self.queue[0].frame
+
+                self.queue.popleft()
+                new_item = FrameTransmitter._ReceiveWindow.ReceiveItem(
+                    self.frame_id_it.next(), None)
+                self.queue.append(new_item)
+
     def __init__(self, *args, **kwargs):
         self._simple_frame_transmitter = kwargs.pop('simple_frame_transmitter')
         self._max_frame_data = kwargs.pop('max_frame_data', 100)
@@ -157,6 +241,15 @@ class FrameTransmitter(object):
         self._received_data = Queue.Queue()
 
         self._received_frames_buffer = []
+
+        self._send_window = FrameTransmitter._SendWindow(
+            self._logger, self._window_size,
+            itertools.cycle(xrange(self._frame_id_period)),
+            self._ack_timeout)
+        self._receive_window = FrameTransmitter._ReceiveWindow(
+            self._logger, self._window_size,
+            itertools.cycle(xrange(self._frame_id_period)))
+
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
@@ -238,96 +331,8 @@ class FrameTransmitter(object):
                 return None
 
     def _work(self):
-        class SendWindow(object):
-            SendItem = recordtype('SendItem', 'id time frame ack_received')
-
-            def __init__(self, logger, maxlen, frame_id_it, timeout):
-                super(SendWindow, self).__init__()
-
-                self._logger = logger
-                self.maxlen = maxlen
-                self.queue = deque(maxlen=maxlen)
-                self.frame_id_it = frame_id_it
-                self.timeout = timeout
-
-            def can_add_next(self):
-                return len(self.queue) < self.maxlen
-
-            def add_next(self, is_last, data, curtime=None):
-                assert self.can_add_next()
-
-                using_curtime = curtime if curtime is not None else time.time()
-                
-                frame_id = self.frame_id_it.next()                
-                p = Frame(type=FrameType.data, id=frame_id, is_last=is_last,
-                    data=data)
-                item = SendWindow.SendItem(frame_id, using_curtime, p, False)
-                self.queue.append(item)
-
-                return item
-
-            def timeout_items(self, curtime=None):
-                using_curtime = curtime if curtime is not None else time.time()
-                for item in self.queue:
-                    if item.time + self.timeout < using_curtime:
-                        yield item
-
-            def ack_received(self, frame_id):
-                # TODO: Performance issue.
-                for item in self.queue:
-                    if item.id == frame_id:
-                        item.ack_received = True
-                        break
-                else:
-                    self._logger.warning(
-                        "Received ack for frame outside working window: {0}".
-                            format(frame_id))
-
-                while len(self.queue) > 0 and self.queue[0].ack_received:
-                    self.queue.popleft()
-
-        class ReceiveWindow(object):
-            ReceiveItem = recordtype('ReceiveItem', 'id frame')
-
-            def __init__(self, logger, maxlen, frame_id_it):
-                super(ReceiveWindow, self).__init__()
-
-                self._logger = logger
-                self.queue = deque(maxlen=maxlen)
-                self.frame_id_it = frame_id_it
-                
-                # Fill receive window with placeholders for receiving frames.
-                for idx in xrange(maxlen):
-                    item = ReceiveWindow.ReceiveItem(
-                        self.frame_id_it.next(), None)
-                    self.queue.append(item)
-
-            def receive_frame(self, frame):
-                # TODO: Performance issue.
-                for item in self.queue:
-                    if item.id == frame.id:
-                        item.frame = frame
-                        break
-                else:
-                    self._logger.warning(
-                        "Received frame outside working window: {0}".
-                            format(frame))
-
-                while self.queue[0].frame is not None:
-                    yield self.queue[0].frame
-
-                    self.queue.popleft()
-                    new_item = ReceiveWindow.ReceiveItem(
-                        self.frame_id_it.next(), None)
-                    self.queue.append(new_item)
-
+        
         self._logger.info("Working thread started")
-
-        send_window = SendWindow(self._logger, self._window_size,
-            itertools.cycle(xrange(self._frame_id_period)),
-            self._ack_timeout)
-        receive_window = ReceiveWindow(self._logger, self._window_size,
-            itertools.cycle(xrange(self._frame_id_period)))
 
         while True:
             if self._exit_lock.acquire(False):
@@ -339,13 +344,13 @@ class FrameTransmitter(object):
 
             # Send frames.
             if (not self._frames_data_to_send.empty() and
-                    send_window.can_add_next()):
+                    self._send_window.can_add_next()):
                 # Have frame for sending in queue and free space in send
                 # window. Send frame.
 
                 is_last, frame_data = self._frames_data_to_send.get()
 
-                item = send_window.add_next(is_last, frame_data)
+                item = self._send_window.add_next(is_last, frame_data)
 
                 self._logger.debug("Sending:\n  {0}".format(str(item.frame)))
                 self._simple_frame_transmitter.write_frame(
@@ -353,7 +358,7 @@ class FrameTransmitter(object):
 
             # Handle timeouts.
             curtime = time.time()
-            for item in send_window.timeout_items(curtime):
+            for item in self._send_window.timeout_items(curtime):
                 # TODO: Currently it is selective repeat.
 
                 self._logger.warning("Resending due to timeout:\n  {0}".format(
@@ -361,7 +366,7 @@ class FrameTransmitter(object):
                 self._simple_frame_transmitter.write_frame(
                     item.frame.serialize())
                 item.time = curtime
-            assert len(list(send_window.timeout_items(curtime))) == 0
+            assert len(list(self._send_window.timeout_items(curtime))) == 0
 
             # Handle receiving data.
             frame = self._simple_frame_transmitter.read_frame(block=False)
@@ -385,13 +390,13 @@ class FrameTransmitter(object):
                         self._simple_frame_transmitter.write_frame(
                             ack.serialize())
 
-                        for frame in receive_window.receive_frame(p):
+                        for frame in self._receive_window.receive_frame(p):
                             self._received_data.put((frame.is_last, frame.data))
 
                     elif p.type == FrameType.ack:
                         # Received ACK.
 
-                        send_window.ack_received(p.id)
+                        self._send_window.ack_received(p.id)
 
                     else:
                         assert False
