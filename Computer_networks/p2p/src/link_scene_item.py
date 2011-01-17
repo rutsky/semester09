@@ -87,7 +87,7 @@ class LinkItem(QGraphicsObject):
 
         self.destroyed.connect(self.on_destroy)
 
-        update_rate = 25 # frames per second
+        update_rate = 20 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
 
     @pyqtSlot()

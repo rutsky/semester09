@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         # Routers
         self.router_velocity_range = (0.0, 20.0)
 
-        self.dt = 1 / 30.0
+        self.dt = 1 / 20.0
         self.timer_id = self.startTimer(int(1000 * self.dt))
 
         # If working thread will be able to acquire the lock, then it should
