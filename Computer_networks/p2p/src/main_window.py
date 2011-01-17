@@ -39,6 +39,21 @@ def random_velocity(min, max):
     return QLineF.fromPolar(random.uniform(min, max),
         random.uniform(0, 360.0)).p2()
 
+class GraphicsView(QGraphicsView):
+    def __init__(self):
+        super(GraphicsView, self).__init__()
+
+    def wheelEvent(self, event):
+        self._scale_view(2 ** (-event.delta() / 240.0))
+
+    def _scale_view(self, scale_factor):
+        factor = self.matrix().scale(scale_factor, scale_factor).\
+            mapRect(QRectF(0, 0, 1, 1)).width()
+        if factor < 0.07 or factor > 100:
+            return
+
+        self.scale(scale_factor, scale_factor)
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -49,6 +64,8 @@ class MainWindow(QMainWindow):
         self.scene_rect = QRectF(-150, -105, 300, 210)
 
         self.scene = QGraphicsScene()
+        self.graphicsView = GraphicsView()
+        self.setCentralWidget(self.graphicsView)
         self.graphicsView.setScene(self.scene)
         self.scene.setSceneRect(self.scene_rect)
 
@@ -59,17 +76,61 @@ class MainWindow(QMainWindow):
         self.graphicsView.setViewportUpdateMode(
             QGraphicsView.BoundingRectViewportUpdate)
         self.graphicsView.setRenderHint(QPainter.Antialiasing)
-        #self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         
         # Disable scrollbars. Seems this is required for correct fitInView()
         # work in resizeEvent(). See fitInView() documentation for details.
-        self.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        #self.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
-        #self.scene.addText("Hello, world!")
+        class WheelEventIgnoreFilter(QObject):
+            def __init__(self, w, cls):
+                super(WheelEventIgnoreFilter, self).__init__()
+                self._cls = cls
+                self._w = w
 
-        # debug
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.Wheel:
+                    print obj, event
+                    print "title:", obj.windowTitle()
+                    print "parent:", obj.parent()
+                    if obj.parent() is not None:
+                        def children(w):
+                            return dict([(v, children(v)) for v in w.children()])
+                        import pprint
+                        print
+                        pprint.pprint(children(obj.parent()))
+                    print "viewport:", self._w.graphicsView.viewport()
+                    print "ignore"
+                    return True
+                else:
+                    return self._cls.eventFilter(obj, obj, event)
+        #self._wheel_event_filter = WheelEventIgnoreFilter()
+        #self.graphicsView.installEventFilter(self._wheel_event_filter)
+        #self.centralwidget.installEventFilter(self._wheel_event_filter)
+        #self.centralwidget.installEventFilter(self)
+        #self.graphicsView.installEventFilter(self)
+
+        print "QApplication.instance():", QApplication.instance()
+        print "self.graphicsView:", self.graphicsView
+
+        #f(self)
+
+        #self.installEventFilter(self)
+        
+        #self._wheel_event_filter = WheelEventIgnoreFilter(self, QCoreApplication)
+        #QApplication.instance().installEventFilter(self._wheel_event_filter)
+
+        #self._wheel_event_filter = WheelEventIgnoreFilter(QGraphicsView)
+        #self.graphicsView.installEventFilter(self._wheel_event_filter)
+
+        #print self.children()
+
+        #for w in self.children():
+        #    w.installEventFilter(self)
+
+        # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
         self.name_it = itertools.count(0)
@@ -95,6 +156,15 @@ class MainWindow(QMainWindow):
         self._working_thread = threading.Thread(target=self._work)
         self._working_thread.start()
 
+    def eventFilter(self, obj, event):
+        #print obj, event
+        if event.type() == QEvent.Wheel:
+            print "ignore"
+            return True
+        else:
+            return super(MainWindow, self).\
+                eventFilter(obj, event)
+
     def closeEvent(self, event):
         # Release exit lock and wait until working thread will not terminate.
         self._exit_lock.release()
@@ -103,11 +173,17 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, event):
         super(MainWindow, self).showEvent(event)
-        self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
+        #self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
+
+        def children(w):
+            return dict([(v, children(v)) for v in w.children()])
+        import pprint
+        print
+        pprint.pprint(children(self))
 
     def resizeEvent(self, event):
         super(MainWindow, self).resizeEvent(event)
-        self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
+        #self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
 
     def timerEvent(self, event):
         for router in self.routers:
@@ -148,6 +224,12 @@ class MainWindow(QMainWindow):
 
         return name
 
+    @pyqtSlot()
+    def stop_routers(self):
+        for router in self.routers:
+            router.velocity = QPointF()
+
+    @pyqtSlot()
     def shake_routers(self):
         for router in self.routers:
             router.velocity = random_velocity(*self.router_velocity_range)
