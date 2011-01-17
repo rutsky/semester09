@@ -22,10 +22,10 @@ default_log_format = "%(asctime)-15s %(levelname)-8s %(name)-30s %(message)s"
 
 thread_sleep_time = 1e-1
 use_openGL = False
-packets_delivery_time_factor = 15
+packets_delivery_time_factor = 10
 
 # RIP.
-rip_update_period = 5
+rip_update_period = 7
 rip_inf_timeout = 30
 rip_remove_timeout = 60
 
