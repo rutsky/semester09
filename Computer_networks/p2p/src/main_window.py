@@ -115,6 +115,9 @@ class MainWindow(QMainWindow):
         self._working_thread.start()
 
     def closeEvent(self, event):
+        # TODO: It is possible to hit close button twice. Must do
+        # deinitialization on destroy event.
+
         # Release exit lock and wait until working thread will not terminate.
         self._exit_lock.release()
         self._working_thread.join()
