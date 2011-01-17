@@ -64,6 +64,7 @@ class LinkItem(QGraphicsObject):
         self._visual_route_offset_step = 0.8
         self._visual_route_line_width = 0.5
         self._visual_route_draw_fraction = 2.0 / 3
+        self._visual_packet_offset = 5
 
         # Initial state is disabled.
         self._enabled = False
@@ -280,14 +281,18 @@ class LinkItem(QGraphicsObject):
             (curtime - tr_packet.start_time) /
                 (tr_packet.end_time - tr_packet.start_time))
 
-        line = QLineF(self.src_point, self.dest_point)
+        if tr_packet.packet.src == self.src.name:
+            line = QLineF(self.src_point, self.dest_point)
+        else:
+            line = QLineF(self.dest_point, self.src_point)
         assert not qFuzzyCompare(line.length(), 0.)
 
         unit_vector = line.unitVector().p2() - line.unitVector().p1()
         normal_vector = line.normalVector().unitVector().p1() - \
             line.normalVector().unitVector().p2()
 
-        position = line.p1() + unit_vector * line.length() * progress
+        position = line.p1() + unit_vector * line.length() * progress + \
+            normal_vector * self._visual_packet_offset
         tr_packet.packet_item.setPos(position)
 
     def timerEvent(self, event):
