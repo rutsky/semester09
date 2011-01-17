@@ -58,15 +58,14 @@ class Packet(recordtype('PacketBase', 'src dest data time')):
                 src=self.src, dest=self.dest, data=self.data.encode('hex'),
                 time=self.time)
 
-def packet_to_datagram(packet, protocol, time_=None):
-    using_time = time_ if time_ is not None else time.time()
-    time_data = struct.pack("f", float(using_time))
+def packet_to_datagram(packet, protocol):
+    time_data = struct.pack("d", packet.time)
     return datagram(type=protocol, src=packet.src,
         dest=packet.dest, data=packet.data + time_data)
 
 def datagram_to_packet(datagram):
-    time_data_len = struct.calcsize("f")
-    time_ = struct.unpack("f", datagram.data[-time_data_len:])[0]
+    time_data_len = struct.calcsize("d")
+    time_ = struct.unpack("d", datagram.data[-time_data_len:])[0]
 
     return datagram.type, Packet(src=datagram.src, dest=datagram.dest,
         data=datagram.data[:-time_data_len], time=time_)
@@ -179,14 +178,15 @@ class RouterServiceManager(object):
                     break
                 else:
                     protocol, packet = datagram_to_packet(datagram)
-                    packet.time -= time.time()
-
+                    
                     with self._services_lock:
                         if protocol in self._services:
                             self._logger.info(
                                 "Network to client (protocol={0}):\n"
-                                "  {1}".format(
-                                    protocol, datagram))
+                                "  {1}\n  {2}".format(
+                                    protocol, datagram, packet))
+                            
+                            packet.time = time.time() - packet.time
 
                             self._services[protocol].receive_queue.put(packet)
                         else:
@@ -232,13 +232,17 @@ def _test(level=None):
                 self.assertEqual(p1.src,  1)
                 self.assertEqual(p1.dest, 2)
                 self.assertEqual(p1.data, "3")
+                self.assertEqual(p1.time, t)
 
                 d1 = packet_to_datagram(p1, 30)
                 self.assertEqual(d1,
                     datagram(30, p1.src, p1.dest, p1.data +
-                        struct.pack("f", t)))
+                        struct.pack("d", t)))
 
-                self.assertEqual(datagram_to_packet(d1), (d1.type, p1))
+                d1_type, p1_ = datagram_to_packet(d1)
+                self.assertEqual(d1_type, d1.type)
+                self.assertEqual(p1_, p1)
+                self.assertEqual(p1_.time, p1.time)
 
         class Test_ServiceInfo(unittest.TestCase):
             def test_main(self):
@@ -357,7 +361,10 @@ def _test(level=None):
                 self.sm1 = RouterServiceManager(self.dr1)
                 self.sm2 = RouterServiceManager(self.dr2)
 
-            def test_transmit(self):
+                self.s1_100 = self.sm1.register_service(100)
+                self.s2_100 = self.sm2.register_service(100)
+
+            def _test_transmit(self):
                 s1_77 = self.sm1.register_service(77)
                 s2_77 = self.sm2.register_service(77)
 
@@ -391,6 +398,15 @@ def _test(level=None):
                 self.assertEqual(s2_77.receive(), d12_3)
                 self.assertEqual(s2_33.receive(), d12_2)
 
+            def test_time(self):
+                data = "test"
+                self.s1_100.send_data(2, data)
+                p = self.s2_100.receive()
+                self.assertEqual(p.data, data)
+                # TODO: Assume computer is not slow.
+                self.assertLess(p.time, 5.0)
+                self.assertGreaterEqual(p.time, 0)
+
             def tearDown(self):
                 self.sm1.terminate()
                 self.sm2.terminate()
@@ -401,7 +417,7 @@ def _test(level=None):
                 self.ft1.terminate()
                 self.ft2.terminate()
 
-        class TestRouterServiceManager2WithLosses(unittest.TestCase):
+        class _TestRouterServiceManager2WithLosses(unittest.TestCase):
             def setUp(self):
                 l1, l2 = FullDuplexLink(loss_func=LossFunc(0.001, 0.001, 0.001))
 
