@@ -635,11 +635,11 @@ def _test(init_logging=True, level=None, disabled_loggers=None):
     do_tests(Tests, level=level, disabled_loggers=disabled_loggers)
 
 if __name__ == "__main__":
-    disable_loggers = [
+    disabled_loggers = [
         "DatagramRouter.router=1",
         "DatagramRouter.router=2",
         "FrameTransmitter.1->2",
         "FrameTransmitter.2->1"
         ]
     
-    _test(disabled_loggers=disable_loggers, level=0)
+    _test(disabled_loggers=disabled_loggers, level=0)
