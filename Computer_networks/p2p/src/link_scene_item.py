@@ -151,6 +151,13 @@ class LinkItem(QGraphicsObject):
             assert self.dest == src
             return self.src
 
+    def link_end_by_name(self, name):
+        if self.src.name == name:
+            return self.src
+        else:
+            assert self.dest.name == name
+            return self.dest
+
     def is_singular(self):
         return self.src_point is None or self.dest_point is None
 
@@ -243,6 +250,10 @@ class LinkItem(QGraphicsObject):
         if old_src_table != self.src_table or old_dest_table != self.dest_table:
             self._recalculate_routes()
             self.update()
+
+    def transmit_packet(self, packet):
+        # Dummy
+        self.link_end_by_name(packet.dest).deliver_packet(packet, False)
 
 def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.

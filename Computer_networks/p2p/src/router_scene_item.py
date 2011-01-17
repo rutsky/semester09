@@ -56,7 +56,7 @@ class ControllableRouterServiceManager(RouterServiceManager):
     def __init__(self, datagram_router):
         super(ControllableRouterServiceManager, self).__init__(datagram_router)
 
-        self._controllable_services = []
+        self._controllable_services = {}
 
     def register_service(self, protocol):
         service_info = \
@@ -64,7 +64,7 @@ class ControllableRouterServiceManager(RouterServiceManager):
                 self.name, Queue.Queue(), Queue.Queue())
         self._register_service_info(protocol, service_info)
 
-        self._controllable_services.append((protocol, service_info))
+        self._controllable_services[protocol] = service_info
 
         return service_info
 
@@ -95,7 +95,11 @@ class RouterItem(QGraphicsObject):
             QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
             self.size)
 
-        self.links = {}
+        # connected router -> link to it
+        self._links = {}
+
+        # packet -> protocol
+        self._packets_for_delivery = {}
 
         self._link_manager = RouterLinkManager()
         self._datagram_router = None
@@ -148,12 +152,22 @@ class RouterItem(QGraphicsObject):
         self._rip_service = None
 
     @property
+    def links(self):
+        return self._links
+
+    @property
     def link_manager(self):
         return self._link_manager
 
     @property
     def rip_service(self):
         return self._rip_service
+
+    def link_to_router(self, name):
+        for router, link in self._links.items():
+            if router.name == name:
+                return link
+        return None
 
     def boundingRect(self):
         adjust = 2
@@ -218,19 +232,27 @@ class RouterItem(QGraphicsObject):
         super(RouterItem, self).mouseMoveEvent(event)
 
     def timerEvent(self, event):
-        for protocol, service_transmitter in self._service_manager.services:
+        for protocol, service_transmitter in \
+                self._service_manager.services.items():
             while True:
                 try:
                     packet = service_transmitter.receive_queue.get(block=False)
                 except Queue.Empty:
                     break
 
-                print packet
+                self._packets_for_delivery[packet] = protocol
+                
+                link = self.link_to_router(packet.src)
+                link.transmit_packet(packet)
 
-                service_transmitter.actual_receive_queue.put(packet)
-        
-    def packet_transmitted(self, packet_guid):
-        pass
+    def deliver_packet(self, packet, is_failed):
+        if not is_failed:
+            protocol = self._packets_for_delivery[packet]
+            service_transmitter = self._service_manager.services[protocol]
+            service_transmitter.actual_receive_queue.put(packet)
+
+            #print packet, len(self._packets_for_delivery)
+        del self._packets_for_delivery[packet]
 
     def _return_to_scene(self, pos):
         new_pos = QPointF(pos)
@@ -249,10 +271,10 @@ class RouterItem(QGraphicsObject):
         return new_pos
 
     def add_link(self, link):
-        self.links[link.link_end(self)] = link
+        self._links[link.link_end(self)] = link
 
     def adjust_links(self):
-        for dest, link in self.links.iteritems():
+        for dest, link in self._links.iteritems():
             link.adjust()
 
     def advance(self, dt):
@@ -317,7 +339,7 @@ def _test(timeout=1):
                 ri = RouterItem(1)
                 link = "dummy"
                 ri.add_link(link)
-                self.assertEqual(ri.links, set([link]))
+                self.assertItemsEqual(ri.links, [link])
 
                 self.finished = True
 
@@ -335,7 +357,7 @@ def _test(timeout=1):
                 self.assertFalse(link.adjusted)
                 ri.add_link(link)
                 self.assertFalse(link.adjusted)
-                self.assertEqual(ri.links, set([link]))
+                self.assertItemsEqual(ri.links, [link])
 
                 # TODO
                 #ri.setPos(10, 10)
