@@ -87,7 +87,7 @@ class LinkItem(QGraphicsObject):
 
         self.destroyed.connect(self.on_destroy)
 
-        update_rate = 20 # frames per second
+        update_rate = 10 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
 
     @pyqtSlot()
@@ -184,7 +184,7 @@ class LinkItem(QGraphicsObject):
         if self.is_singular():
             return QRectF()
 
-        # TODO: Take in count transmitting packets.
+        # TODO: Take in account transmitting packets.
 
         routes_count = max(len(self._routes_through_dest),
             len(self._routes_through_src))

@@ -103,8 +103,12 @@ class MainWindow(QMainWindow):
         # Routers
         self.router_velocity_range = (0.0, 20.0)
 
-        self.dt = 1 / 20.0
-        self.timer_id = self.startTimer(int(1000 * self.dt))
+        self._dt = 1 / 20.0
+        self._refresh_timer_id = self.startTimer(int(1000 * self._dt))
+
+        link_update_rate = 5 # timer per second
+        self._update_link_timer_id = \
+            self.startTimer(int(1000 / link_update_rate))
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
@@ -124,17 +128,19 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).closeEvent(event)
 
     def timerEvent(self, event):
-        for router in self.routers:
-            router.advance(self.dt)
+        if event.timerId() == self._refresh_timer_id:
+            for router in self.routers:
+                router.advance(self._dt)
 
-        for (r1, r2), link in self.links.iteritems():
-            if r1.distance(r2) >= self.disconnection_distance:
-                link.enabled = False
+        elif event.timerId() == self._update_link_timer_id:
+            for (r1, r2), link in self.links.iteritems():
+                if r1.distance(r2) >= self.disconnection_distance:
+                    link.enabled = False
 
-        for idx, r1 in enumerate(self.routers):
-            for r2 in self.routers[idx + 1:]:
-                if r1.distance(r2) <= self.connection_distance:
-                    self.links[(r1, r2)].enabled = True
+            for idx, r1 in enumerate(self.routers):
+                for r2 in self.routers[idx + 1:]:
+                    if r1.distance(r2) <= self.connection_distance:
+                        self.links[(r1, r2)].enabled = True
 
     def add_router(self, pos=None):
         name = self.name_it.next()
