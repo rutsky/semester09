@@ -24,6 +24,11 @@ thread_sleep_time = 1e-1
 use_openGL = False
 packets_delivery_time_factor = 15
 
+# RIP.
+rip_update_period = 5
+rip_inf_timeout = 30
+rip_remove_timeout = 60
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 

@@ -80,9 +80,12 @@ class RIPService(object):
 
     def __init__(self, router_name, router_link_manager, service_transmitter,
             **kwargs):
-        self._update_period  = kwargs.pop('update_period',   1)
-        self._inf_timeout    = kwargs.pop('inf_timeout',     2)
-        self._remove_timeout = kwargs.pop('remove_timeout', 12)
+        self._update_period  = kwargs.pop('update_period',
+            config.rip_update_period)
+        self._inf_timeout    = kwargs.pop('inf_timeout',
+            config.rip_inf_timeout)
+        self._remove_timeout = kwargs.pop('remove_timeout',
+            config.rip_remove_timeout)
         super(RIPService, self).__init__()
 
         self._router_name = router_name
