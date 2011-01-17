@@ -294,6 +294,7 @@ class LinkItem(QGraphicsObject):
         position = line.p1() + unit_vector * line.length() * progress + \
             normal_vector * self._visual_packet_offset
         tr_packet.packet_item.setPos(position)
+        tr_packet.packet_item.setRotation(-line.angle() - 90.0)
 
     def timerEvent(self, event):
         old_src_table = self.src_table
