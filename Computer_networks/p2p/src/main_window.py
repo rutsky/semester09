@@ -79,57 +79,6 @@ class MainWindow(QMainWindow):
         self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.graphicsView.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         
-        # Disable scrollbars. Seems this is required for correct fitInView()
-        # work in resizeEvent(). See fitInView() documentation for details.
-        #self.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        #self.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-
-        class WheelEventIgnoreFilter(QObject):
-            def __init__(self, w, cls):
-                super(WheelEventIgnoreFilter, self).__init__()
-                self._cls = cls
-                self._w = w
-
-            def eventFilter(self, obj, event):
-                if event.type() == QEvent.Wheel:
-                    print obj, event
-                    print "title:", obj.windowTitle()
-                    print "parent:", obj.parent()
-                    if obj.parent() is not None:
-                        def children(w):
-                            return dict([(v, children(v)) for v in w.children()])
-                        import pprint
-                        print
-                        pprint.pprint(children(obj.parent()))
-                    print "viewport:", self._w.graphicsView.viewport()
-                    print "ignore"
-                    return True
-                else:
-                    return self._cls.eventFilter(obj, obj, event)
-        #self._wheel_event_filter = WheelEventIgnoreFilter()
-        #self.graphicsView.installEventFilter(self._wheel_event_filter)
-        #self.centralwidget.installEventFilter(self._wheel_event_filter)
-        #self.centralwidget.installEventFilter(self)
-        #self.graphicsView.installEventFilter(self)
-
-        print "QApplication.instance():", QApplication.instance()
-        print "self.graphicsView:", self.graphicsView
-
-        #f(self)
-
-        #self.installEventFilter(self)
-        
-        #self._wheel_event_filter = WheelEventIgnoreFilter(self, QCoreApplication)
-        #QApplication.instance().installEventFilter(self._wheel_event_filter)
-
-        #self._wheel_event_filter = WheelEventIgnoreFilter(QGraphicsView)
-        #self.graphicsView.installEventFilter(self._wheel_event_filter)
-
-        #print self.children()
-
-        #for w in self.children():
-        #    w.installEventFilter(self)
-
         # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
@@ -156,34 +105,11 @@ class MainWindow(QMainWindow):
         self._working_thread = threading.Thread(target=self._work)
         self._working_thread.start()
 
-    def eventFilter(self, obj, event):
-        #print obj, event
-        if event.type() == QEvent.Wheel:
-            print "ignore"
-            return True
-        else:
-            return super(MainWindow, self).\
-                eventFilter(obj, event)
-
     def closeEvent(self, event):
         # Release exit lock and wait until working thread will not terminate.
         self._exit_lock.release()
         self._working_thread.join()
         super(MainWindow, self).closeEvent(event)
-
-    def showEvent(self, event):
-        super(MainWindow, self).showEvent(event)
-        #self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
-
-        def children(w):
-            return dict([(v, children(v)) for v in w.children()])
-        import pprint
-        print
-        pprint.pprint(children(self))
-
-    def resizeEvent(self, event):
-        super(MainWindow, self).resizeEvent(event)
-        #self.graphicsView.fitInView(self.scene_rect, Qt.KeepAspectRatio)
 
     def timerEvent(self, event):
         for router in self.routers:
