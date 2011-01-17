@@ -43,6 +43,8 @@ class GraphicsView(QGraphicsView):
     def __init__(self):
         super(GraphicsView, self).__init__()
 
+        self._scale_view(2.0)
+
     def wheelEvent(self, event):
         self._scale_view(2 ** (-event.delta() / 240.0))
 
