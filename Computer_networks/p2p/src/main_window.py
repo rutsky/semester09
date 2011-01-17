@@ -226,5 +226,3 @@ if __name__ == "__main__":
             disabled_loggers.append("FrameTransmitter.{0}->{1}".format(r, rr))
     
     _test(timeout=None, disabled_loggers=disabled_loggers, level=0)
-
-    
