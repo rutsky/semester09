@@ -29,7 +29,7 @@ def main():
 
     w = MainWindow()
 
-    for i in xrange(20):
+    for i in xrange(16):
         w.add_router()
 
     w.shake_routers()

@@ -298,7 +298,8 @@ class FrameTransmitter(object):
                 
                 # Fill receive window with placeholders for receiving frames.
                 for idx in xrange(maxlen):
-                    item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
+                    item = ReceiveWindow.ReceiveItem(
+                        self.frame_id_it.next(), None)
                     self.queue.append(item)
 
             def receive_frame(self, frame):
@@ -316,7 +317,8 @@ class FrameTransmitter(object):
                     yield self.queue[0].frame
 
                     self.queue.popleft()
-                    new_item = ReceiveWindow.ReceiveItem(self.frame_id_it.next(), None)
+                    new_item = ReceiveWindow.ReceiveItem(
+                        self.frame_id_it.next(), None)
                     self.queue.append(new_item)
 
         self._logger.info("Working thread started")
