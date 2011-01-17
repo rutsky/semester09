@@ -159,7 +159,7 @@ class RouterServiceManager(object):
                         continue
                     datagram = packet_to_datagram(packet, protocol)
 
-                    self._logger.info(
+                    self._logger.debug(
                         "Client to network (protocol={0}):\n"
                         "  {1}".format(
                             protocol, packet))
@@ -181,7 +181,7 @@ class RouterServiceManager(object):
                     
                     with self._services_lock:
                         if protocol in self._services:
-                            self._logger.info(
+                            self._logger.debug(
                                 "Network to client (protocol={0}):\n"
                                 "  {1}\n  {2}".format(
                                     protocol, datagram, packet))
@@ -494,6 +494,4 @@ def _test(level=None):
     do_tests(Tests, level=level)
 
 if __name__ == "__main__":
-    
-
     _test(level=0)
