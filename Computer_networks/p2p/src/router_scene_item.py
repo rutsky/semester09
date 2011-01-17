@@ -22,6 +22,7 @@ __license__ = "GPL"
 __all__ = ["RouterItem"]
 
 import time
+import Queue
 from collections import deque
 
 from PyQt4.QtGui import *
@@ -33,6 +34,43 @@ from link_manager import RouterLinkManager
 from datagram import DatagramRouter
 from service_manager import RouterServiceManager
 from rip import RIPService
+
+class ControllableRouterServiceManager(RouterServiceManager):
+    class ControllableServiceInfo(RouterServiceManager.ServiceInfo):
+        def __init__(self, *args, **kwargs):
+            super(ControllableRouterServiceManager.ControllableServiceInfo,
+                self).__init__(*args, **kwargs)
+
+            self._actual_receive_queue = Queue.Queue()
+
+        def receive(self, block=True):
+            try:
+                return self._actual_receive_queue.get(block)
+            except Queue.Empty:
+                return None
+
+        @property
+        def actual_receive_queue(self):
+            return self._actual_receive_queue
+
+    def __init__(self, datagram_router):
+        super(ControllableRouterServiceManager, self).__init__(datagram_router)
+
+        self._controllable_services = []
+
+    def register_service(self, protocol):
+        service_info = \
+            ControllableRouterServiceManager.ControllableServiceInfo(
+                self.name, Queue.Queue(), Queue.Queue())
+        self._register_service_info(protocol, service_info)
+
+        self._controllable_services.append((protocol, service_info))
+
+        return service_info
+
+    @property
+    def services(self):
+        return self._controllable_services
 
 class RouterItem(QGraphicsObject):
     def __init__(self, name, parent=None):
@@ -72,6 +110,9 @@ class RouterItem(QGraphicsObject):
 
         self._start_networking()
 
+        update_rate = 20 # frames per second
+        self._timer_id = self.startTimer(int(1000.0 / update_rate))
+
         self.destroyed.connect(self.on_destroy)
 
     @pyqtSlot()
@@ -85,7 +126,8 @@ class RouterItem(QGraphicsObject):
         self._datagram_router = DatagramRouter(
             router_name=self.name,
             link_manager=self._link_manager)
-        self._service_manager = RouterServiceManager(self._datagram_router)
+        self._service_manager = \
+            ControllableRouterServiceManager(self._datagram_router)
         self._rip_service_transmitter = self._service_manager.register_service(
             RIPService.protocol)
 
@@ -174,6 +216,21 @@ class RouterItem(QGraphicsObject):
         self._drag_points.append((time.time(), event.scenePos()))
 
         super(RouterItem, self).mouseMoveEvent(event)
+
+    def timerEvent(self, event):
+        for protocol, service_transmitter in self._service_manager.services:
+            while True:
+                try:
+                    packet = service_transmitter.receive_queue.get(block=False)
+                except Queue.Empty:
+                    break
+
+                print packet
+
+                service_transmitter.actual_receive_queue.put(packet)
+        
+    def packet_transmitted(self, packet_guid):
+        pass
 
     def _return_to_scene(self, pos):
         new_pos = QPointF(pos)

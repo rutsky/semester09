@@ -203,7 +203,7 @@ def _test(timeout=1, level=None):
                 self.w = MainWindow()
                 self.w.show()
 
-                for i in xrange(10):
+                for i in xrange(5):
                     self.w.add_router()
 
                 self.w.shake_routers()
