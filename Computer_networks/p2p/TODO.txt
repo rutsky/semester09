@@ -1,5 +1,5 @@
  * Handle all links in single thread.
- * May be rename modules according classes they implement? Like 
+ * Maybe rename modules according classes they implement? Like 
 "simple_frame_transmitter.py" instead of "frame.py" and "frame_transmitter.py"
 instead of "sliding_window.py".
  * There is serious performance issue - all waiting of events implemented as 
@@ -16,8 +16,6 @@ GUI:
  * Add/remove router.
  * Manual adding of persistent links.
  * Add buttons to stop/shake all routers.
- * Links always drawing above routers - this is not always correct.
  * File->Quit (or Ctrl+Q) don't work on recent Python 2.7 and PyQt.
  * Add window with statistics about loss packets etc.
  * Add zooming.
-
