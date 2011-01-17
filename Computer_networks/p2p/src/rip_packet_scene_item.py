@@ -37,37 +37,37 @@ class RIPPacketItem(QGraphicsObject):
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setZValue(2)
 
-        self.src_color  = palette.palette[self._packet.src]
-        self.dest_color = palette.palette[self._packet.dest]
+        self._src_color  = palette.palette[self._packet.src]
+        self._dest_color = palette.palette[self._packet.dest]
 
-        self.width = 1.0
-        self.height = 1.3
+        self._width = 1.0
+        self._height = 1.3
         
-        self.size = QSizeF(self.width, self.height)
-        self.size_rect = QRectF(
-            QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
-            self.size)
+        self._size = QSizeF(self._width, self._height)
+        self._size_rect = QRectF(
+            QPointF(-self._size.width() / 2.0, -self._size.height() / 2.0),
+            self._size)
 
-        self.src_rect = QRectF(
-            QPointF(-self.width / 2.0, -self.height / 2.0),
-            QSizeF(self.width, self.height / 2.0))
-        self.dest_rect = QRectF(
-            QPointF(-self.width / 2.0, 0),
-            QSizeF(self.width, self.height / 2.0))
+        self._src_rect = QRectF(
+            QPointF(-self._width / 2.0, -self._height / 2.0),
+            QSizeF(self._width, self._height / 2.0))
+        self._dest_rect = QRectF(
+            QPointF(-self._width / 2.0, 0),
+            QSizeF(self._width, self._height / 2.0))
 
     def boundingRect(self):
         adjust = 1
 
-        return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
+        return self._size_rect.adjusted(-adjust, -adjust, adjust, adjust)
 
     def paint(self, painter, style_option, widget):
-        painter.setPen(QPen(self.src_color, 0))
-        painter.setBrush(QBrush(self.src_color))
-        painter.drawRect(self.src_rect)
+        painter.setPen(QPen(self._src_color, 0))
+        painter.setBrush(QBrush(self._src_color))
+        painter.drawRect(self._src_rect)
 
-        painter.setPen(QPen(self.dest_color, 0))
-        painter.setBrush(QBrush(self.dest_color))
-        painter.drawRect(self.dest_rect)
+        painter.setPen(QPen(self._dest_color, 0))
+        painter.setBrush(QBrush(self._dest_color))
+        painter.drawRect(self._dest_rect)
 
 def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.
