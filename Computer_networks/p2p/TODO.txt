@@ -1,4 +1,3 @@
- * Handle all links in single thread.
  * Maybe rename modules according classes they implement? Like 
 "simple_frame_transmitter.py" instead of "frame.py" and "frame_transmitter.py"
 instead of "sliding_window.py".
@@ -19,4 +18,3 @@ GUI:
  * Add buttons to stop/shake all routers.
  * File->Quit (or Ctrl+Q) don't work on recent Python 2.7 and PyQt.
  * Add window with statistics about loss packets etc.
- * Add zooming.
