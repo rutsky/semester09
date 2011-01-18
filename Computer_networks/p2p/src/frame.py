@@ -73,6 +73,7 @@ class SimpleFrameTransmitter(object):
                 return frame
             else:
                 self._read_buffer.write(ch)
+# --- cut here in report ---
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

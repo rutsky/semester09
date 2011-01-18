@@ -82,6 +82,7 @@
 Данные должны передаваться с гарантией доставки.
 
 \section{Выбранный метод решения}
+\label{section:solution}
 Для реализации был выбран протокол выборочного повтора (\textit{selective repeat}), 
 описанный в~\cite{tanenbaum2003compnet}.
 
@@ -107,8 +108,10 @@
 при обнаружении кадра с ошибкой доставки производится его повторная отправка.
 
 \section{Детали реализации}
-Физический уровень передачи представлен классом узла \myfunc{FullDuplexNode}
-(см.~приложение~\ref{appendix-sources-duplex-link}).
+\subsection{Физический уровень передачи данных}
+Модель физического уровеня передачи данных представлена 
+классом \textit{узла} \myfunc{FullDuplexNode}
+(см.~приложение~\ref{appendix:sources:duplex-link}).
 Узлы конструируются связанными парами.
 Каждый узел предоставляет два метода: \myfunc{write} и \myfunc{read}, 
 позволяющие отправлять связанному узлу непрерывный поток байтов.
@@ -117,6 +120,48 @@
 Возможно внесение ошибок трёх типов: подмена передаваемого байта, 
 добавление лишнего байта, удаление передаваемого байта.
 
+\subsection{Передачи данных фреймами}
+Для удобства контроля передачи данных 
+непрерывный поток байтов делится на группы байтов переменной длины~--- фреймы
+(см.~приложение~\ref{appendix:sources:frame}).
+Деление на фреймы делается по аналогии с делением в протоколе SLIP%
+\footnote{\textit{Serial Line Internet Protocol}, описан в RFC 1055.}
+
+\subsection{Передача данных датаграммами}
+Поверх уровня передачи фреймами реализован протокол передачи с выборочным обменом,
+описанный в разделе~\ref{section:solution} 
+(см.~реализацию в приложении~\ref{appendix:sources:datagram}).
+
+Передаваемые данные делятся на куски небольшого размера, 
+упаковываются в датаграмму,
+которая передаётся в виде фрейма через нижележащий уровень сети.
+
+Используется датаграмма следующего формата (см.~таблицу~\ref{table:datagram}):
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|c|c|}
+      \hline
+      proto & src & dest & len & data & CRC32 \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{Формат датаграммы.}
+  \label{table:datagram}
+\end{table}
+\begin{itemize}
+  \item \textbf{proto} (2 байта)~--- 
+  идентификатор вышестоящего в сетевом стеке протокола;
+  \item \textbf{src} (4 байта), \textbf{dest} (4 байта)~--- 
+  идентификаторы отправителя и получателя датаграммы;
+  \item \textbf{len} (4 байта)~--- длина поля данных;
+  \item \textbf{data} ~--- данные;
+  \item \textbf{CRC32} ~--- контрольная сумма пакета (CRC32%
+\footnote{\textit{Сyclic redundancy check}~--- \textit{циклический избыточный код}, %
+описан в~\cite{peterson1961crc}.%
+}).
+\end{itemize}
+
+
 \section{Результат работы}
 % Выборочный повтор более эффективен. 
 
@@ -124,12 +169,21 @@
 
 \appendix
 \section{Исходный код}
-\label{appendix-sources}
-\subsection{Полнодуплексная передача данных}
-\label{appendix-sources-duplex-link}
+\label{appendix:sources}
 
 \usestyle{default}
+
+\subsection{Полнодуплексная передача данных}
+\label{appendix:sources:duplex-link}
 \includecode[python -O linenos=1]{data/duplex_link.py}
+
+\subsection{Передача данных фреймами}
+\label{appendix:sources:frame}
+\includecode[python -O linenos=1]{data/frame.py}
+
+\subsection{Передача данных датаграммами}
+\label{appendix:sources:datagram}
+\includecode[python -O linenos=1]{data/datagram.py}
 
 \pagebreak
 

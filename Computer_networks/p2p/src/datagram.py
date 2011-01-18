@@ -255,6 +255,7 @@ class DatagramRouter(object):
             handle_send_requests()
 
             time.sleep(config.thread_sleep_time)
+# --- cut here in report ---
 
 def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
