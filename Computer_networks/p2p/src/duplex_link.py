@@ -29,7 +29,7 @@ import bisect
 import random
 import StringIO
 
-# TODO: May be loss function will loose bits, not bytes?
+# TODO: Maybe loss function will loose bits, not bytes?
 # TODO: Maybe rename `node_a'/`node_b'? `Source' and `destination' are not
 # really good due to symmetric relation between link ends.
 
