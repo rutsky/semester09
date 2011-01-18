@@ -141,7 +141,7 @@ class FrameTransmitterWorker(object):
         self._logger = logging.getLogger("FrameTransmitterWorker")
 
         self._frame_transmitters = set()
-        self._frame_transmitters_lock = threading.Lock()
+        self._frame_transmitters_lock = threading.RLock()
 
         self._working_thread = None
         self._exit_lock = threading.RLock()
@@ -193,8 +193,7 @@ class FrameTransmitterWorker(object):
 worker = FrameTransmitterWorker()
 
 class FrameTransmitter(object):
-    #_frame_id_period = 32768
-    _frame_id_period = 200 # DEBUG
+    _frame_id_period = 32768
 
     class _SendWindow(object):
         SendItem = recordtype('SendItem', 'id time frame ack_received')
@@ -438,6 +437,50 @@ class FrameTransmitter(object):
 
                 else:
                     assert False
+# --- cut here in report ---
+
+def experiment(window_size, max_frame_data, data_list, loss_prob=None):
+    from duplex_link import FullDuplexLink, LossFunc
+
+    if loss_prob is not None:
+        loss_func = LossFunc(
+            loss_prob / 3.0, loss_prob / 3.0, loss_prob / 3.0)
+        a, b = FullDuplexLink(loss_func=loss_func)
+    else:
+        a, b = FullDuplexLink()
+
+    at = SimpleFrameTransmitter(node=a)
+    bt = SimpleFrameTransmitter(node=b)
+
+    aft = FrameTransmitter(window_size=window_size,
+        max_frame_data=max_frame_data, simple_frame_transmitter=at,
+        debug_src=1, debug_dest=2)
+    bft = FrameTransmitter(window_size=window_size,
+        max_frame_data=max_frame_data, simple_frame_transmitter=bt,
+        debug_src=2, debug_dest=1)
+
+    receive_list = []
+
+    start_time = time.time()
+    for data in data_list:
+        aft.send(data)
+
+        while True:
+            recv_data = bft.receive(False)
+            if recv_data is None:
+                break
+            receive_list.append(recv_data)
+
+    while len(receive_list) != len(data_list):
+        recv_data = bft.receive()
+        receive_list.append(recv_data)
+    end_time = time.time()
+
+    aft.terminate()
+    bft.terminate()
+
+    return (end_time - start_time,
+        at.write_frames_count + bt.write_frames_count)
 
 def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
@@ -561,7 +604,8 @@ def _test(level=None):
                 
         class TestFrameTransmitterWithLosses(unittest.TestCase):
             def setUp(self):
-                self.a, self.b = FullDuplexLink()
+                self.a, self.b = FullDuplexLink(
+                    loss_func=LossFunc(0.001, 0.001, 0.001))
 
                 self.at = SimpleFrameTransmitter(node=self.a)
                 self.bt = SimpleFrameTransmitter(node=self.b)
@@ -606,7 +650,28 @@ def _test(level=None):
                 self.assertEqual(self.aft.receive(block=False), None)
                 self.assertEqual(self.bft.receive(block=False), None)
 
+        class TestExperiment(unittest.TestCase):
+            def test_main(self):
+                time_, sent = experiment(100, 100, ["data"], loss_prob=None)
+                # TODO: Assume that computer is not very slow.
+                self.assertLess(time_, 5.0)
+                self.assertEqual(sent, 2)
+
+                time_, sent = experiment(100, 100, ["data", "another"],
+                    loss_prob=None)
+
+                # TODO: Assume that computer is not very slow.
+                self.assertLess(time_, 5.0)
+                self.assertEqual(sent, 4)
+
     do_tests(Tests, level=level)
+
+def _statistics():
+    import time
+
+    data = "".join(map(chr, xrange(256))) * 16
+    experiment(100, 100, [data], loss_prob=None)
 
 if __name__ == "__main__":
     _test(level=None)
+    #_statistics()

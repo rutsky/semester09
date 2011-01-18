@@ -37,6 +37,17 @@ class SimpleFrameTransmitter(object):
         super(SimpleFrameTransmitter, self).__init__(*args, **kwargs)
         self._read_buffer = StringIO.StringIO()
 
+        self._read_frames_count = 0
+        self._write_frames_count = 0
+
+    @property
+    def read_frames_count(self):
+        return self._read_frames_count
+
+    @property
+    def write_frames_count(self):
+        return self._write_frames_count
+
     def write_frame(self, frame):
         raw_data = (
             # Replace escape characters.
@@ -46,6 +57,8 @@ class SimpleFrameTransmitter(object):
             # Append frame end at end.
             self.frame_end)
         self.node.write(raw_data)
+
+        self._write_frames_count += 1
 
     def read_frame(self, block=True):
         """Read single frame from input channel.
@@ -69,6 +82,8 @@ class SimpleFrameTransmitter(object):
                 frame = encoded_frame.replace(self.frame_end_subst,
                                               self.frame_end).\
                     replace(self.esc_subst, self.esc_char)
+
+                self._read_frames_count += 1
 
                 return frame
             else:
