@@ -125,7 +125,7 @@
 непрерывный поток байтов делится на группы байтов переменной длины~--- 
 низкоуровневые кадры
 (см.~приложение~\ref{appendix:sources:frame}).
-Деление на низкоуровневые кадры делается по аналогии с делением в протоколе SLIP%
+Деление на низкоуровневые кадры делается по аналогии с делением в протоколе SLIP.%
 \footnote{\textit{Serial Line Internet Protocol}, описан в RFC 1055.}
 
 \subsection{Передача данных кадрами с гарантией доставки}
@@ -159,8 +159,8 @@
   \item \textbf{last} (1 байт)~--- 
   является ли кадр последней частью передаваемых данных;
   \item \textbf{len} (4 байта)~--- длина поля данных;
-  \item \textbf{data} ~--- данные;
-  \item \textbf{CRC32} ~--- контрольная сумма пакета (CRC32%
+  \item \textbf{data} (\textbf{len} байт)~--- данные;
+  \item \textbf{CRC32} (4 байта)~--- контрольная сумма пакета (CRC32%
 \footnote{\textit{Сyclic redundancy check}~--- \textit{циклический избыточный код}, %
 описан в~\cite{peterson1961crc}.%
 }).
@@ -168,7 +168,8 @@
 
 \section{Исследования алгоритма}
 В результате проведённых исследований были получены следующие экспериментальные результаты.
-На рис.~\ref{fig:graph:wsize} и~\ref{fig:graph:wsize-loss} 
+
+На рис.~\ref{fig:graph:wsize} и рис.~\ref{fig:graph:wsize-loss}
 представлены полученные зависимости времени передачи сообщений 
 и количества переданных кадров от размера окна передачи.
 \begin{figure}
@@ -180,6 +181,32 @@
 {\label{fig:graph:wsize-loss}\includegraphics[height=5cm]{graph_wsize_loss.pdf}}
   \caption{Зависимость времени передачи данных и количества переданных кадров от размера окна передачи.}
   \label{fig:graph:wsize-all}
+\end{figure}
+
+На рис.~\ref{fig:graph:maxframe} и рис.~\ref{fig:graph:maxframe-loss}
+представлены полученные зависимости времени передачи сообщений 
+и количества переданных кадров от максимального размера низкоуровнего кадра.
+\begin{figure}
+  \centering
+  \subfloat[Передача без потерь.]%
+{\label{fig:graph:maxframe}\includegraphics[height=5cm]{graph_maxframe.pdf}}
+  \quad
+  \subfloat[Передача с потерями.]%
+{\label{fig:graph:maxframe-loss}\includegraphics[height=5cm]{graph_maxframe_loss.pdf}}
+  \caption{Зависимость времени передачи данных и количества переданных кадров 
+  от максимального размера низкоуровнего кадра.}
+  \label{fig:graph:maxframe-all}
+\end{figure}
+
+На рис.~\ref{fig:graph:loss}
+представлена полученная зависимость времени передачи сообщений 
+и количества переданных кадров от вероятности потери данных при передаче.
+\begin{figure}
+  \centering
+  \includegraphics[height=5cm]{graph_loss.pdf}
+  \caption{Зависимость времени передачи данных и количества переданных кадров 
+  от вероятности потери данных.}
+  \label{fig:graph:loss}
 \end{figure}
 
 \section{Результат работы}

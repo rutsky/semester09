@@ -682,6 +682,11 @@ def _statistics():
     import time
     import csv
 
+    import config
+
+    config.thread_sleep_time = 1e-3
+    config.frame_transmitter_thread_sleep_time = 1e-3
+
     data = "".join(map(chr, xrange(256))) * 1
     base_wsize = 50
     base_max_frame = 50
@@ -706,6 +711,36 @@ def _statistics():
             print "{0} - time={1}, frames count={2}".format(
                 wsize, time_, frames_count)
             csv_writer.writerow((wsize, time_, frames_count))
+
+    with open("data_maxframe.csv", "w") as f:
+        csv_writer = csv.writer(f, lineterminator='\n')
+        for maxframe in range(10, 402, 10):
+            time_, frames_count = \
+                average_experiment(base_wsize, maxframe, [data],
+                    loss_prob=None)
+            print "{0} - time={1}, frames count={2}".format(
+                maxframe, time_, frames_count)
+            csv_writer.writerow((maxframe, time_, frames_count))
+            
+    with open("data_maxframe_loss.csv", "w") as f:
+        csv_writer = csv.writer(f, lineterminator='\n')
+        for maxframe in range(10, 402, 10):
+            time_, frames_count = \
+                average_experiment(base_wsize, maxframe, [data],
+                    loss_prob=base_loss_prob)
+            print "{0} - time={1}, frames count={2}".format(
+                maxframe, time_, frames_count)
+            csv_writer.writerow((maxframe, time_, frames_count))
+
+    with open("data_loss.csv", "w") as f:
+        csv_writer = csv.writer(f, lineterminator='\n')
+        for prob in [1e-5, 1e-4, 1e-3, 3e-3, 6e-3, 9e-3, 1e-2]:
+            time_, frames_count = \
+                average_experiment(base_wsize, base_max_frame, [data],
+                    loss_prob=prob)
+            print "{0} - time={1}, frames count={2}".format(
+                prob, time_, frames_count)
+            csv_writer.writerow((prob, time_, frames_count))
 
 if __name__ == "__main__":
     #_test(level=None)
