@@ -18,5 +18,6 @@
 env = Environment(tools=["default"])
 Export('env')
 
-SConscript("report/SConscript", variant_dir="build/report")
+#SConscript("report/SConscript", variant_dir="build/report")
+SConscript("report/SConscript")
 SConscript("src/SConscript")

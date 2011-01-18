@@ -143,6 +143,8 @@ def FullDuplexLink(a_to_b_queue=None, b_to_a_queue=None, loss_func=None):
         loss_func=loss_func)
     return node_a, node_b
 
+# --- cut here in report ---
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 

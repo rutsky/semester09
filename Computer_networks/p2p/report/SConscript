@@ -16,11 +16,36 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import re
 
 Import('env')
 env['ENV']['HOME'] = os.environ['HOME']
 
+py_sources_dir = os.path.join("..", "src")
+py_result_dir = "data"
+
+def cut_source_file(env, target, source):
+    assert len(target) == 1
+    assert len(source) == 1
+
+    with open(str(source[0]), "rt") as f:
+        contents = f.read()
+    
+    splitted = contents.split("# --- cut here in report ---")[0]
+    
+    with open(str(target[0]), "wt") as f:
+        f.write(splitted)
+
+def cut_source_command(py_file_name):
+    target = os.path.join(py_result_dir, py_file_name)
+    source = os.path.join(py_sources_dir, py_file_name)
+    return env.Command(target, source, cut_source_file, chdir=False)
+
+duplex_link_module = cut_source_command("duplex_link.py")
+
 env['PDFLATEXFLAGS'].append('-shell-escape')
-pdfOutput = env.PDF(target="report.pdf", source="report.tex")
-Depends(pdfOutput, Split("title.tex data/duplex_link.py references.bib"))
-#Depends(pdfOutput, Split("references.bib"))
+report_pdf = env.PDF(target="report.pdf", source="report.tex")
+Depends(report_pdf, Split("title.tex data/duplex_link.py references.bib"))
+Depends(report_pdf, [duplex_link_module])
+
+Default(report_pdf)
