@@ -687,7 +687,7 @@ def _statistics():
     config.thread_sleep_time = 1e-3
     config.frame_transmitter_thread_sleep_time = 1e-3
 
-    data = "".join(map(chr, xrange(256))) * 1
+    data = "".join(map(chr, xrange(256))) * 8
     base_wsize = 50
     base_max_frame = 50
     base_loss_prob = 0.003
