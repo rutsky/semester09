@@ -688,13 +688,13 @@ def _statistics():
     config.frame_transmitter_thread_sleep_time = 1e-3
 
     data = "".join(map(chr, xrange(256))) * 8
-    base_wsize = 50
-    base_max_frame = 50
+    base_wsize = 100
+    base_max_frame = 100
     base_loss_prob = 0.003
 
     with open("data_wsize.csv", "w") as f:
         csv_writer = csv.writer(f, lineterminator='\n')
-        for wsize in range(1, 102, 5):
+        for wsize in range(1, 102, 3):
             time_, frames_count = \
                 average_experiment(wsize, base_max_frame, [data],
                     loss_prob=None)
@@ -704,7 +704,7 @@ def _statistics():
 
     with open("data_wsize_loss.csv", "w") as f:
         csv_writer = csv.writer(f, lineterminator='\n')
-        for wsize in range(1, 102, 5):
+        for wsize in range(1, 102, 3):
             time_, frames_count = \
                 average_experiment(wsize, base_max_frame, [data],
                     loss_prob=base_loss_prob)
