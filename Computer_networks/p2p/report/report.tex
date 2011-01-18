@@ -120,39 +120,44 @@
 Возможно внесение ошибок трёх типов: подмена передаваемого байта, 
 добавление лишнего байта, удаление передаваемого байта.
 
-\subsection{Передачи данных фреймами}
+\subsection{Передачи данных низкоуровневыми кадрами}
 Для удобства контроля передачи данных 
-непрерывный поток байтов делится на группы байтов переменной длины~--- фреймы
+непрерывный поток байтов делится на группы байтов переменной длины~--- 
+низкоуровневые кадры
 (см.~приложение~\ref{appendix:sources:frame}).
-Деление на фреймы делается по аналогии с делением в протоколе SLIP%
+Деление на низкоуровневые кадры делается по аналогии с делением в протоколе SLIP%
 \footnote{\textit{Serial Line Internet Protocol}, описан в RFC 1055.}
 
-\subsection{Передача данных датаграммами}
-Поверх уровня передачи фреймами реализован протокол передачи с выборочным обменом,
+\subsection{Передача данных кадрами с гарантией доставки}
+Поверх уровня передачи низкоуровневыми кадрами 
+реализован протокол передачи кадров с выборочным обменом,
 описанный в разделе~\ref{section:solution} 
-(см.~реализацию в приложении~\ref{appendix:sources:datagram}).
+(см.~реализацию в приложении~\ref{appendix:sources:sliding-window}).
 
-Передаваемые данные делятся на куски небольшого размера, 
-упаковываются в датаграмму,
-которая передаётся в виде фрейма через нижележащий уровень сети.
+Передаваемые данные делятся на куски небольшого размера и 
+упаковываются во кадр,
+которые последовательно передаются смежному узлу через 
+нижележащий уровень сети.
 
-Используется датаграмма следующего формата (см.~таблицу~\ref{table:datagram}):
+Используется кадр следующего формата (см.~таблицу~\ref{table:frame}):
 \begin{table}[h]
   \begin{center}
     \begin{tabular}{|c|c|c|c|c|c|}
       \hline
-      proto & src & dest & len & data & CRC32 \\
+      type & id & last & len & data & CRC32 \\
       \hline
     \end{tabular}
   \end{center}
-  \caption{Формат датаграммы.}
-  \label{table:datagram}
+  \caption{Формат кадра.}
+  \label{table:frame}
 \end{table}
 \begin{itemize}
-  \item \textbf{proto} (2 байта)~--- 
-  идентификатор вышестоящего в сетевом стеке протокола;
-  \item \textbf{src} (4 байта), \textbf{dest} (4 байта)~--- 
-  идентификаторы отправителя и получателя датаграммы;
+  \item \textbf{type} (1 байт)~--- 
+  тип кадра: данные или подтверждение полученных данных;
+  \item \textbf{id} (2 байта)~--- 
+  идентификатор (номер) передаваемого кадра;
+  \item \textbf{last} (1 байт)~--- 
+  является ли кадр последней частью передаваемых данных;
   \item \textbf{len} (4 байта)~--- длина поля данных;
   \item \textbf{data} ~--- данные;
   \item \textbf{CRC32} ~--- контрольная сумма пакета (CRC32%
@@ -161,6 +166,21 @@
 }).
 \end{itemize}
 
+\section{Исследования алгоритма}
+В результате проведённых исследований были получены следующие экспериментальные результаты.
+На рис.~\ref{fig:graph:wsize} и~\ref{fig:graph:wsize-loss} 
+представлены полученные зависимости времени передачи сообщений 
+и количества переданных кадров от размера окна передачи.
+\begin{figure}
+  \centering
+  \subfloat[Передача без потерь.]%
+{\label{fig:graph:wsize}\includegraphics[height=5cm]{graph_wsize.pdf}}
+  \quad
+  \subfloat[Передача с потерями.]%
+{\label{fig:graph:wsize-loss}\includegraphics[height=5cm]{graph_wsize_loss.pdf}}
+  \caption{Зависимость времени передачи данных и количества переданных кадров от размера окна передачи.}
+  \label{fig:graph:wsize-all}
+\end{figure}
 
 \section{Результат работы}
 % Выборочный повтор более эффективен. 
@@ -177,13 +197,15 @@
 \label{appendix:sources:duplex-link}
 \includecode[python -O linenos=1]{data/duplex_link.py}
 
-\subsection{Передача данных фреймами}
+\subsection{Передача данных низкоуровневыми кадрами}
 \label{appendix:sources:frame}
 \includecode[python -O linenos=1]{data/frame.py}
 
-\subsection{Передача данных датаграммами}
-\label{appendix:sources:datagram}
-\includecode[python -O linenos=1]{data/datagram.py}
+\subsection{Передача данных кадрами с гарантией доставки}
+\label{appendix:sources:sliding-window}
+\includecode[python -O linenos=1]{data/sliding_window.py}
+
+% TODO: Add example of log.
 
 \pagebreak
 

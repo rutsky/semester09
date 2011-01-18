@@ -482,6 +482,18 @@ def experiment(window_size, max_frame_data, data_list, loss_prob=None):
     return (end_time - start_time,
         at.write_frames_count + bt.write_frames_count)
 
+def average_experiment(window_size, max_frame_data, data_list, loss_prob=None,
+        tries=3):
+    results = []
+    for i in xrange(tries):
+        results.append(experiment(
+            window_size, max_frame_data, data_list, loss_prob))
+
+    avg_time  = sum(zip(*results)[0]) / float(len(results))
+    avg_count = sum(zip(*results)[1]) / float(len(results))
+
+    return avg_time, avg_count
+
 def _test(level=None):
     # TODO: Use in separate file to test importing functionality.
 
@@ -668,10 +680,19 @@ def _test(level=None):
 
 def _statistics():
     import time
+    import csv
 
-    data = "".join(map(chr, xrange(256))) * 16
-    experiment(100, 100, [data], loss_prob=None)
+    data = "".join(map(chr, xrange(256))) * 8
+
+    with open("data_wsize.csv", "w") as f:
+        csv_writer = csv.writer(f, lineterminator='\n')
+        for wsize in range(1, 102, 10):
+            time_, frames_count = \
+                average_experiment(wsize, 100, [data], loss_prob=None)
+            print "{0} - time={1}, frames count={2}".format(
+                wsize, time_, frames_count)
+            csv_writer.writerow((wsize, time_, frames_count))
 
 if __name__ == "__main__":
-    _test(level=None)
-    #_statistics()
+    #_test(level=None)
+    _statistics()
