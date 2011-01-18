@@ -50,11 +50,12 @@ frame_module = cut_source_command("frame.py")
 datagram_module = cut_source_command("sliding_window.py")
 
 graph_wsize = asy_to_pdf("graph_wsize.asy")
+graph_wsize_loss = asy_to_pdf("graph_wsize_loss.asy")
 
 env['PDFLATEXFLAGS'].append('-shell-escape')
 report_pdf = env.PDF(target="report.pdf", source="report.tex")
 Depends(report_pdf, Split("title.tex data/duplex_link.py references.bib"))
 Depends(report_pdf, [duplex_link_module, frame_module, datagram_module])
-Depends(report_pdf, [graph_wsize])
+Depends(report_pdf, [graph_wsize, graph_wsize_loss])
 
 Default(report_pdf)

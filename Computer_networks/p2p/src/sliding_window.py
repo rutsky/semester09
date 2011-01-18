@@ -682,13 +682,27 @@ def _statistics():
     import time
     import csv
 
-    data = "".join(map(chr, xrange(256))) * 8
+    data = "".join(map(chr, xrange(256))) * 1
+    base_wsize = 50
+    base_max_frame = 50
+    base_loss_prob = 0.003
 
     with open("data_wsize.csv", "w") as f:
         csv_writer = csv.writer(f, lineterminator='\n')
-        for wsize in range(1, 102, 10):
+        for wsize in range(1, 102, 5):
             time_, frames_count = \
-                average_experiment(wsize, 100, [data], loss_prob=None)
+                average_experiment(wsize, base_max_frame, [data],
+                    loss_prob=None)
+            print "{0} - time={1}, frames count={2}".format(
+                wsize, time_, frames_count)
+            csv_writer.writerow((wsize, time_, frames_count))
+
+    with open("data_wsize_loss.csv", "w") as f:
+        csv_writer = csv.writer(f, lineterminator='\n')
+        for wsize in range(1, 102, 5):
+            time_, frames_count = \
+                average_experiment(wsize, base_max_frame, [data],
+                    loss_prob=base_loss_prob)
             print "{0} - time={1}, frames count={2}".format(
                 wsize, time_, frames_count)
             csv_writer.writerow((wsize, time_, frames_count))
