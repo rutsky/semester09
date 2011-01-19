@@ -1,0 +1,55 @@
+#  This program is part of network emulation test model.
+#
+#  Copyright (C) 2010  Vladimir Rutsky <altsysrq@gmail.com>
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+import re
+
+Import('env')
+env['ENV']['HOME'] = os.environ['HOME']
+
+py_sources_dir = os.path.join("..", "src")
+py_result_dir = "data"
+
+def cut_source_file(env, target, source):
+    assert len(target) == 1
+    assert len(source) == 1
+
+    with open(str(source[0]), "rt") as f:
+        contents = f.read()
+    
+    splitted = contents.split("# --- cut here in report ---")[0]
+    
+    with open(str(target[0]), "wt") as f:
+        f.write(splitted)
+
+def cut_source_command(py_file_name):
+    target = os.path.join(py_result_dir, py_file_name)
+    source = os.path.join(py_sources_dir, py_file_name)
+    return env.Command(target, source, cut_source_file, chdir=False)
+    
+def asy_to_pdf(asy_file):
+    return env.Command(asy_file.replace(".asy", ".pdf"), 
+        asy_file, "asy -V -f pdf {0}".format(asy_file), chdir=True)
+
+datagram_module = cut_source_command("datagram.py")
+
+env['PDFLATEXFLAGS'].append('-shell-escape')
+report_pdf = env.PDF(target="report.pdf", source="report.tex")
+Depends(report_pdf, Split("title.tex references.bib"))
+Depends(report_pdf, datagram_module)
+
+Default(report_pdf)

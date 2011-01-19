@@ -20,4 +20,5 @@ Export('env')
 
 #SConscript("report/SConscript", variant_dir="build/report")
 SConscript("report/SConscript")
+SConscript("report2/SConscript")
 SConscript("src/SConscript")

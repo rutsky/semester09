@@ -1,0 +1,102 @@
+% Report.
+%
+% Copyright (C) 2010, 2011  Vladimir Rutsky <altsysrq@gmail.com>
+%
+% This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 
+% Unported License. See <http://creativecommons.org/licenses/by-sa/3.0/> 
+% for details.
+
+% TODO: Use styles according to GOST (it's hard).
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\usepackage{amsmath, amsthm, amssymb}
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+\usepackage{url}
+\usepackage[unicode]{hyperref}
+
+%\usepackage[final]{pdfpages}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{subfig}
+
+%TODO: use texments
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{texments}
+%\usepackage{listings}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+%\flushbottom       % page height aligning
+%\hoffset=0cm
+%\pagestyle{empty}  % without numeration
+
+\newcommand{\myemail}[1]{%
+\href{mailto:#1}{\nolinkurl{#1}}}
+
+\newcommand{\myfunc}[1]{%
+\textit{#1}}
+
+\begin{document}
+
+% Title page.
+\input{./title.tex}
+
+\tableofcontents
+\pagebreak
+
+% Content
+
+\section{Постановка задачи}
+
+\section{Выбранный метод решения}
+
+\section{Детали реализации}
+
+\section{Исследования алгоритма}
+
+\section{Результат работы}
+
+\pagebreak
+
+\appendix
+\section{Исходный код}
+\label{appendix:sources}
+
+\usestyle{default}
+
+\subsection{Маршрутизация датаграм}
+\label{appendix:sources:datagram}
+\includecode[python -O linenos=1]{data/datagram.py}
+
+% TODO: Add example of log.
+
+\pagebreak
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
