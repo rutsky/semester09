@@ -17,54 +17,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POINT_HPP
-#define POINT_HPP
-
-#include <boost/assert.hpp>
+#ifndef XMATH_HPP
+#define XMATH_HPP
 
 namespace cg
 {
-  template< typename Scalar, int Dim >
-  struct point_t
-  {
-  };
-
   template< typename Scalar >
-  struct point_t<Scalar, 2>
+  inline
+  Scalar sqr( Scalar v )
   {
-    typedef point_t<Scalar, 2> self_t;
-    typedef Scalar scalar_t;
-
-    static int const dim = 2;
-
-    scalar_t x, y;
-
-    point_t()
-      : x()
-      , y()
-    {
-    }
-
-    point_t( scalar_t x, scalar_t y )
-      : x(x)
-      , y(y)
-    {
-    }
-
-    scalar_t const & operator [] ( int i ) const
-    {
-      BOOST_ASSERT(i >= 0 && i < dim);
-      // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t const *>(this)[i];
-    }
-
-    scalar_t       & operator [] ( int i )
-    {
-      BOOST_ASSERT(i >= 0 && i < dim);
-      // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t *>(this)[i];
-    }
-  };
+    return v * v;
+  }
 }
 
-#endif // POINT_HPP
+#endif // XMATH_HPP

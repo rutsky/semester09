@@ -36,6 +36,7 @@
 
 #include "point_predicates.hpp"
 #include "point_io.hpp"
+#include "point_ops.hpp"
 #include "utils.hpp"
 
 // TODO: For determined points shuffling random generator should be passed
@@ -531,7 +532,7 @@ namespace dt
       verifyAdjancy();
       
       BOOST_ASSERT(exact_side_of_oriented_triangle(
-              trh, vh) == cg::ON_POSITIVE_SIDE);
+              trh, vh) == cg::or_on_positive_side);
       BOOST_ASSERT(!triangle(trh).has_children());
 
       // Create new 3 triangles inside parent triangle.
@@ -590,11 +591,11 @@ namespace dt
       verifyAdjancy();
       
       BOOST_ASSERT(exact_side_of_oriented_triangle(
-              trh, vh) == cg::ON_ORIENTED_BOUNDARY);
+              trh, vh) == cg::or_on_boundary);
       BOOST_ASSERT(exact_orientation(
                 vertex_point(triangle(trh).vertex(idx + 1)),
                 vertex_point(triangle(trh).vertex(idx + 2)),
-                vertex_point(vh)) == cg::COLLINEAR);
+                vertex_point(vh)) == cg::or_collinear);
 
       triangle_handle_t const neighTrH = triangle(trh).triangle(idx);
       BOOST_ASSERT(neighTrH != invalid_triangle_handle);
@@ -691,7 +692,7 @@ namespace dt
           if (cg::exact_orientation(
                 vertex_point(triangle(trh).vertex(i)),
                 vertex_point(triangle(trh).vertex(i + 1)),
-                vertex_point(vh)) == cg::COLLINEAR)
+                vertex_point(vh)) == cg::or_collinear)
           {
             adjTrIdxPtr = i - 1;
             break;
@@ -741,7 +742,7 @@ namespace dt
             vertex_point(triangle(trh).vertex(0)),
             vertex_point(triangle(trh).vertex(1)),
             vertex_point(triangle(trh).vertex(2)),
-            vertex_point(vh)) == cg::ON_POSITIVE_SIDE;
+            vertex_point(vh)) == cg::or_on_positive_side;
         }
         else
         {
@@ -778,7 +779,7 @@ namespace dt
             if (cg::exact_orientation(
                 vertex_point(triangle(trh).vertex(infVertexIdx + 1)),
                 vertex_point(triangle(trh).vertex(infVertexIdx + 2)),
-                vertex_point(vh)) == cg::COUNTERCLOCKWISE)
+                vertex_point(vh)) == cg::or_counterclockwise)
             {
               // Point in triangle half-plane.
               return true;
@@ -811,7 +812,8 @@ namespace dt
         triangle_t const &tr = triangle(trh);
 
         // Assert that vertex inside or on boundary of current triangle.
-        BOOST_ASSERT(exact_side_of_oriented_triangle(trh, vh) != cg::ON_NEGATIVE_SIDE);
+        BOOST_ASSERT(exact_side_of_oriented_triangle(trh, vh) != 
+                cg::or_on_negative_side);
 
         if (!tr.has_children())
         {
@@ -821,11 +823,11 @@ namespace dt
 
           cg::orientation_t const orient = 
               exact_side_of_oriented_triangle(trh, vh);
-          if (orient == cg::ON_POSITIVE_SIDE)
+          if (orient == cg::or_on_positive_side)
           {
             return std::make_pair(loc_triangle, trh);
           }
-          else if (orient == cg::ON_ORIENTED_BOUNDARY)
+          else if (orient == cg::or_on_boundary)
           {
             return std::make_pair(loc_edge, trh);
           }
@@ -847,7 +849,7 @@ namespace dt
           for (size_t childIdx = 0; childIdx < tr.children_num(); ++childIdx)
           {
             if (exact_side_of_oriented_triangle(tr.child_triangle(childIdx),
-                                                vh) != cg::ON_NEGATIVE_SIDE)
+                                                vh) != cg::or_on_negative_side)
             {
               // Found child triangle that contains current vertex.
               nextVH = tr.child_triangle(childIdx);

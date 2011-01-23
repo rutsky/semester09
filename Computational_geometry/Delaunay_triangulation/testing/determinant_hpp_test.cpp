@@ -24,7 +24,7 @@
 
 #include "determinant.hpp"
 
-BOOST_AUTO_TEST_SUITE(cg_determinant)
+BOOST_AUTO_TEST_SUITE(determinant_hpp)
 
 BOOST_AUTO_TEST_CASE(main)
 {

@@ -37,8 +37,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I/usr/include -frounding-math
-CXXFLAGS=-I/usr/include -frounding-math
+CCFLAGS=-I../boost -I/usr/include -frounding-math
+CXXFLAGS=-I../boost -I/usr/include -frounding-math
 
 # Fortran Compiler Flags
 FFLAGS=

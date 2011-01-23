@@ -26,6 +26,7 @@
 #include "point.hpp"
 #include "point_io.hpp"
 #include "point_predicates.hpp"
+#include "point_types.hpp"
 
 int main()
 {

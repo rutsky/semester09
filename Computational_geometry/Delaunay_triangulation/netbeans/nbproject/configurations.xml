@@ -12,8 +12,23 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>src/SConscript</itemPath>
       <itemPath>src/delaunay_triangulation.hpp</itemPath>
+      <itemPath>src/determinant.hpp</itemPath>
+      <itemPath>src/exceptions.hpp</itemPath>
+      <itemPath>src/inexact_computations_ex.hpp</itemPath>
       <itemPath>src/main.cpp</itemPath>
+      <itemPath>src/orientation.hpp</itemPath>
+      <itemPath>src/point.hpp</itemPath>
+      <itemPath>src/point_io.hpp</itemPath>
+      <itemPath>src/point_ops.hpp</itemPath>
+      <itemPath>src/point_predicates.hpp</itemPath>
+      <itemPath>src/point_predicates_impl_cgal.hpp</itemPath>
+      <itemPath>src/point_predicates_impl_interval.hpp</itemPath>
+      <itemPath>src/point_types.hpp</itemPath>
+      <itemPath>src/point_utils.hpp</itemPath>
+      <itemPath>src/utils.hpp</itemPath>
+      <itemPath>src/xmath.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -31,7 +46,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I/usr/include -frounding-math</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
@@ -53,7 +68,7 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <commandLine>-I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I/usr/include -frounding-math</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>

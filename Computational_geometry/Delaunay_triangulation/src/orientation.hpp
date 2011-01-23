@@ -22,9 +22,9 @@
 
 #include <boost/static_assert.hpp>
 
-#ifdef USING_CGAL
+#ifdef HAVE_CGAL
 #include <CGAL/enum.h>
-#endif // USING_CGAL
+#endif // HAVE_CGAL
 
 namespace cg
 {
@@ -40,14 +40,33 @@ namespace cg
     or_on_positive_side = +1,
   };
 
-#ifdef USING_CGAL
-  BOOST_STATIC_ASSERT(or_clockwise        == CGAL::CLOCKWISE);
-  BOOST_STATIC_ASSERT(or_collinear        == CGAL::COLLINEAR);
-  BOOST_STATIC_ASSERT(or_counterclockwise == CGAL::COUNTERCLOCKWISE);
+  inline
+  orientation_t opposite( orientation_t orient )
+  {
+    return static_cast<orientation_t>(-static_cast<int>(orient));
+  }
 
-  BOOST_STATIC_ASSERT(or_on_negative_side == CGAL::ON_NEGATIVE_SIDE);
-  BOOST_STATIC_ASSERT(or_on_boundary      == CGAL::ON_ORIENTED_BOUNDARY);
-  BOOST_STATIC_ASSERT(or_on_positive_side == CGAL::ON_POSITIVE_SIDE);
-#endif // USING_CGAL
+#ifdef HAVE_CGAL
+  inline
+  cg::orientation_t from_cgal( CGAL::Orientation orient )
+  {
+    return static_cast<orientation_t>(orient);
+  }
+
+  BOOST_STATIC_ASSERT(or_clockwise ==
+      static_cast<cg::orientation_t>(CGAL::CLOCKWISE));
+  BOOST_STATIC_ASSERT(or_collinear ==
+      static_cast<cg::orientation_t>(CGAL::COLLINEAR));
+  BOOST_STATIC_ASSERT(or_counterclockwise ==
+      static_cast<cg::orientation_t>(CGAL::COUNTERCLOCKWISE));
+
+  BOOST_STATIC_ASSERT(or_on_negative_side ==
+      static_cast<cg::orientation_t>(CGAL::ON_NEGATIVE_SIDE));
+  BOOST_STATIC_ASSERT(or_on_boundary ==
+      static_cast<cg::orientation_t>(CGAL::ON_ORIENTED_BOUNDARY));
+  BOOST_STATIC_ASSERT(or_on_positive_side ==
+      static_cast<cg::orientation_t>(CGAL::ON_POSITIVE_SIDE));
+#endif // HAVE_CGAL
+}
 
 #endif // ORIENTATION_HPP

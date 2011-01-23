@@ -21,50 +21,72 @@
 #define POINT_OPS_HPP
 
 #include <boost/assert.hpp>
+#include <boost/tuple/tuple.hpp>
+
+#include "point.hpp"
 
 namespace cg
 {
-  template< typename Scalar, int Dim >
-  struct point_t
-  {
-  };
-
   template< typename Scalar >
-  struct point_t<Scalar, 2>
+  inline
+  boost::tuple<Scalar, Scalar> tuple( point_t<Scalar, 2> const &p )
   {
-    typedef point_t<Scalar, 2> self_t;
-    typedef Scalar scalar_t;
+    return boost::tuple<Scalar, Scalar>(p.x, p.y);
+  }
 
-    static int const dim = 2;
+  template< typename Scalar, int Dim >
+  inline
+  bool operator == ( point_t<Scalar, Dim> const &p1,
+                     point_t<Scalar, Dim> const &p2 )
+  {
+    for (size_t i = 0; i < Dim; ++i)
+      if (p1[i] != p2[i])
+        return false;
 
-    scalar_t x, y;
+    return true;
+  }
 
-    point_t()
-      : x()
-      , y()
-    {
-    }
+  template< typename Scalar, int Dim >
+  inline
+  point_t<Scalar, Dim>
+      operator - ( point_t<Scalar, Dim> const &p1,
+                   point_t<Scalar, Dim> const &p2 )
+  {
+    point_t<Scalar, Dim> result;
 
-    point_t( scalar_t x, scalar_t y )
-      : x(x)
-      , y(y)
-    {
-    }
+    for (size_t i = 0; i < Dim; ++i)
+      result[i] = p1[i] - p2[i];
 
-    scalar_t const & operator [] ( int i ) const
-    {
-      BOOST_ASSERT(i >= 0 && i < dim);
-      // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t const *>(this)[i];
-    }
+    return result;
+  }
 
-    scalar_t       & operator [] ( int i )
-    {
-      BOOST_ASSERT(i >= 0 && i < dim);
-      // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t *>(this)[i];
-    }
-  };
+  template< typename Scalar, int Dim >
+  inline
+  point_t<Scalar, Dim>
+      operator + ( point_t<Scalar, Dim> const &p1,
+                   point_t<Scalar, Dim> const &p2 )
+  {
+    point_t<Scalar, Dim> result;
+
+    for (size_t i = 0; i < Dim; ++i)
+      result[i] = p1[i] + p2[i];
+
+    return result;
+  }
+
+  template< typename Scalar, int Dim >
+  inline
+  point_t<Scalar, Dim>
+      operator / ( point_t<Scalar, Dim> const &p,
+                   Scalar v )
+  {
+    point_t<Scalar, Dim> result;
+
+    for (size_t i = 0; i < Dim; ++i)
+      result[i] = p[i] / v;
+
+    return result;
+  }
 }
 
 #endif // POINT_OPS_HPP

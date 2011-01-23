@@ -17,16 +17,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_NO_MAIN
+#ifndef EXEPTIONS_HPP
+#define EXEPTIONS_HPP
 
-#include <boost/test/unit_test.hpp>
+#include <stdexcept>
+#include <boost/exception/all.hpp>
 
-BOOST_AUTO_TEST_SUITE(point_predicates)
-
-BOOST_AUTO_TEST_CASE(test_test) 
+namespace cg
 {
-  BOOST_CHECK_EQUAL(1, 1);
+  class invalid_argument 
+    : public virtual std::invalid_argument
+    , public virtual boost::exception
+  {
+  public:
+    invalid_argument( std::string const &what )
+      : std::invalid_argument(what)
+    {
+    }
+  };
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+#endif // EXEPTIONS_HPP
