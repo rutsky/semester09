@@ -41,7 +41,4 @@ else:
     print "Using Debug configuration."
     env.MergeFlags(env.ParseFlags("-O0"))
 
-main_files = Glob("sample*.cpp", strings=True) + ['dispersion.cpp', 'dispersion2.cpp', 'dispersion3.cpp']
-source_files = set(Glob("*.cpp", strings=True)) - set(main_files)
-
 env.my_main_program = env.Program(target="delaunay", source=['main.cpp'])
