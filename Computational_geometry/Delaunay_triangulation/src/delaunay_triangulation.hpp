@@ -58,10 +58,12 @@ namespace dt
     typedef std::vector<point_t> vertex_buffer_t;
 
     // Common to all infinite triangles vertex.
-    static vertex_handle_t const invalid_vertex_handle = static_cast<size_t>(-1);
+    static vertex_handle_t const invalid_vertex_handle =
+        static_cast<size_t>(-1);
 
     typedef size_t triangle_handle_t;
-    static triangle_handle_t const invalid_triangle_handle = static_cast<size_t>(-1);
+    static triangle_handle_t const invalid_triangle_handle =
+        static_cast<size_t>(-1);
 
     struct triangle_t
     {
@@ -213,7 +215,9 @@ namespace dt
         return children_num() != 0;
       }
 
-      void replace_neighbor( triangle_handle_t oldTrH, triangle_handle_t newTrH )
+      void replace_neighbor( 
+          triangle_handle_t oldTrH,
+          triangle_handle_t newTrH )
       {
         triangle(triangle_index(oldTrH)) = newTrH;
       }
@@ -252,7 +256,8 @@ namespace dt
       
       scalar_t const extraSpace = 10.0;
       scalar_t const boundingSquareSize =
-              std::max((hiPoint - loPoint).x, (hiPoint - loPoint).y) + extraSpace;
+              std::max((hiPoint - loPoint).x,
+                       (hiPoint - loPoint).y) + extraSpace;
       point_t const center_point = (hiPoint + loPoint) / 2.0;
       // Inscribed circle radius:
       scalar_t const r = boundingSquareSize * std::sqrt(2.0) / 2.0;
@@ -359,7 +364,9 @@ namespace dt
     }
 
   protected:
-    static triangle_vertices_indices_t triangle_vertices( triangle_t const &tr )
+    static 
+    triangle_vertices_indices_t
+        triangle_vertices( triangle_t const &tr )
     {
       // TODO: Use functions like internalIdxToOutputIdx().
 
@@ -466,10 +473,14 @@ namespace dt
                   triangle(trh).triangle(idx - 1)));
 
       // Link neighbors.
-      triangle(triangle(trh).triangle(idx + 1)).replace_neighbor(trh, ch0);
-      triangle(triangle(trh).triangle(idx - 1)).replace_neighbor(trh, ch1);
-      triangle(triangle(neighTrH).triangle(neighIdx + 1)).replace_neighbor(neighTrH, ch1);
-      triangle(triangle(neighTrH).triangle(neighIdx - 1)).replace_neighbor(neighTrH, ch0);
+      triangle(triangle(trh).triangle(idx + 1)).
+          replace_neighbor(trh, ch0);
+      triangle(triangle(trh).triangle(idx - 1)).
+          replace_neighbor(trh, ch1);
+      triangle(triangle(neighTrH).triangle(neighIdx + 1)).
+          replace_neighbor(neighTrH, ch1);
+      triangle(triangle(neighTrH).triangle(neighIdx - 1)).
+          replace_neighbor(neighTrH, ch0);
 
       // Link child triangles to parent.
       triangle(trh).set_children(ch0, ch1);
@@ -527,7 +538,9 @@ namespace dt
     }
 
     // Add new vertex to interior of triangle.
-    void addVertexToTriangleInterior( triangle_handle_t trh, vertex_handle_t vh )
+    void addVertexToTriangleInterior( 
+        triangle_handle_t trh,
+        vertex_handle_t vh )
     {
       verifyAdjancy();
       
@@ -652,10 +665,14 @@ namespace dt
                   triangle(neighTrH).triangle(neighIdx + 1)));
 
       // Link neighbors.
-      triangle(triangle(trh).triangle(idx + 1)).replace_neighbor(trh, ch1);
-      triangle(triangle(trh).triangle(idx - 1)).replace_neighbor(trh, ch0);
-      triangle(triangle(neighTrH).triangle(neighIdx + 1)).replace_neighbor(neighTrH, ch3);
-      triangle(triangle(neighTrH).triangle(neighIdx - 1)).replace_neighbor(neighTrH, ch2);
+      triangle(triangle(trh).triangle(idx + 1)).
+          replace_neighbor(trh, ch1);
+      triangle(triangle(trh).triangle(idx - 1)).
+          replace_neighbor(trh, ch0);
+      triangle(triangle(neighTrH).triangle(neighIdx + 1)).
+          replace_neighbor(neighTrH, ch3);
+      triangle(triangle(neighTrH).triangle(neighIdx - 1)).
+          replace_neighbor(neighTrH, ch2);
 
       // Link child triangles to parent.
       triangle(trh).set_children(ch0, ch1);
@@ -699,7 +716,8 @@ namespace dt
           }
         BOOST_ASSERT(adjTrIdxPtr);
 
-        triangle_handle_t const neighTrH = triangle(trh).triangle(*adjTrIdxPtr);
+        triangle_handle_t const neighTrH =
+            triangle(trh).triangle(*adjTrIdxPtr);
         addVertexToTriangleEdge(trh, vh, *adjTrIdxPtr);
         BOOST_ASSERT(triangle(trh).children_num() == 2);
         BOOST_ASSERT(triangle(neighTrH).children_num() == 2);
@@ -716,7 +734,8 @@ namespace dt
         
         // Duplicate vertex. Skipping.
         // DEBUG
-        std::cout << "Warning: duplicate vertex #" << vh << ": " << point(vh) << "\n";
+        std::cout << "Warning: duplicate vertex #" << vh << ": " <<
+            point(vh) << "\n";
       }
     }
 
