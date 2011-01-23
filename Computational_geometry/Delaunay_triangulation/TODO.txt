@@ -5,5 +5,4 @@
  * Add tests for checking Delaunay property.
  * Use CPPPATH instead of -I...: http://www.scons.org/wiki/FrequentlyAskedQuestions#head-638361e9cba3fec0bc32698d3cc2961c8fc05d73
  * Use "Program('prog.c', LIBS=['foo', 'bar'], LIBPATH='.')" for linking with libraries, not -L... -l...
- * find ./ -type f -exec sed -i 's/Copyright (C) 2010, 2011 /Copyright (C) 2010, 2011 /' {} \;
  * Test working time.
