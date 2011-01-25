@@ -40,6 +40,8 @@ BOOST_AUTO_TEST_CASE(test_turns)
   BOOST_CHECK(exact_is_left_turn(p0_0, p0_2, p2_0));
   BOOST_CHECK(exact_is_right_turn(p0_0, p2_0, p0_2));
   BOOST_CHECK(exact_is_collinear(p0_0, p1_1, p2_2));
+  
+  // TODO: test is_collinear(sequence)
 }
 
 BOOST_AUTO_TEST_SUITE_END()

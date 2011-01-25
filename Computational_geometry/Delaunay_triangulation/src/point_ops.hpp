@@ -48,6 +48,28 @@ namespace cg
 
   template< typename Scalar, int Dim >
   inline
+  bool operator != ( point_t<Scalar, Dim> const &p1,
+                     point_t<Scalar, Dim> const &p2 )
+  {
+    return !(p1 == p2);
+  }
+
+  template< typename Scalar, int Dim >
+  inline
+  bool operator < ( point_t<Scalar, Dim> const &p1,
+                     point_t<Scalar, Dim> const &p2 )
+  {
+    for (size_t i = 0; i < Dim; ++i)
+      if (p1[i] < p2[i])
+        return true;
+      else if (p1[i] > p2[i])
+        return false;
+
+    return true;
+  }
+
+  template< typename Scalar, int Dim >
+  inline
   point_t<Scalar, Dim>
       operator - ( point_t<Scalar, Dim> const &p1,
                    point_t<Scalar, Dim> const &p2 )

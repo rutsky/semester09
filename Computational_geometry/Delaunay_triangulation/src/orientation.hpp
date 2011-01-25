@@ -41,7 +41,7 @@ namespace cg
   };
 
   inline
-  orientation_t opposite( orientation_t orient )
+  orientation_t opposite( orientation_t const orient )
   {
     return static_cast<orientation_t>(-static_cast<int>(orient));
   }

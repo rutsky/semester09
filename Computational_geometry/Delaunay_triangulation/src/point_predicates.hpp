@@ -22,6 +22,8 @@
 
 #include <sstream>
 
+#include <boost/optional.hpp>
+
 #include "inexact_computations_ex.hpp"
 #include "point.hpp"
 #include "orientation.hpp"
@@ -83,6 +85,7 @@ namespace cg
    * in right-hand coordinate system, then "positive side" is interior of
    * triangle.
    */
+  // TODO: Use (p0, p1, p2), q.
   template< class Scalar >
   inline
   orientation_t exact_side_of_oriented_triangle(
@@ -225,6 +228,22 @@ namespace cg
     }
 
     BOOST_ASSERT(p0 == p1 && p1 == p2);
+    return true;
+  }
+
+  template< class PointFwdIt >
+  inline
+  bool exact_is_collinear( PointFwdIt first, PointFwdIt beyond )
+  {
+    typedef typename PointFwdIt::value_type point_t;
+
+    boost::optional<point_t> prev, pprev;
+
+    for (; first != beyond; pprev = prev, prev = *first, ++first)
+      if (prev && pprev && !exact_is_collinear(*pprev, *prev, *first))
+        return false;
+      
+    // TODO: Empty points set IS and IS NOT collinear.
     return true;
   }
 }
