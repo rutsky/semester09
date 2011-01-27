@@ -69,7 +69,7 @@ namespace dt
     {
       // Triangle vertices in CCW order.
       vertex_handle_t v[3];
-      // TODO: Use fixed size container, like tuple.
+      // TODO: Use fixed size container, like boost::tuple or boost::array.
       // TODO: Close access to data members (access should be done using
       // getters)
       // TODO: Rename members.

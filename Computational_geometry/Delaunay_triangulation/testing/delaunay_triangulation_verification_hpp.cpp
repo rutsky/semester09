@@ -179,14 +179,14 @@ BOOST_AUTO_TEST_CASE(test_triangulation_verification)
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_not_delaunay);
+      t.begin(), t.end(), std::cout),
+      tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(0.7, 0.7);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout, false),
-      tvr_valid);
+      t.begin(), t.end(), std::cout, true), tvr_not_delaunay);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

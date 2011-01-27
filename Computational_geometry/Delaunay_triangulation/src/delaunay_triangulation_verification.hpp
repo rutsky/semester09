@@ -84,7 +84,7 @@ namespace cg
     triangulation_verification_result verify_triangulation(
         PointFwdIt pointsFirst, PointFwdIt pointsBeyond,
         TriangleFwdIt trianglesFirst, TriangleFwdIt trianglesBeyond,
-        MessageBuffer &messageBuffer, bool checkDelaunay = true )
+        MessageBuffer &messageBuffer, bool checkDelaunay = false )
     {
       typedef typename PointFwdIt::value_type point_t;
       typedef std::vector<point_t> vertex_buffer_t;
