@@ -15,11 +15,30 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#env = Environment(tools=["default", "gch"])
-env = Environment(tools=["default"])
-Export('env')
+import os.path
+import itertools
 
-SConscript("src/SConscript", variant_dir="build/main")
-SConscript("tests/SConscript")
-SConscript("testing/SConscript", variant_dir="build/testing")
-SConscript("verificator/SConscript", variant_dir="build/verificator")
+Import('env')
+
+#env['Gch'] = env.Gch('precompiled.hpp')[0]
+
+configuration = ARGUMENTS.get('conf', None)
+if configuration not in ['release', 'valgrind']:
+  configuration = 'debug'
+
+# Common build flags.
+env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -I#src -frounding-math -lCGAL -lCGAL_Core"))
+
+# Build flags.
+if configuration == 'release':
+    print "Using Release configuration."
+    env.MergeFlags(env.ParseFlags("-O3"))
+elif configuration == 'valgrind':
+    print "Using Valgrind configuration."
+    env.MergeFlags(env.ParseFlags("-O -fno-inline"))
+else:
+    # Debug configuration.
+    print "Using Debug configuration."
+    env.MergeFlags(env.ParseFlags("-O0"))
+
+env.verificator = env.Program(target="verificator", source=['main.cpp'])
