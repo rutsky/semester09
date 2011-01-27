@@ -77,7 +77,7 @@ def runTests(env, target, source):
                     raise TestFailed()
             finally:
                 time = datetime.datetime.now() - start_time
-                print "  triangulation time:", time
+                print "    triangulation time:", time
             
             # Verify result.
             tmp_results_fd, tmp_results_file = tempfile.mkstemp(".tmp")
@@ -103,7 +103,7 @@ def runTests(env, target, source):
                     raise TestFailed()
             finally:
                 time = datetime.datetime.now() - start_time
-                print "  verification time:", time
+                print "    verification time:", time
 
                 os.remove(tmp_results_file)
             
