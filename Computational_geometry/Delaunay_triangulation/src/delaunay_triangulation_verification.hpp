@@ -79,25 +79,32 @@ namespace cg
     };
 
     // TODO: Output messages without dot and line feed at end.
-    template< class PointFwdIt, class TriangleFwdIt, class MessageBuffer >
+    template< class PointInIt, class TriangleInIt, class MessageBuffer >
     inline
     triangulation_verification_result verify_triangulation(
-        PointFwdIt pointsFirst, PointFwdIt pointsBeyond,
-        TriangleFwdIt trianglesFirst, TriangleFwdIt trianglesBeyond,
+        PointInIt pointsFirst, PointInIt pointsBeyond,
+        TriangleInIt trianglesFirst, TriangleInIt trianglesBeyond,
         MessageBuffer &messageBuffer, bool checkDelaunay = false )
     {
-      typedef typename PointFwdIt::value_type point_t;
+      typedef typename PointInIt::value_type point_t;
       typedef std::vector<point_t> vertex_buffer_t;
       typedef std::vector<size_t> index_buffer_t;
       typedef std::vector<triangle_vertices_indices_t> triangles_t;
 
       // Store vertex buffer and triangles index buffer.
-      // TODO: Don't copy them but use provided iterators.
       vertex_buffer_t const vertexBuffer(pointsFirst, pointsBeyond);
       triangles_t triangles(trianglesFirst, trianglesBeyond);
 
+      // DEBUG
+      std::cout << "vertices:\n";
+      std::copy(vertexBuffer.begin(), vertexBuffer.end(),
+        std::ostream_iterator<point_t>(std::cout, "\n"));
+      std::cout << "triangles:\n";
+      std::copy(triangles.begin(), triangles.end(),
+        std::ostream_iterator<triangle_vertices_indices_t>(std::cout, "\n"));
+
       // Filter unique points.
-      vertex_buffer_t uniquePoints(pointsFirst, pointsBeyond);
+      vertex_buffer_t uniquePoints(vertexBuffer.begin(), vertexBuffer.end());
       std::sort(uniquePoints.begin(), uniquePoints.end());
       typename vertex_buffer_t::iterator const uniqueEndIt =
           std::unique(uniquePoints.begin(), uniquePoints.end());

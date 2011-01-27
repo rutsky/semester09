@@ -226,8 +226,8 @@ namespace dt
     typedef std::vector<triangle_t> triangles_t;
 
   public:
-    template< class PointFwdIt >
-    delaunay_triangulation( PointFwdIt first, PointFwdIt beyond )
+    template< class PointInIt >
+    delaunay_triangulation( PointInIt first, PointInIt beyond )
     {
       if (first == beyond)
       {
@@ -734,7 +734,7 @@ namespace dt
         
         // Duplicate vertex. Skipping.
         // DEBUG
-        std::cout << "Warning: duplicate vertex #" << vh << ": " <<
+        std::cerr << "Warning: duplicate vertex #" << vh << ": " <<
             point(vh) << "\n";
       }
     }

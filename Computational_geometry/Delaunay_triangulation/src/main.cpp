@@ -28,10 +28,21 @@
 #include "point_predicates.hpp"
 #include "point_types.hpp"
 
+typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
+
+template< class CharT, class Traits >
+inline
+std::basic_ostream<CharT, Traits> &
+  operator << ( std::basic_ostream<CharT, Traits> &os, 
+                triangulation_t::triangle_vertices_indices_t const &t )
+{
+  os << t.get<0>() << t.get<1>() << t.get<2>();
+  
+  return os;
+}
+
 int main()
 {
-  typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
-
   // Reset random counter (for stable testing).
   // TODO: Not necessarilly defines determined shuffling of points.
   std::srand(0);
@@ -39,19 +50,9 @@ int main()
   triangulation_t triangulation(std::istream_iterator<cg::point_2>(std::cin),
                                 std::istream_iterator<cg::point_2>());
 
-  // Copy result triangles into local container for future sorting.
-  typedef std::vector<triangulation_t::triangle_vertices_indices_t> triangles_t;
-  triangles_t triangles;
+  typedef
+    std::ostream_iterator<triangulation_t::triangle_vertices_indices_t>
+    out_iterator_t;
   std::copy(triangulation.begin(), triangulation.end(),
-            std::back_inserter(triangles));
-
-  // Sort output (for stable testing).
-  std::sort(triangles.begin(), triangles.end());
-
-  for (triangles_t::const_iterator it = triangles.begin();
-       it != triangles.end();
-       ++it)
-  {
-    std::cout << it->get<0>() << " " << it->get<1>() << " " << it->get<2>() << "\n";
-  }
+    out_iterator_t(std::cout, "\n"));
 }

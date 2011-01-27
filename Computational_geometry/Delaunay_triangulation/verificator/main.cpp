@@ -32,11 +32,12 @@ using namespace cg::verification;
 template< class CharT, class Traits >
 inline
 std::basic_istream<CharT, Traits> &
-  operator >> ( std::basic_istream<CharT, Traits> &is, triangle_vertices_indices_t &p )
+  operator >> ( std::basic_istream<CharT, Traits> &is, 
+                triangle_vertices_indices_t &t )
 {
   size_t i1, i2, i3;
   is >> i1 >> i2 >> i3;
-  p = triangle_vertices_indices_t(i1, i2, i3);
+  t = triangle_vertices_indices_t(i1, i2, i3);
   
   return is;
 }
