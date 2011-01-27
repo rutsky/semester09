@@ -30,18 +30,92 @@
 
 using namespace cg;
 
-BOOST_AUTO_TEST_SUITE(point_predicates_hpp)
+BOOST_AUTO_TEST_SUITE(point_predicates_impl_interval_hpp_wo_cgal)
 
-BOOST_AUTO_TEST_CASE(test_turns)
+BOOST_AUTO_TEST_CASE(test_exact_orientation)
 {
   point_2 const p0_0(0, 0), p2_0(2, 0), p0_2(0, 2), p2_2(2, 2),
     p1_0(1, 0), p0_1(0, 1), p1_1(1, 1);
-    
-  BOOST_CHECK(exact_is_left_turn(p0_0, p0_2, p2_0));
-  BOOST_CHECK(exact_is_right_turn(p0_0, p2_0, p0_2));
-  BOOST_CHECK(exact_is_collinear(p0_0, p1_1, p2_2));
+
+  BOOST_CHECK_EQUAL(exact_orientation(p2_0, p0_0, p0_2), or_clockwise);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p0_2, p2_0), or_clockwise);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_2, p2_0, p0_0), or_clockwise);
   
-  // TODO: test is_collinear(sequence)
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p2_0, p0_2), or_counterclockwise);
+  BOOST_CHECK_EQUAL(exact_orientation(p2_0, p0_2, p0_0), or_counterclockwise);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_2, p0_0, p2_0), or_counterclockwise);
+  
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p1_0, p2_0), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p1_0, p2_0, p0_0), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p2_0, p0_0, p1_0), or_collinear);
+
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p0_1, p0_2), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_1, p0_2, p0_0), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_2, p0_0, p0_1), or_collinear);
+      
+  BOOST_CHECK_EQUAL(exact_orientation(p2_0, p0_2, p1_1), or_collinear);
+
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p1_1, p1_1), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p0_0, p0_0, p1_1), or_collinear);
+  BOOST_CHECK_EQUAL(exact_orientation(p1_1, p0_0, p1_1), or_collinear);
+
+  BOOST_CHECK_EQUAL(exact_orientation(p1_1, p1_1, p1_1), or_collinear);
+  
+  // TODO: Suspicious test.
+  BOOST_CHECK_THROW(exact_orientation(
+      point_2(-1e9, -1e9 + 1e-4), point_2(0, 0), point_2(1e9 + 1e-4, 1e9)), 
+      inexact_computations_exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_triangle)
+{
+  point_2 p0_0(0, 0), p2_0(2, 0), p0_2(0, 2), p2_2(2, 2),
+    p1_0(1, 0), p0_1(0, 1), p1_1(1, 1);
+    
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p2_0, p0_2, p1_1), 
+      or_on_boundary);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p2_0, p0_2, p2_2), 
+      or_on_negative_side);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p2_0, p0_0, p0_2, p2_2), 
+      or_on_positive_side);
+  
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p2_0, p0_2, p2_2), 
+      or_on_negative_side);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p0_2, p2_0, p2_2), 
+      or_on_positive_side);
+  
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p2_0, p0_2, p1_1), 
+      or_on_boundary);
+
+  // TODO:
+  //BOOST_CHECK_THROW(exact_side_of_oriented_triangle(
+  //    point_2(1e-16, 1e-16), point_2(1e10, 1e-10), point_2(1e-10, 1e10), 
+  //    point_2(0.5e10, 1e-16)),
+  //    inexact_computations_exception);
+
+  BOOST_CHECK_THROW(exact_side_of_oriented_triangle(p0_0, p0_0, p0_2, p1_1),
+      invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
+{
+  point_2 p0_0(0, 0), p2_0(2, 0), p0_2(0, 2), p2_2(2, 2),
+    p1_0(1, 0), p0_1(0, 1), p1_1(1, 1), p3_3(3, 3);
+    
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p2_0, p0_2, p2_2), 
+      or_on_boundary);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p0_2, p2_0, p2_2), 
+      or_on_boundary);
+
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p0_2, p2_0, p3_3), 
+      or_on_positive_side);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_2, p0_0, p2_0, p3_3), 
+      or_on_negative_side);
+
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p0_2, p2_0, p1_1), 
+      or_on_negative_side);
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p2_0, p0_2, p1_1), 
+      or_on_positive_side);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
