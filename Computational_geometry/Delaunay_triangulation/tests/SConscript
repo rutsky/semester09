@@ -37,7 +37,10 @@ def normalize_output(output):
         
     triangles.sort()
     
-    return "\n".join(map(lambda tr: " ".join(map(str, tr)), triangles))
+    result = "\n".join(map(lambda tr: " ".join(map(str, tr)), triangles))
+    if result:
+        result += "\n"
+    return result
 
 def runTests(env, target, source):
     import subprocess
@@ -99,7 +102,8 @@ def runTests(env, target, source):
             output = normalize_output(stdout)
             if os.path.exists(test_result_file):
                 if os.path.exists(new_test_result_file):
-                    print "    Remove generated data due to fact that test output already exists: '{0}'".format(os.path.relpath(test_err_file))
+                    print "    Remove generated data due to fact that test output already exists: '{0}'".\
+                        format(os.path.relpath(new_test_result_file))
                     os.remove(new_test_result_file)
             
                 with open(test_result_file, 'r') as f:
@@ -129,7 +133,7 @@ def runTests(env, target, source):
     if len(failed_tests) == 0:
         #with open(str(target[0]), 'w') as f:
         #    f.write("PASSED\n")
-        pass
+        print "All tests succeded"
     else:
         print "Following tests failed:\n  " + ", ".join(failed_tests)
 
