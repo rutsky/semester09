@@ -29,19 +29,6 @@
 
 using namespace cg::verification;
 
-template< class CharT, class Traits >
-inline
-std::basic_istream<CharT, Traits> &
-  operator >> ( std::basic_istream<CharT, Traits> &is, 
-                triangle_vertices_indices_t &t )
-{
-  size_t i1, i2, i3;
-  is >> i1 >> i2 >> i3;
-  t = triangle_vertices_indices_t(i1, i2, i3);
-  
-  return is;
-}
-
 int main( int argc, char *argv[] )
 {
   if (argc < 3)
@@ -60,7 +47,7 @@ int main( int argc, char *argv[] )
   }
   
   std::ifstream trianglesFile(argv[2]);
-  if (!pointsFile)
+  if (!trianglesFile)
   {
     perror(argv[2]);
     return -2;
@@ -70,8 +57,8 @@ int main( int argc, char *argv[] )
       verify_triangulation(
           std::istream_iterator<cg::point_2>(pointsFile),
           std::istream_iterator<cg::point_2>(),
-          std::istream_iterator<triangle_vertices_indices_t>(trianglesFile),
-          std::istream_iterator<triangle_vertices_indices_t>(),
+          std::istream_iterator<cg::triangle_vertices_indices_t>(trianglesFile),
+          std::istream_iterator<cg::triangle_vertices_indices_t>(),
         std::cerr, true);
   return static_cast<int>(result);
 }

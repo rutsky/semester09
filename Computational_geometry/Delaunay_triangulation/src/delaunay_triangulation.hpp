@@ -38,6 +38,7 @@
 #include "point_io.hpp"
 #include "point_ops.hpp"
 #include "utils.hpp"
+#include "indexed_triangle.hpp"
 
 // TODO: For determined points shuffling random generator should be passed
 // to triangulation.
@@ -51,7 +52,8 @@ namespace dt
     typedef delaunay_triangulation<PointType> self_t;
     typedef PointType point_t;
     typedef typename point_t::scalar_t scalar_t;
-    typedef boost::tuple<size_t, size_t, size_t> triangle_vertices_indices_t;
+
+    typedef cg::triangle_vertices_indices_t triangle_vertices_indices_t;
 
   protected:
     typedef size_t vertex_handle_t;

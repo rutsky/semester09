@@ -37,7 +37,7 @@ def normalize_output(output):
         
     triangles.sort()
     
-    return "\n".join(map(lambda tr: " ".join(tr), triangles))
+    return "\n".join(map(lambda tr: " ".join(map(str, tr)), triangles))
 
 def runTests(env, target, source):
     import subprocess

@@ -33,13 +33,12 @@
 
 #include "point_predicates.hpp"
 #include "point_ops.hpp"
+#include "indexed_triangle.hpp"
 
 namespace cg
 {
   namespace verification
   {
-    typedef boost::tuple<size_t, size_t, size_t> triangle_vertices_indices_t;
-
     template< class TriangleFwdIt, class indicesOutIt >
     inline
     indicesOutIt copy_indices_from_triangle_vertices_indices(
