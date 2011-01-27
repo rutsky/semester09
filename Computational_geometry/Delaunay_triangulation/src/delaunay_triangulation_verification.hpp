@@ -64,16 +64,17 @@ namespace cg
       tvr_excess_triangles,
       tvr_empty_triangulation,
       tvr_invalid_index,
-      trv_duplicate_vertices_in_triangulation,
-      trv_points_and_indices_not_correspond,
-      trv_singular_triangle,
-      trv_point_in_triangle,
-      trv_duplicate_edge,
-      trv_duplicate_border_out_edge,
-      trv_unexpected_border_chain_end,
-      trv_border_is_not_chain,
-      trv_border_chain_not_closed,
-      trv_more_than_one_border_chain,
+      tvr_duplicate_vertices_in_triangulation,
+      tvr_points_and_indices_not_correspond,
+      tvr_singular_triangle,
+      tvr_point_in_triangle,
+      tvr_duplicate_edge,
+      tvr_duplicate_border_out_edge,
+      tvr_unexpected_border_chain_end,
+      tvr_border_is_not_chain,
+      tvr_border_chain_not_closed,
+      tvr_more_than_one_border_chain,
+      tvr_border_chain_not_convex,
     };
 
     // TODO: Output messages without dot and line feed at end.
@@ -163,7 +164,7 @@ namespace cg
         // TODO: spaces after linefeed.
         std::copy(equalPointsIt, usedPoints.end(), 
           std::ostream_iterator<point_t>(messageBuffer, "\n"));
-        return trv_duplicate_vertices_in_triangulation;
+        return tvr_duplicate_vertices_in_triangulation;
       }
 
       // Check that number of different indices used in triangulation is equal
@@ -178,7 +179,7 @@ namespace cg
         // TODO: Not sure about this, but I think it's true.
         BOOST_ASSERT(usedPoints.size() < uniquePoints.size());
 
-        return trv_points_and_indices_not_correspond;
+        return tvr_points_and_indices_not_correspond;
       }
 
       // Check that all triangles are not singular and fix they orientation.
@@ -194,7 +195,7 @@ namespace cg
               "Triangulation contains singular triangle:\n  " << tr <<
               "\n  " <<
               p0 << ", " << p1 << ", " << p2 << "\n";
-          return trv_singular_triangle;
+          return tvr_singular_triangle;
         }
 
         if (orient == or_clockwise)
@@ -245,7 +246,7 @@ namespace cg
                 q << "\n";
             }
             
-            return trv_point_in_triangle;
+            return tvr_point_in_triangle;
           }
         }
       }
@@ -266,19 +267,19 @@ namespace cg
         {
           messageBuffer <<
               "Multiple triangles have single edge:\n  " << e1 << "\n";
-          return trv_duplicate_edge;
+          return tvr_duplicate_edge;
         }
         if (edges.find(e2) != edges.end())
         {
           messageBuffer <<
               "Multiple triangles have single edge:\n  " << e1 << "\n";
-          return trv_duplicate_edge;
+          return tvr_duplicate_edge;
         }
         if (edges.find(e3) != edges.end())
         {
           messageBuffer <<
               "Multiple triangles have single edge:\n  " << e1 << "\n";
-          return trv_duplicate_edge;
+          return tvr_duplicate_edge;
         }
 
         edges.insert(e1);
@@ -287,7 +288,8 @@ namespace cg
       }
 
       // Collect border edges (which don't have twin).
-      std::vector<edge_t> borderEdges;
+      typedef std::vector<edge_t> edges_t;
+      edges_t borderEdges;
       BOOST_FOREACH(edge_t const &e, edges)
       {
         edge_t const twin(e.get<1>(), e.get<0>());
@@ -305,7 +307,7 @@ namespace cg
           // TODO: Output correspond triangles.
           messageBuffer <<
               "Multiple border edges going out of vertex #" << e.get<0>() << ".\n";
-          return trv_duplicate_border_out_edge;
+          return tvr_duplicate_border_out_edge;
         }
         else
         {
@@ -315,7 +317,7 @@ namespace cg
 
       // Check that there is only one chain.
       std::set<edge_t> borderChainEdgesSet;
-      std::vector<edge_t> borderChain;
+      edges_t borderChain;
       borderChain.push_back(borderEdges[0]);
       borderChainEdgesSet.insert(borderEdges[0]);
       while (true)
@@ -326,17 +328,11 @@ namespace cg
           // TODO: Probably impossible case.
           messageBuffer <<
             "Border chain end unexpectedly at edge: " << e << "\n";
-          return trv_unexpected_border_chain_end;
+          return tvr_unexpected_border_chain_end;
         }
 
         edge_t const e1 = vertexToEdge[e.get<1>()];
         
-        if (e.get<1>() == borderChain[0].get<0>())
-        {
-          // Found closed chain.
-          break;
-        }
-
         borderChain.push_back(e1);
 
         if (borderChainEdgesSet.find(e1) != borderChainEdgesSet.end())
@@ -345,9 +341,15 @@ namespace cg
           messageBuffer << "Border is not chain:\n";
           std::copy(borderChain.begin(), borderChain.end(), 
             std::ostream_iterator<edge_t>(messageBuffer, "\n"));
-          return trv_border_is_not_chain;
+          return tvr_border_is_not_chain;
         }
         borderChainEdgesSet.insert(e1);
+
+        if (e1.get<1>() == borderChain[0].get<0>())
+        {
+          // Found closed chain.
+          break;
+        }
       }
 
       if (borderChain.size() != borderEdges.size())
@@ -359,11 +361,34 @@ namespace cg
             "  found chain:\n";
         std::copy(borderChain.begin(), borderChain.end(),
             std::ostream_iterator<edge_t>(messageBuffer, "\n"));
-        return trv_more_than_one_border_chain;
+        return tvr_more_than_one_border_chain;
       }
 
-      // Check that chain is convex.
-      
+      std::cout << "\n";
+      std::copy(borderChain.begin(), borderChain.end(),
+          std::ostream_iterator<edge_t>(std::cout, "\n")); // DEBUG
+      std::cout << "\n";
+
+      // Check that border chain is convex.
+      edge_t prevEdge = borderChain.back();
+      for (edges_t::const_iterator it = borderChain.begin();
+           it != borderChain.end();
+           prevEdge = *it, ++it)
+      {
+        edge_t const edge = *it;
+        BOOST_ASSERT(prevEdge.get<1>() == edge.get<0>());
+
+        point_t const &p0 = vertexBuffer[prevEdge.get<0>()];
+        point_t const &p1 = vertexBuffer[prevEdge.get<1>()];
+        point_t const &p2 = vertexBuffer[edge.get<1>()];
+        if (exact_is_left_turn(p0, p1, p2))
+        {
+          messageBuffer <<
+            "Border chain is not convex at vertices:\n"
+            "  " << p0 << ", " << p1 << ", " << p2 << "\n";
+          return tvr_border_chain_not_convex;
+        }
+      }
 
       return tvr_valid;
     }
