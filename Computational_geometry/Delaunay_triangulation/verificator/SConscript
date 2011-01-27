@@ -27,7 +27,7 @@ if configuration not in ['release', 'valgrind']:
   configuration = 'debug'
 
 # Common build flags.
-env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -I#src -frounding-math -lCGAL -lCGAL_Core"))
+env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -I#src -frounding-math -lCGAL -lCGAL_Core -DHAVE_CGAL"))
 
 # Build flags.
 if configuration == 'release':
