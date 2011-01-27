@@ -75,6 +75,7 @@ namespace cg
       tvr_border_chain_not_closed,
       tvr_more_than_one_border_chain,
       tvr_border_chain_not_convex,
+      tvr_not_delaunay,
     };
 
     // TODO: Output messages without dot and line feed at end.
@@ -83,7 +84,7 @@ namespace cg
     triangulation_verification_result verify_triangulation(
         PointFwdIt pointsFirst, PointFwdIt pointsBeyond,
         TriangleFwdIt trianglesFirst, TriangleFwdIt trianglesBeyond,
-        MessageBuffer &messageBuffer )
+        MessageBuffer &messageBuffer, bool checkDelaunay = true )
     {
       typedef typename PointFwdIt::value_type point_t;
       typedef std::vector<point_t> vertex_buffer_t;
@@ -387,6 +388,42 @@ namespace cg
             "Border chain is not convex at vertices:\n"
             "  " << p0 << ", " << p1 << ", " << p2 << "\n";
           return tvr_border_chain_not_convex;
+        }
+      }
+
+      if (checkDelaunay)
+      {
+        // Check Delaunay property: circumscribed circle for each triangle
+        // don't have any points in its interior.
+
+        BOOST_FOREACH(triangle_vertices_indices_t const &tr, triangles)
+        {
+          point_t const &p0 = vertexBuffer[tr.get<0>()];
+          point_t const &p1 = vertexBuffer[tr.get<1>()];
+          point_t const &p2 = vertexBuffer[tr.get<2>()];
+
+          BOOST_ASSERT(exact_orientation(p0, p1, p2) == or_counterclockwise);
+
+          BOOST_FOREACH(point_t const &q, uniquePoints)
+          {
+            if (q == p0 || q == p1 || q == p2)
+              continue;
+
+            orientation_t const orient =
+                exact_side_of_oriented_circle(p0, p1, p2, q);
+            if (orient == or_on_positive_side)
+            {
+              // TODO: Output point index.
+              messageBuffer <<
+                "Found point in interior of circumscribed around triangle "
+                "circle:\n"
+                "  " << tr << "\n"
+                "  " << p0 << ", " << p1 << ", " << p2 << "\n"
+                "  point:\n"
+                "  " << q << "\n";
+              return tvr_not_delaunay;
+            }
+          }
         }
       }
 
