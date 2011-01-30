@@ -78,6 +78,8 @@ namespace cg
     };
 
     // TODO: Output messages without dot and line feed at end.
+    // TODO: It's O(N^2) but can be reduced to O(N^2) if point location will
+    // be optimized.
     template< class PointInIt, class TriangleInIt, class MessageBuffer >
     inline
     triangulation_verification_result verify_triangulation(
@@ -95,12 +97,14 @@ namespace cg
       triangles_t triangles(trianglesFirst, trianglesBeyond);
 
       // DEBUG
+      /*
       std::cout << "vertices:\n";
       std::copy(vertexBuffer.begin(), vertexBuffer.end(),
         std::ostream_iterator<point_t>(std::cout, "\n"));
       std::cout << "triangles:\n";
       std::copy(triangles.begin(), triangles.end(),
         std::ostream_iterator<triangle_vertices_indices_t>(std::cout, "\n"));
+       */
 
       // Filter unique points.
       vertex_buffer_t uniquePoints(vertexBuffer.begin(), vertexBuffer.end());
@@ -371,10 +375,13 @@ namespace cg
         return tvr_more_than_one_border_chain;
       }
 
+      /*
+      // DEBUG
       std::cout << "\n";
       std::copy(borderChain.begin(), borderChain.end(),
-          std::ostream_iterator<edge_t>(std::cout, "\n")); // DEBUG
+          std::ostream_iterator<edge_t>(std::cout, "\n"));
       std::cout << "\n";
+       */
 
       // Check that border chain is convex.
       edge_t prevEdge = borderChain.back();
