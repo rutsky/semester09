@@ -30,7 +30,7 @@
 
 using namespace cg;
 
-BOOST_AUTO_TEST_SUITE(point_predicates_impl_interval_hpp_wo_cgal)
+BOOST_AUTO_TEST_SUITE(point_predicates_hpp_wo_cgal)
 
 BOOST_AUTO_TEST_CASE(test_exact_orientation)
 {
