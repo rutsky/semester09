@@ -31,9 +31,13 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/foreach.hpp>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Point_set_2.h>
+
 #include "point_predicates.hpp"
 #include "point_ops.hpp"
 #include "indexed_triangle.hpp"
+#include "point_utils.hpp"
 
 namespace cg
 {
@@ -112,6 +116,15 @@ namespace cg
       typename vertex_buffer_t::iterator const uniqueEndIt =
           std::unique(uniquePoints.begin(), uniquePoints.end());
       uniquePoints.erase(uniqueEndIt, uniquePoints.end());
+
+      // Create points localisation structure.
+      typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+      typedef CGAL::Point_set_2<K>::Vertex_handle vertex_handle_t;
+
+      CGAL::Point_set_2<K> pointsSet;
+
+      BOOST_FOREACH(point_t const &p, vertexBuffer)
+        pointsSet.insert(K::Point_2(p.x, p.y));
 
       // Check if all points collinear.
       // TODO: Assume that empty points set IS collinear.
@@ -229,13 +242,26 @@ namespace cg
         
         BOOST_ASSERT(exact_orientation(p0, p1, p2) == or_counterclockwise);
 
-        BOOST_FOREACH(point_t const &q, uniquePoints)
+        std::vector<vertex_handle_t> points;
+        pointsSet.range_search(
+          K::Point_2(p0.x, p0.y),
+          K::Point_2(p1.x, p1.y), 
+          K::Point_2(p2.x, p2.y),
+          std::back_inserter(points));
+
+        BOOST_FOREACH(vertex_handle_t const &qh, points)
         {
+          point_t const q(qh->point().x(), qh->point().y());
+
           if (q == p0 || q == p1 || q == p2)
             continue;
 
           orientation_t const orient =
               exact_side_of_oriented_triangle(p0, p1, p2, q);
+
+          // Sincle points localisation is exact.
+          BOOST_ASSERT(orient != or_on_negative_side);
+
           if (orient != or_on_negative_side)
           {
             if (orient == or_collinear)
@@ -417,13 +443,29 @@ namespace cg
 
           BOOST_ASSERT(exact_orientation(p0, p1, p2) == or_counterclockwise);
 
-          BOOST_FOREACH(point_t const &q, uniquePoints)
+          std::vector<vertex_handle_t> points;
+          pointsSet.range_search(
+            CGAL::Circle_2<K>(
+              construct_2d_point<K::Point_2>(p0),
+              construct_2d_point<K::Point_2>(p1),
+              construct_2d_point<K::Point_2>(p2)),
+            std::back_inserter(points));
+
+          BOOST_FOREACH(vertex_handle_t const &qh, points)
           {
+            point_t const q(qh->point().x(), qh->point().y());
+
             if (q == p0 || q == p1 || q == p2)
               continue;
 
             orientation_t const orient =
                 exact_side_of_oriented_circle(p0, p1, p2, q);
+
+            // Sincle points localisation is exact.
+            BOOST_ASSERT(
+                orient == or_on_positive_side ||
+                orient == or_on_boundary);
+
             if (orient == or_on_positive_side)
             {
               // TODO: Output point index.
