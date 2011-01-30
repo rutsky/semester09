@@ -116,6 +116,10 @@ BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
       or_on_negative_side);
   BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p2_0, p0_2, p1_1), 
       or_on_positive_side);
+      
+  BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p1_0, p0_1, 
+      point_2(1, 1 - 1e-10)),
+      or_on_positive_side);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

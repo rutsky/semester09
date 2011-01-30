@@ -191,6 +191,18 @@ BOOST_AUTO_TEST_CASE(test_triangulation_verification)
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
       t.begin(), t.end(), errstream, true), tvr_not_delaunay);
+
+  p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1);
+  t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
+  BOOST_CHECK_EQUAL(verify_triangulation(
+      p.begin(), p.end(), 
+      t.begin(), t.end(), errstream, true), tvr_valid);
+
+  p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1 - 1e-10);
+  t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
+  BOOST_CHECK_EQUAL(verify_triangulation(
+      p.begin(), p.end(), 
+      t.begin(), t.end(), errstream, true), tvr_not_delaunay);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
