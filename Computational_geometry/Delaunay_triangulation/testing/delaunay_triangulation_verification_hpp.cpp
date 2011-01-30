@@ -22,6 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <sstream>
+
 #include <boost/assign/list_of.hpp>
 
 #include "point_types.hpp"
@@ -33,6 +35,8 @@ using namespace cg;
 using namespace cg::verification;
 typedef triangle_vertices_indices_t triangle_t;
 
+std::ostringstream errstream;
+
 BOOST_AUTO_TEST_SUITE(delaunay_triangulation_verification_hpp)
 
 BOOST_AUTO_TEST_CASE(test_triangulation_verification)
@@ -42,151 +46,151 @@ BOOST_AUTO_TEST_CASE(test_triangulation_verification)
   
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
   
   p = list_of<point_2>(1, 1);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
   
   p = list_of<point_2>(0, 0)(1, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(2, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(2, 0)(3, 0)(-10, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
       
   t = list_of<triangle_t>();
   
   p.clear();
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_excess_triangles);
+      t.begin(), t.end(), errstream), tvr_excess_triangles);
   
   p = list_of<point_2>(1, 1);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_excess_triangles);
+      t.begin(), t.end(), errstream), tvr_excess_triangles);
   
   p = list_of<point_2>(0, 0)(1, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_excess_triangles);
+      t.begin(), t.end(), errstream), tvr_excess_triangles);
 
   p = list_of<point_2>(0, 0)(1, 0)(2, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_excess_triangles);
+      t.begin(), t.end(), errstream), tvr_excess_triangles);
 
   p = list_of<point_2>(0, 0)(1, 0)(2, 0)(3, 0)(-10, 0);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_excess_triangles);
+      t.begin(), t.end(), errstream), tvr_excess_triangles);
   
   p = list_of<point_2>(0, 0)(1, 0)(0, 1);
   t.clear();
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_empty_triangulation);
+      t.begin(), t.end(), errstream), tvr_empty_triangulation);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1);
   t = list_of<triangle_t>(0, 1, 2);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1);
   t = list_of<triangle_t>(0, 10, 2);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_invalid_index);
+      t.begin(), t.end(), errstream), tvr_invalid_index);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1);
   t = list_of<triangle_t>(0, 1, 2)(1, 2, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1)(1, 0);
   t = list_of<triangle_t>(0, 1, 2)(4, 2, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_duplicate_vertices_in_triangulation);
+      t.begin(), t.end(), errstream), tvr_duplicate_vertices_in_triangulation);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1)(1, 0);
   t = list_of<triangle_t>(0, 1, 2);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_points_and_indices_not_correspond);
+      t.begin(), t.end(), errstream), tvr_points_and_indices_not_correspond);
 
   p = list_of<point_2>(0, 0)(1, 0)(2, 0)(1, 1);
   t = list_of<triangle_t>(0, 1, 2)(0, 3, 1)(1, 3, 2);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_singular_triangle);
+      t.begin(), t.end(), errstream), tvr_singular_triangle);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(0.5, 0);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_point_in_triangle);
+      t.begin(), t.end(), errstream), tvr_point_in_triangle);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(0.1, 0.1);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_point_in_triangle);
+      t.begin(), t.end(), errstream), tvr_point_in_triangle);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(2, 0)(2, 1);
   t = list_of<triangle_t>(0, 1, 2)(1, 3, 4);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_duplicate_border_out_edge);
+      t.begin(), t.end(), errstream), tvr_duplicate_border_out_edge);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(2, 0)(2, 1)(3, 0);
   t = list_of<triangle_t>(0, 1, 2)(3, 4, 5);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_more_than_one_border_chain);
+      t.begin(), t.end(), errstream), tvr_more_than_one_border_chain);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(1, 1);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0.7, 0.2)(1, 1);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_border_chain_not_convex);
+      t.begin(), t.end(), errstream), tvr_border_chain_not_convex);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(2, 2);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout), tvr_valid);
+      t.begin(), t.end(), errstream), tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(0.7, 0.7);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout),
+      t.begin(), t.end(), errstream),
       tvr_valid);
 
   p = list_of<point_2>(0, 0)(1, 0)(0, 1)(0.7, 0.7);
   t = list_of<triangle_t>(0, 1, 2)(2, 1, 3);
   BOOST_CHECK_EQUAL(verify_triangulation(
       p.begin(), p.end(), 
-      t.begin(), t.end(), std::cout, true), tvr_not_delaunay);
+      t.begin(), t.end(), errstream, true), tvr_not_delaunay);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
