@@ -27,7 +27,7 @@ if configuration not in ['release', 'valgrind']:
   configuration = 'debug'
 
 # Common build flags.
-testing_env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -L#boost-lib -I#src -frounding-math -lCGAL -lCGAL_Core -lboost_unit_test_framework"))
+testing_env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -L#boost-lib -I#include -frounding-math -lCGAL -lCGAL_Core -lboost_unit_test_framework"))
 
 # Build flags.
 if configuration == 'release':
@@ -44,3 +44,5 @@ else:
 source_files = Glob("*.cpp", strings=True)
 
 test_program = testing_env.Program(target="tests", source=source_files)
+
+run_tests = Command("unit_testing.passed", test_program, str(test_program[0].abspath))
