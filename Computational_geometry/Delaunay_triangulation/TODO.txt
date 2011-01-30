@@ -6,3 +6,4 @@
  * Test working time.
  * Create test generator.
  * Triangulation visualisation with Asymptote.
+ * Add CGAL implementation of DT.
