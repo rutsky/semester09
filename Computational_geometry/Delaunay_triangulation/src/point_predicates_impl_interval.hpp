@@ -219,10 +219,10 @@ namespace cg
       boost::tie(sx, sy) = tuple(s);
 
       interval_t const det = determinant(
-          px, py, sqr(px) + sqr(px), interval_t(1),
-          qx, qy, sqr(qx) + sqr(qx), interval_t(1),
-          rx, ry, sqr(rx) + sqr(rx), interval_t(1),
-          sx, sy, sqr(sx) + sqr(sx), interval_t(1));
+          px, py, sqr(px) + sqr(py), interval_t(1),
+          qx, qy, sqr(qx) + sqr(qy), interval_t(1),
+          rx, ry, sqr(rx) + sqr(ry), interval_t(1),
+          sx, sy, sqr(sx) + sqr(sy), interval_t(1));
 
       if (det.lower() == scalar_t(0) && det.upper() == scalar_t(0))
       {
