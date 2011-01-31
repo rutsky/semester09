@@ -31,14 +31,14 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/src/main.o
+	${OBJECTDIR}/_ext/_DOTDOT/delaunay/main.o
 
 # C Compiler Flags
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I../boost -I/usr/include -frounding-math
-CXXFLAGS=-I../boost -I/usr/include -frounding-math
+CCFLAGS=-I../boost -I../include -I/usr/include -frounding-math
+CXXFLAGS=-I../boost -I../include -I/usr/include -frounding-math
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -57,10 +57,10 @@ dist/Release/GNU-Linux-x86/netbeans: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.cc} -L/usr/lib -lCGAL -lCGAL_Core -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/netbeans ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/src/main.o: nbproject/Makefile-${CND_CONF}.mk src/main.cpp 
-	${MKDIR} -p ${OBJECTDIR}/src
+${OBJECTDIR}/_ext/_DOTDOT/delaunay/main.o: nbproject/Makefile-${CND_CONF}.mk ../delaunay/main.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/_DOTDOT/delaunay
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/main.o src/main.cpp
+	$(COMPILE.cc) -O2 -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/_DOTDOT/delaunay/main.o ../delaunay/main.cpp
 
 # Subprojects
 .build-subprojects:

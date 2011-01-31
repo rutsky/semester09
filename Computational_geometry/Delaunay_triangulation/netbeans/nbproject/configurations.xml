@@ -12,23 +12,29 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>src/SConscript</itemPath>
-      <itemPath>src/delaunay_triangulation.hpp</itemPath>
-      <itemPath>src/determinant.hpp</itemPath>
-      <itemPath>src/exceptions.hpp</itemPath>
-      <itemPath>src/inexact_computations_ex.hpp</itemPath>
-      <itemPath>src/main.cpp</itemPath>
-      <itemPath>src/orientation.hpp</itemPath>
-      <itemPath>src/point.hpp</itemPath>
-      <itemPath>src/point_io.hpp</itemPath>
-      <itemPath>src/point_ops.hpp</itemPath>
-      <itemPath>src/point_predicates.hpp</itemPath>
-      <itemPath>src/point_predicates_impl_cgal.hpp</itemPath>
-      <itemPath>src/point_predicates_impl_interval.hpp</itemPath>
-      <itemPath>src/point_types.hpp</itemPath>
-      <itemPath>src/point_utils.hpp</itemPath>
-      <itemPath>src/utils.hpp</itemPath>
-      <itemPath>src/xmath.hpp</itemPath>
+      <logicalFolder name="delaunay" displayName="delaunay" projectFiles="true">
+        <itemPath>../delaunay/main.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="include" displayName="include" projectFiles="true">
+        <itemPath>../include/delaunay_triangulation.hpp</itemPath>
+        <itemPath>../include/delaunay_triangulation_verification.hpp</itemPath>
+        <itemPath>../include/determinant.hpp</itemPath>
+        <itemPath>../include/exceptions.hpp</itemPath>
+        <itemPath>../include/indexed_triangle.hpp</itemPath>
+        <itemPath>../include/inexact_computations_ex.hpp</itemPath>
+        <itemPath>../include/orientation.hpp</itemPath>
+        <itemPath>../include/point.hpp</itemPath>
+        <itemPath>../include/point_io.hpp</itemPath>
+        <itemPath>../include/point_ops.hpp</itemPath>
+        <itemPath>../include/point_predicates.hpp</itemPath>
+        <itemPath>../include/point_predicates_fwd.hpp</itemPath>
+        <itemPath>../include/point_predicates_impl_cgal.hpp</itemPath>
+        <itemPath>../include/point_predicates_impl_interval.hpp</itemPath>
+        <itemPath>../include/point_types.hpp</itemPath>
+        <itemPath>../include/point_utils.hpp</itemPath>
+        <itemPath>../include/utils.hpp</itemPath>
+        <itemPath>../include/xmath.hpp</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -36,6 +42,10 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../delaunay</Elem>
+    <Elem>../include</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
@@ -46,7 +56,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-I../boost -I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I../include -I/usr/include -frounding-math</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
@@ -68,7 +78,7 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <commandLine>-I../boost -I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I../include -I/usr/include -frounding-math</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
