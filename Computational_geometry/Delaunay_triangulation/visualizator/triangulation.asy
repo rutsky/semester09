@@ -23,8 +23,14 @@ void draw_triangulation(string points_file_name, string triangles_file_name)
   }
   
   // Draw points.
+  int idx = 0;
   for (real[] p : points)
   {
-    dot((p[0], p[1]), red);
+    pair v = (p[0], p[1]);
+  
+    dot(v, red);
+    label(string(idx), v, E, red);
+    
+    idx += 1;
   }
 }
