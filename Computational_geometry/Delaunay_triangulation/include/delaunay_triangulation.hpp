@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 
 #include <boost/bind.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -33,6 +35,7 @@
 #include <boost/optional.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
+#include <boost/format.hpp>
 
 #include "point_predicates.hpp"
 #include "point_io.hpp"
@@ -534,6 +537,7 @@ namespace dt
       }
       else
       {
+        // TODO: Obsolete comment:
         // Point NOT inside triangle - point is outside of triangle or
         // on its bounding - thats ok.
       }
@@ -739,6 +743,41 @@ namespace dt
         std::cerr << "Warning: duplicate vertex #" << vh << ": " <<
             point(vh) << "\n";
       }
+
+      // DEBUG
+      {
+        std::ofstream points_ofs(
+            (boost::format("debug_%1%_points_%2%.out") %
+                triangles_.size() % vh).str().c_str());
+        BOOST_ASSERT(points_ofs);
+        if (points_ofs)
+        {
+          for (size_t i = 0; i < vertexBuffer_.size(); ++i)
+          {
+            points_ofs << std::setprecision(16) << vertexBuffer_[i].x << " " <<
+                vertexBuffer_[i].y << "\n";
+          }
+        }
+
+        std::ofstream triangles_ofs(
+            (boost::format("debug_%1%_triangles_%2%.out") %
+                triangles_.size() % vh).str().c_str());
+        BOOST_ASSERT(triangles_ofs);
+        if (triangles_ofs)
+        {
+          for (size_t i = 0; i < triangles_.size(); ++i)
+          {
+            //std::cout << "vh=" << vh << ", i=" << i << "\n";
+            triangle_t const &tr = triangles_[i];
+            if (!tr.has_children())
+            {
+              triangles_ofs <<
+                  tr.v[0] << " " << tr.v[1] << " " << tr.v[2] << "\n";
+            }
+          }
+        }
+      }
+      // END OF DEBUG
     }
 
     cg::orientation_t exact_side_of_oriented_triangle(
@@ -751,6 +790,13 @@ namespace dt
           vertex_point(vh));
     }
 
+    // Checks whether edge should be flipped:
+    //     *-------* vh
+    //    / \     /
+    //   /   \   /
+    //  / trh \ /
+    // *-------*
+    //
     bool is_flip_required( triangle_handle_t trh, vertex_handle_t vh )
     {
       if (isFiniteTriangle(trh))
