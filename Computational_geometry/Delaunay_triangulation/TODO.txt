@@ -7,3 +7,4 @@
  * Create test generator.
  * Triangulation visualisation with Asymptote.
  * Add CGAL implementation of DT.
+ * Disable adjency verification in release build.
