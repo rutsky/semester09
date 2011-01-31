@@ -29,7 +29,7 @@ void draw_triangulation(string points_file_name, string triangles_file_name)
     pair v = (p[0], p[1]);
   
     dot(v, red);
-    label(string(idx), v, E, red);
+    label(string(idx) + " (" + string(idx + 3) + ")", v, E, red);
     
     idx += 1;
   }
