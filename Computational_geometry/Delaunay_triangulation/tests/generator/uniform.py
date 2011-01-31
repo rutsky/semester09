@@ -4,7 +4,8 @@ import random
 if len(sys.argv) >= 2:
     n = int(sys.argv[1])
 else:
-    n = 1000
+    print "Usage:\n  {0} <Number of points>".format(sys.argv[0])
+    sys.exit(0)
 
 gen_range = 1000
 min_val = -gen_range / 2.0
