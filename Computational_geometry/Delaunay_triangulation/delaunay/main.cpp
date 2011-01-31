@@ -39,5 +39,5 @@ int main()
     std::ostream_iterator<cg::triangle_vertices_indices_t>
     out_iterator_t;
   std::copy(triangulation.begin(), triangulation.end(),
-    out_iterator_t(std::cout, "\n"));
+    out_iterator_t(std::cout));
 }
