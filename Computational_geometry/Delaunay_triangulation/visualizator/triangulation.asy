@@ -1,5 +1,8 @@
 import graph;
 
+// TODO:
+//  1. When coordinates is small (e.g. 0..1) result PDF is too small.
+
 void draw_triangulation(string points_file_name, string triangles_file_name)
 {
   //size(640, 480);
