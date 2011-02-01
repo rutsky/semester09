@@ -1,10 +1,14 @@
  * Fix TODO from sources.
  * Add tests for different triangulations.
  * Implement correct testing structure using SCons.
- * Use CPPPATH instead of -I...: http://www.scons.org/wiki/FrequentlyAskedQuestions#head-638361e9cba3fec0bc32698d3cc2961c8fc05d73
- * Use "Program('prog.c', LIBS=['foo', 'bar'], LIBPATH='.')" for linking with libraries, not -L... -l...
+ * Use CPPPATH instead of -I...: 
+http://www.scons.org/wiki/FrequentlyAskedQuestions#head-638361e9cba3fec0bc32698d3cc2961c8fc05d73
+ * Use "Program('prog.c', LIBS=['foo', 'bar'], LIBPATH='.')" for linking with 
+libraries, not -L... -l...
  * Test working time.
  * Create test generator.
  * Triangulation visualisation with Asymptote.
  * Add CGAL implementation of DT.
  * Disable adjency verification in release build.
+ * Construction of bounding triangle can cause precision problems (noticed on 
+such simple test as "0 0 0 1 1 0").
