@@ -331,93 +331,114 @@ namespace dt
 
       int idx;
       if (!triangle(trh).has_vertex(0))
-        idx = triangle(trh).vertex_index(1);
+        idx = triangle(trh).vertex_index(1) - 1;
       else if (!triangle(trh).has_vertex(1))
-        idx = triangle(trh).vertex_index(2);
+        idx = triangle(trh).vertex_index(2) - 1;
       else if (!triangle(trh).has_vertex(2))
-        idx = triangle(trh).vertex_index(0);
+        idx = triangle(trh).vertex_index(0) - 1;
       else
         BOOST_ASSERT(false);
-      BOOST_ASSERT(!isFiniteVertex(triangle(trh).vertex((idx + 1) % 3)));
+      BOOST_ASSERT(isFiniteVertex(triangle(trh).vertex(idx)));
 
       // Iterate over border triangles.
       triangle_handle_t const endTrH = trh;
-
+      
       triangle_handle_t nextTrH;
       int nextIdx;
-
-      nextTrH = triangle(trh).triangle(idx);
-      nextIdx = triangle(nextTrH).triangle_index(trh) + 1;
-      BOOST_ASSERT(!(infiniteVerticesNum(nextTrH) == 1) ||
-        !isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
-      BOOST_ASSERT(
-        !(infiniteVerticesNum(nextTrH) == 1) ||
-        isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
-
-      while (true)
+      for (bool firstTriangle = true;
+           firstTriangle || trh != endTrH;
+           firstTriangle = false,
+           trh = nextTrH, idx = nextIdx)
       {
-        trh = nextTrH;
-        idx = nextIdx;
-        //     finite          //
-        //    (idx - 1)        //
-        //      /  \           //
-        //     /    \          //
-        //    / trh  \         //
-        //   /        \        //
-        // (idx)---(idx + 1)   //
-        // finite   infinite   //
         BOOST_ASSERT(isFiniteVertex(triangle(trh).vertex(idx)));
-        BOOST_ASSERT(!isFiniteVertex(triangle(trh).vertex(idx + 1)));
-        BOOST_ASSERT(!(infiniteVerticesNum(trh) == 1) ||
-          isFiniteVertex(triangle(trh).vertex(idx - 1)));
 
-        nextTrH = triangle(trh).triangle(idx);
-        nextIdx = triangle(nextTrH).triangle_index(trh) + 1;
-        if (infiniteVerticesNum(nextTrH) == 2)
+        if (infiniteVerticesNum(trh) == 2)
         {
-          // Triangle with two infinite vertices. Skip it.
-          if (nextTrH == endTrH)
-          {
-            break;
-          }
+          //      finite         //
+          //      (idx)          //
+          //       /  \  next    //
+          //      /    \     /   //
+          //     / trh  \   /    //
+          //    /        \ /     //
+          // (idx+1)---(idx-1)   //
+          // infinite infinite   //
+          BOOST_ASSERT(!isFiniteVertex(triangle(trh).vertex(idx + 1)));
+          BOOST_ASSERT(!isFiniteVertex(triangle(trh).vertex(idx - 1)));
 
-          BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
-          BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
-          BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 2)));
+          // Triangle with infinite edge. Skip it.
 
-          trh = nextTrH;
-          idx = nextIdx + 1;
-          nextTrH = triangle(trh).triangle(idx);
-          nextIdx = triangle(nextTrH).triangle_index(trh) + 1;
-          BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
-          BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
-          continue;
-        }
-        BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
-        BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
-        BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
-
-        //   nextIdx                   p1          p2                        //
-        //       *---------*             *---------*                         //
-        //      / \ nTrH  /             / ch0  .. /                          //
-        //     /   \     /             /   ....  /                           //
-        //    / trh \   /       ->    / ...     /                            //
-        //   /       \ /             /.   ch1  /                             //
-        //  *---------X             *---------X                              //
-        // idx     infinite       p0                                         //
-        //
-        point_t const &p0 = vertex_point(triangle(trh).vertex(idx));
-        point_t const &p1 = vertex_point(triangle(trh).vertex(idx - 1));
-        point_t const &p2 = vertex_point(triangle(nextTrH).vertex(nextIdx));
-        if (cg::exact_is_right_turn(p0, p1, p2))
-        {
-          // Flip required.
-          flip(trh, idx);
-          nextTrH = triangle(trh).child_triangle(1); // second child
+          nextTrH = triangle(trh).triangle(idx + 1);
           nextIdx = triangle(nextTrH).vertex_index(triangle(trh).vertex(idx));
-          BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
-          BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
-          BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
+        }
+        else
+        {
+          //      finite         //
+          //      (idx)          //
+          //       /  \          //
+          //      /    \         //
+          //     / trh  \        //
+          //    /        \       //
+          // (idx+1)---(idx-1)   //
+          // infinite  finite    //
+          //    \      nextIdx   //
+          //     \ nTrH /        //
+          //      \    /         //
+          //       \  /          //
+          //      finite?        //
+          BOOST_ASSERT(!isFiniteVertex(triangle(trh).vertex(idx + 1)));
+          BOOST_ASSERT(isFiniteVertex(triangle(trh).vertex(idx - 1)));
+
+          nextTrH = triangle(trh).triangle(idx);
+          nextIdx = triangle(nextTrH).vertex_index(
+              triangle(trh).vertex(idx - 1));
+          if (!isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)))
+          {
+            // Next triangle has infinite edge. Skip current.
+            BOOST_ASSERT(
+                isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
+            BOOST_ASSERT(
+                !isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
+            BOOST_ASSERT(
+                !isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
+          }
+          else
+          {
+            // Check if flip is needed.
+            BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(idx)));
+            BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(idx + 1)));
+            BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(idx - 1)));
+
+            //                                                               //
+            //    nextIdx                    p1          p2                  //
+            //       *---------*               *---------*                   //
+            //      / \ nTrH  /               / ch0  .. /                    //
+            //     /   \     /               /   ....  /                     //
+            //    / trh \   /       ->      / ...     /                      //
+            //   /       \ /               /.   ch1  /                       //
+            //  *---------X               *---------X                        //
+            // idx     infinite         p0                                   //
+            //                                                               //
+            point_t const &p0 =
+                vertex_point(triangle(trh).vertex(idx));
+            point_t const &p1 =
+                vertex_point(triangle(nextTrH).vertex(nextIdx));
+            point_t const &p2 =
+                vertex_point(triangle(nextTrH).vertex(nextIdx - 1));
+            if (cg::exact_is_right_turn(p0, p1, p2))
+            {
+              // Flip required.
+              flip(trh, idx);
+              nextTrH = triangle(trh).child_triangle(1); // second child
+              nextIdx = triangle(nextTrH).vertex_index(
+                  triangle(trh).vertex(idx));
+              BOOST_ASSERT(
+                  isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
+              BOOST_ASSERT(
+                  !isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
+              BOOST_ASSERT(
+                  isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
+            }
+          }
         }
       }
     }
