@@ -6,4 +6,4 @@ if [ "$#" -ne "2" ]; then
   exit 0
 fi
 
-asy -f pdf -nointeractiveView -o $1.pdf -c 'from "triangulation.asy" access draw_triangulation; draw_triangulation("'$1'", "'$2'");'
+asy -f pdf -nointeractiveView -o `basename $1`.pdf -c 'from "triangulation.asy" access draw_triangulation; draw_triangulation("'$1'", "'$2'");'
