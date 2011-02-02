@@ -25,7 +25,7 @@ import datetime
 
 Import('env')
 
-failed_tests_limit = 5
+failed_tests_limit = 1
 
 class TestFailed(Exception):
     pass
