@@ -407,9 +407,12 @@ namespace dt
           else
           {
             // Check if flip is needed.
-            BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(idx)));
-            BOOST_ASSERT(!isFiniteVertex(triangle(nextTrH).vertex(idx + 1)));
-            BOOST_ASSERT(isFiniteVertex(triangle(nextTrH).vertex(idx - 1)));
+            BOOST_ASSERT(
+                isFiniteVertex(triangle(nextTrH).vertex(nextIdx)));
+            BOOST_ASSERT(
+                !isFiniteVertex(triangle(nextTrH).vertex(nextIdx + 1)));
+            BOOST_ASSERT(
+                isFiniteVertex(triangle(nextTrH).vertex(nextIdx - 1)));
 
             //                                                               //
             //    nextIdx                    p1          p2                  //
@@ -591,7 +594,9 @@ namespace dt
       triangle_handle_t neighTrH = triangle(trh).triangle(idx);
       int const neighIdx = triangle(neighTrH).triangle_index(trh);
 
-      BOOST_ASSERT(is_flip_required(trh, triangle(neighTrH).vertex(neighIdx)));
+      // Flip is not required when flipping border triangles.
+      //BOOST_ASSERT(
+      //    is_flip_required(trh, triangle(neighTrH).vertex(neighIdx)));
       BOOST_ASSERT(!triangle(trh).has_children());
       BOOST_ASSERT(!triangle(neighTrH).has_children());
 
@@ -630,14 +635,18 @@ namespace dt
                   triangle(trh).triangle(idx - 1)));
 
       // Link neighbors.
-      triangle(triangle(trh).triangle(idx + 1)).
-          replace_neighbor(trh, ch0);
-      triangle(triangle(trh).triangle(idx - 1)).
-          replace_neighbor(trh, ch1);
-      triangle(triangle(neighTrH).triangle(neighIdx + 1)).
-          replace_neighbor(neighTrH, ch1);
-      triangle(triangle(neighTrH).triangle(neighIdx - 1)).
-          replace_neighbor(neighTrH, ch0);
+      if (triangle(trh).triangle(idx + 1) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(idx + 1)).
+            replace_neighbor(trh, ch0);
+      if (triangle(trh).triangle(idx - 1) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(idx - 1)).
+            replace_neighbor(trh, ch1);
+      if (triangle(neighTrH).triangle(neighIdx + 1) != invalid_triangle_handle)
+        triangle(triangle(neighTrH).triangle(neighIdx + 1)).
+            replace_neighbor(neighTrH, ch1);
+      if (triangle(neighTrH).triangle(neighIdx - 1) != invalid_triangle_handle)
+        triangle(triangle(neighTrH).triangle(neighIdx - 1)).
+            replace_neighbor(neighTrH, ch0);
 
       // Link child triangles to parent.
       triangle(trh).set_children(ch0, ch1);
@@ -823,14 +832,18 @@ namespace dt
                   triangle(neighTrH).triangle(neighIdx + 1)));
 
       // Link neighbors.
-      triangle(triangle(trh).triangle(idx + 1)).
-          replace_neighbor(trh, ch1);
-      triangle(triangle(trh).triangle(idx - 1)).
-          replace_neighbor(trh, ch0);
-      triangle(triangle(neighTrH).triangle(neighIdx + 1)).
-          replace_neighbor(neighTrH, ch3);
-      triangle(triangle(neighTrH).triangle(neighIdx - 1)).
-          replace_neighbor(neighTrH, ch2);
+      if (triangle(trh).triangle(idx + 1) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(idx + 1)).
+            replace_neighbor(trh, ch1);
+      if (triangle(trh).triangle(idx - 1) != invalid_triangle_handle)
+        triangle(triangle(trh).triangle(idx - 1)).
+            replace_neighbor(trh, ch0);
+      if (triangle(neighTrH).triangle(neighIdx + 1) != invalid_triangle_handle)
+        triangle(triangle(neighTrH).triangle(neighIdx + 1)).
+            replace_neighbor(neighTrH, ch3);
+      if (triangle(neighTrH).triangle(neighIdx - 1) != invalid_triangle_handle)
+        triangle(triangle(neighTrH).triangle(neighIdx - 1)).
+            replace_neighbor(neighTrH, ch2);
 
       // Link child triangles to parent.
       triangle(trh).set_children(ch0, ch1);
@@ -897,7 +910,7 @@ namespace dt
       }
 
       // DEBUG
-      if (0)
+      if (false)
       {
         std::ofstream points_ofs(
             (boost::format("debug_%1%_points_%2%.out") %
