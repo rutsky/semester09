@@ -20,6 +20,8 @@
 #ifndef POINT_OPS_HPP
 #define POINT_OPS_HPP
 
+#include <cmath>
+
 #include <boost/assert.hpp>
 #include <boost/tuple/tuple.hpp>
 
@@ -106,6 +108,19 @@ namespace cg
 
     for (size_t i = 0; i < Dim; ++i)
       result[i] = p[i] / v;
+
+    return result;
+  }
+
+  template< typename Scalar, int Dim >
+  inline
+  point_t<Scalar, Dim>
+      floor ( point_t<Scalar, Dim> const &p )
+  {
+    point_t<Scalar, Dim> result;
+
+    for (size_t i = 0; i < Dim; ++i)
+      result[i] = std::floor(p[i]);
 
     return result;
   }

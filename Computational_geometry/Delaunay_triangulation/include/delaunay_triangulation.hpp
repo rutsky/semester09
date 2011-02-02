@@ -278,9 +278,12 @@ namespace dt
       scalar_t const a = 2.0 * sqrt(3.0) * r;
       // Circumscribed circle radius:
       scalar_t const R = a / sqrt(3.0);
-      point_t const leftAnglePoint  = center_point + point_t(-a / 2.0, -r);
-      point_t const rightAnglePoint = center_point + point_t( a / 2.0, -r);
-      point_t const topAnglePoint   = center_point + point_t(       0,  R);
+      point_t const leftAnglePoint  = 
+          cg::floor(center_point + point_t(-a / 2.0, -r));
+      point_t const rightAnglePoint = 
+          cg::floor(center_point + point_t( a / 2.0, -r));
+      point_t const topAnglePoint   = 
+          cg::floor(center_point + point_t(       0,  R));
 
       //   2   //
       //  / \  //
