@@ -308,7 +308,7 @@ namespace dt
         boost::bind(&self_t::addVertex, boost::ref(*this), _1));
 
       // Flip border triangles so that final triangulation will be convex.
-
+#if 0
       // Locate triangle in final triangulation with two infinite vertices.
       triangle_handle_t trh = 0;
       BOOST_ASSERT(infiniteVerticesNum(trh) == 3);
@@ -447,6 +447,7 @@ namespace dt
           }
         }
       }
+#endif // 0
     }
 
   public:
@@ -965,12 +966,207 @@ namespace dt
     //
     bool is_flip_required( triangle_handle_t trh, vertex_handle_t vh )
     {
-      // If vertex in circumscribed circle around triangle - flip required.
-      return cg::exact_side_of_oriented_circle(
-        vertex_point(triangle(trh).vertex(0)),
-        vertex_point(triangle(trh).vertex(1)),
-        vertex_point(triangle(trh).vertex(2)),
-        vertex_point(vh)) == cg::or_on_positive_side;
+      if (isFiniteTriangle(trh))
+      {
+        if (isFiniteVertex(vh))
+        {
+          // Finite triangle, finite vertex - normal check.
+
+          return cg::exact_side_of_oriented_circle(
+            vertex_point(triangle(trh).vertex(0)),
+            vertex_point(triangle(trh).vertex(1)),
+            vertex_point(triangle(trh).vertex(2)),
+            vertex_point(vh)) == cg::or_on_positive_side;
+        }
+        else
+        {
+          // Finite triangle, infinite vertex.
+          // Infinite vertex always outside of circumscribed circle around
+          // finite triangle.
+          return false;
+        }
+      }
+      else
+      {
+        if (!isFiniteVertex(vh))
+        {
+          // Infinite triangle, infinite vertex.
+          BOOST_ASSERT(infiniteVerticesNum(trh) == 1);
+
+          //   adjAdjTrH                     //
+          //       |                         //
+          //       v   vh                    //
+          // C  --------X infinite           //
+          //   \       /|                    //
+          //    \     / |                    //
+          //     \   /  |                    //
+          //      \ /   |                    //
+          //     B *    | <- adjTrH          //
+          //      / \   |                    //
+          //     /   \  |                    //
+          //    / trh \ |                    //
+          // A /       \|                    //
+          //  *---------X                    //
+          //          infinite               //
+          //
+          // Or OY simmetrical picture. Third case not possible.
+
+          // Check is ABC angle is convex.
+          int const infVertexIdx = triangle(trh).infinite_vertex_index();
+          if (triangle(triangle(trh).triangle(infVertexIdx - 1)).has_vertex(vh))
+          {
+            // Case as on picture above.
+            
+            vertex_handle_t const aVH = triangle(trh).vertex(infVertexIdx - 1);
+            vertex_handle_t const bVH = triangle(trh).vertex(infVertexIdx + 1);
+
+            triangle_handle_t const adjTrH = 
+                triangle(trh).triangle(infVertexIdx - 1);
+            BOOST_ASSERT(infiniteVerticesNum(adjTrH) == 2);
+
+            int const infVertexIdxInAdj = 
+                triangle(adjTrH).vertex_index(
+                    triangle(trh).vertex(infVertexIdx));
+            triangle_handle_t const adjAdjTrH =
+                triangle(adjTrH).triangle(infVertexIdxInAdj);
+            BOOST_ASSERT(infiniteVerticesNum(adjAdjTrH) >= 1);
+            vertex_handle_t const cVH =
+                triangle(adjAdjTrH).vertex(
+                    triangle(adjAdjTrH).vertex_index(bVH) - 1);
+
+            return cg::exact_is_left_turn(
+                vertex_point(aVH),
+                vertex_point(bVH),
+                vertex_point(cVH));
+          }
+          else
+          {
+            // Symmetrical to above picture case.
+
+            //              adjAdjTrH                     //
+            //                  |                         //
+            //            vh    v                         //
+            //             X-------- C                    //
+            //             |\       /                     //
+            //             | \     /                      //
+            //             |  \   /                       //
+            //             |   \ /                        //
+            //   adjTrH -> |  B *                         //
+            //             |   / \                        //
+            //             |  /   \                       //
+            //             | / trh \                      //
+            //             |/       \                     //
+            //             X---------* A                  //
+            //         infinite                           //
+
+            vertex_handle_t const aVH = triangle(trh).vertex(infVertexIdx + 1);
+            vertex_handle_t const bVH = triangle(trh).vertex(infVertexIdx - 1);
+
+            triangle_handle_t const adjTrH =
+                triangle(trh).triangle(infVertexIdx + 1);
+            BOOST_ASSERT(infiniteVerticesNum(adjTrH) == 2);
+
+            int const infVertexIdxInAdj =
+                triangle(adjTrH).vertex_index(
+                    triangle(trh).vertex(infVertexIdx));
+            triangle_handle_t const adjAdjTrH =
+                triangle(adjTrH).triangle(infVertexIdxInAdj);
+            BOOST_ASSERT(infiniteVerticesNum(adjAdjTrH) >= 1);
+            vertex_handle_t const cVH =
+                triangle(adjAdjTrH).vertex(
+                    triangle(adjAdjTrH).vertex_index(bVH) + 1);
+
+            return cg::exact_is_right_turn(
+                vertex_point(aVH),
+                vertex_point(bVH),
+                vertex_point(cVH));
+          }
+
+          // TODO: case is not so simple, but looks like flip is not
+          // needed here.
+          return false;
+        }
+        else
+        {
+          // Infinite triangle, finite vertex.
+          
+          size_t const nInfVert = infiniteVerticesNum(trh);
+          if (nInfVert == 2)
+          {
+            // vh2      infinite               //
+            //  *---------X                    //
+            //   \       /|                    //
+            //    \     / |                    //
+            //     \   /  |                    //
+            //      \ /   |                    //
+            //       *    | <- trh             //
+            //      / \   |                    //
+            //     /   \  |                    //
+            //    /     \ |                    //
+            //   /       \|                    //
+            //  *---------X                    //
+            // vh1      infinite               //
+
+            // TODO: What to do in this case?
+            // Probably should check (vh2,central,vh1) angle for convex.
+            
+            return false;
+          }
+          else
+          {
+            // 1)                              //
+            //                vh               //
+            //      *---------*                //
+            //     / \       /                 //
+            //    /   \     /                  //
+            //   / trh \   /                   //
+            //  /       \ /                    //
+            // *---------X                     //
+            //        infinite                 //
+            //                                 //
+            // 2)                              //
+            //      *                          //
+            //     / \                         //
+            //    /   \                        //
+            //   / trh \                       //
+            //  /       \                      //
+            // *---------X infinite            //
+            //  \       /                      //
+            //   \     /                       //
+            //    \   /                        //
+            //     \ /                         //
+            //      *                          //
+            //      vh                         //
+            //                                 //
+            // 3)                              //
+            //   vh                            //
+            //    *---------*                  //
+            //     \       / \                 //
+            //      \     /   \                //
+            //       \   / trh \               //
+            //        \ /       \              //
+            //         *---------X infinite    //
+
+            BOOST_ASSERT(nInfVert == 1);
+            // Should check is vertex lies in triangle half-plane.
+            int const infVertexIdx = triangle(trh).infinite_vertex_index();
+
+            if (cg::exact_orientation(
+                vertex_point(triangle(trh).vertex(infVertexIdx + 1)),
+                vertex_point(triangle(trh).vertex(infVertexIdx + 2)),
+                vertex_point(vh)) == cg::or_counterclockwise)
+            {
+              // Point in triangle half-plane.
+              return true;
+            }
+            else
+            {
+              // Point and infinite vertex in different triangle half-planes.
+              return false;
+            }
+          }
+        }
+      }
     }
 
     enum location_t
