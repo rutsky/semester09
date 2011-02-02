@@ -163,7 +163,7 @@ namespace cg
                            point_t<Scalar, 2> const &p1,
                            point_t<Scalar, 2> const &p2 )
   {
-    return exact_orientation(p0, p1, p2) == or_clockwise;
+    return exact_orientation(p0, p1, p2) == or_counterclockwise;
   }
 
   /*
@@ -175,7 +175,7 @@ namespace cg
                             point_t<Scalar, 2> const &p1,
                             point_t<Scalar, 2> const &p2 )
   {
-    return exact_orientation(p0, p1, p2) == or_counterclockwise;
+    return exact_orientation(p0, p1, p2) == or_clockwise;
   }
 
   /*
