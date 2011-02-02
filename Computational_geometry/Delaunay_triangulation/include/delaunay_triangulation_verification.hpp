@@ -63,22 +63,22 @@ namespace cg
 
     enum triangulation_verification_result
     {
-      tvr_valid = 0,
-      tvr_excess_triangles,
-      tvr_empty_triangulation,
-      tvr_invalid_index,
-      tvr_duplicate_vertices_in_triangulation,
-      tvr_points_and_indices_not_correspond,
-      tvr_singular_triangle,
-      tvr_point_in_triangle,
-      tvr_duplicate_edge,
-      tvr_duplicate_border_out_edge,
-      tvr_unexpected_border_chain_end,
-      tvr_border_is_not_chain,
-      tvr_border_chain_not_closed,
-      tvr_more_than_one_border_chain,
-      tvr_border_chain_not_convex,
-      tvr_not_delaunay,
+      tvr_valid                                 = 0,
+      tvr_excess_triangles                      = 1,
+      tvr_empty_triangulation                   = 2,
+      tvr_invalid_index                         = 3,
+      tvr_duplicate_vertices_in_triangulation   = 4,
+      tvr_points_and_indices_not_correspond     = 5,
+      tvr_singular_triangle                     = 6,
+      tvr_point_in_triangle                     = 7,
+      tvr_duplicate_edge                        = 8,
+      tvr_duplicate_border_out_edge             = 9,
+      tvr_unexpected_border_chain_end           = 10,
+      tvr_border_is_not_chain                   = 11,
+      tvr_border_chain_not_closed               = 12,
+      tvr_more_than_one_border_chain            = 13,
+      tvr_border_chain_not_convex               = 14,
+      tvr_not_delaunay                          = 15,
     };
 
     // TODO: Output messages without dot and line feed at end.
@@ -421,7 +421,7 @@ namespace cg
         point_t const &p0 = vertexBuffer[prevEdge.get<0>()];
         point_t const &p1 = vertexBuffer[prevEdge.get<1>()];
         point_t const &p2 = vertexBuffer[edge.get<1>()];
-        if (exact_is_left_turn(p0, p1, p2))
+        if (exact_is_right_turn(p0, p1, p2))
         {
           messageBuffer <<
             "Border chain is not convex at vertices:\n"
