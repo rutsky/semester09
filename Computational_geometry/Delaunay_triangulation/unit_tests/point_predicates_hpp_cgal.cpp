@@ -126,4 +126,12 @@ BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
   }
 }
 
+BOOST_AUTO_TEST_CASE(test_exact_turns)
+{
+  point_2 p0_0(0, 0), p1_0(1, 0), p0_1(0, 1), p1_1(1, 1);
+  BOOST_CHECK(exact_is_right_turn(p0_0, p1_0, point_2(1, -1))); 
+  BOOST_CHECK(exact_is_left_turn(p0_0, p1_0, point_2(1, 1))); 
+  BOOST_CHECK(exact_is_collinear(p0_0, p1_0, point_2(2, 0))); 
+}
+
 BOOST_AUTO_TEST_SUITE_END()
