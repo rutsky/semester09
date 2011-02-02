@@ -968,6 +968,8 @@ namespace dt
     {
       if (isFiniteTriangle(trh))
       {
+        // Finite triangle
+
         if (isFiniteVertex(vh))
         {
           // Finite triangle, finite vertex - normal check.
@@ -988,9 +990,12 @@ namespace dt
       }
       else
       {
+        // Infinite triangle.
+
         if (!isFiniteVertex(vh))
         {
           // Infinite triangle, infinite vertex.
+          
           BOOST_ASSERT(infiniteVerticesNum(trh) == 1);
 
           //   adjAdjTrH                     //
@@ -1034,7 +1039,7 @@ namespace dt
                 triangle(adjAdjTrH).vertex(
                     triangle(adjAdjTrH).vertex_index(bVH) - 1);
 
-            return cg::exact_is_left_turn(
+            return cg::exact_is_right_turn(
                 vertex_point(aVH),
                 vertex_point(bVH),
                 vertex_point(cVH));
@@ -1076,7 +1081,7 @@ namespace dt
                 triangle(adjAdjTrH).vertex(
                     triangle(adjAdjTrH).vertex_index(bVH) + 1);
 
-            return cg::exact_is_right_turn(
+            return cg::exact_is_left_turn(
                 vertex_point(aVH),
                 vertex_point(bVH),
                 vertex_point(cVH));
