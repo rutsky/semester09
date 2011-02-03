@@ -31,24 +31,28 @@ if configuration not in ['release', 'valgrind', 'gprof']:
 
 # Common build flags.
 env.MergeFlags(
-    env.ParseFlags("-W -Wall -I#include -I#boost -frounding-math "
-                   "-DHAVE_CGAL -DUSE_CGAL_ON_INEXACT -lCGAL -lCGAL_Core"))
+    env.ParseFlags("-W -Wall -I#include -I#boost -frounding-math "))
+
+cgal_flags = "-DHAVE_CGAL -DUSE_CGAL_ON_INEXACT -lCGAL -lCGAL_Core"
 
 # Build flags.
 if configuration == 'release':
     print "Using Release configuration."
-    env.MergeFlags(env.ParseFlags("-O3 -g"))
+    env.MergeFlags(env.ParseFlags("-O3 -g " + cgal_flags))
 elif configuration == 'valgrind':
     print "Using Valgrind configuration."
-    env.MergeFlags(env.ParseFlags("-O -g -fno-inline"))
+    env.MergeFlags(env.ParseFlags("-O -g -fno-inline " + cgal_flags))
 elif configuration == 'gprof':
     print "Using gprof configuration."
-    env.MergeFlags(env.ParseFlags("-O2 -pg -lc"))
+    env.MergeFlags(env.ParseFlags("-O2 -pg "
+        #"-lc_p "
+        "-lc "
+        ))
     env['LINKFLAGS'] += SCons.Util.CLVar('-pg')
 else:
     # Debug configuration.
     print "Using Debug configuration."
-    env.MergeFlags(env.ParseFlags("-O0"))
+    env.MergeFlags(env.ParseFlags("-O0 " + cgal_flags))
 
 global_env.my_main_program = \
     env.Program(target="delaunay", source=['main.cpp'])
