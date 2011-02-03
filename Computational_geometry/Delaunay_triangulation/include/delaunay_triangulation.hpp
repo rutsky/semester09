@@ -20,6 +20,8 @@
 #ifndef DELAUNAY_TRIANGULATION_HPP
 #define DELAUNAY_TRIANGULATION_HPP
 
+// Define DELAUNAY_DEBUG_VERIFY_ADJANCY for more debug.
+
 #include <vector>
 #include <list>
 #include <algorithm>
@@ -1253,12 +1255,12 @@ namespace dt
         }
     }
 
-    void verifyAdjancy()
+    void verifyAdjancy() const
     {
-      #ifndef NDEBUG
+      #ifdef DELAUNAY_DEBUG_VERIFY_ADJANCY
       for (triangle_handle_t trh = 0; trh < triangles_.size(); ++trh)
         verifyAdjancy(trh);
-      #endif // NDEBUG
+      #endif // DELAUNAY_DEBUG_VERIFY_ADJANCY
     }
 
   protected:
