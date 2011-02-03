@@ -1,11 +1,8 @@
 import graph;
 
-// TODO:
-//  1. When coordinates is small (e.g. 0..1) result PDF is too small.
-
 void draw_triangulation(string points_file_name, string triangles_file_name)
 {
-  //size(640, 480);
+  size(800, 800);
   
   // Read points.
   file points_in = input(points_file_name);
@@ -32,7 +29,8 @@ void draw_triangulation(string points_file_name, string triangles_file_name)
     pair v = (p[0], p[1]);
   
     dot(v, red);
-    label(string(idx) + " (" + string(idx + 3) + ")", v, E, red);
+    label(string(idx) + " (" + string(p[0]) + "," + string(p[1]) + ")", 
+        v, E, red);
     
     idx += 1;
   }
