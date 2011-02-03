@@ -56,4 +56,4 @@ def lattice_points(n):
 for (x, y) in lattice_points(n):
     print x, y    
 
-# vim: set ts=4 ts=4 sw=4 et
+# vim: set ts=4 sw=4 et:
