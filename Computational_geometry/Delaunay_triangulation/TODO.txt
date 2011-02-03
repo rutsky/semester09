@@ -10,5 +10,3 @@ libraries, not -L... -l...
  * Triangulation visualisation with Asymptote.
  * Add CGAL implementation of DT.
  * Disable adjency verification in release build.
- * Construction of bounding triangle can cause precision problems (noticed on 
-such simple test as "0 0 0 1 1 0").
