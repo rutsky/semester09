@@ -4,7 +4,7 @@
 
 APP=../../build/delaunay/delaunay
 VERIFICATOR=../../build/verificator/verificator
-N=10
+N=100
 TEST_IN=test.in
 TEST_OUT=test.out
 
