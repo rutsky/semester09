@@ -18,6 +18,8 @@
 import os.path
 import itertools
 
+import SCons.Util
+
 Import('global_env')
 env = global_env.Clone()
 
@@ -29,19 +31,20 @@ if configuration not in ['release', 'valgrind', 'gprof']:
 
 # Common build flags.
 env.MergeFlags(
-    env.ParseFlags("-W -Wall -g -I#include -I#boost -frounding-math "
+    env.ParseFlags("-W -Wall -I#include -I#boost -frounding-math "
                    "-DHAVE_CGAL -DUSE_CGAL_ON_INEXACT -lCGAL -lCGAL_Core"))
 
 # Build flags.
 if configuration == 'release':
     print "Using Release configuration."
-    env.MergeFlags(env.ParseFlags("-O3"))
+    env.MergeFlags(env.ParseFlags("-O3 -g"))
 elif configuration == 'valgrind':
     print "Using Valgrind configuration."
-    env.MergeFlags(env.ParseFlags("-O -fno-inline"))
+    env.MergeFlags(env.ParseFlags("-O -g -fno-inline"))
 elif configuration == 'gprof':
     print "Using gprof configuration."
-    env.MergeFlags(env.ParseFlags("-O3 -pg -lc"))
+    env.MergeFlags(env.ParseFlags("-O2 -pg -lc"))
+    env['LINKFLAGS'] += SCons.Util.CLVar('-pg')
 else:
     # Debug configuration.
     print "Using Debug configuration."
