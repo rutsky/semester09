@@ -20,7 +20,7 @@ fi
 
 if true; then
   # Circle tests.
-  for n in `seq 4 22`; do
+  for n in `seq 4 11` `seq 12 2 22`; do
     python schinzel_circles.py $n > ../tests/circle_`printf '%03d' $n`.in
   done
 fi
