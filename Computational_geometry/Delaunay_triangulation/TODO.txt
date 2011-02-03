@@ -1,3 +1,4 @@
+ * Test that running time is O(N log N).
  * Fix TODO from sources.
  * Add tests for different triangulations.
  * Implement correct testing structure using SCons.
