@@ -16,10 +16,12 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #env = Environment(tools=["default", "gch"])
-env = Environment(tools=["default"])
-Export('env')
+global_env = Environment(tools=["default"])
+Export('global_env')
 
 SConscript("delaunay/SConscript", variant_dir="build/delaunay")
 SConscript("unit_tests/SConscript", variant_dir="build/unit_testing")
 SConscript("verificator/SConscript", variant_dir="build/verificator")
 SConscript("tests/SConscript")
+
+# vim: set filetype=python ts=4 sw=4 et:

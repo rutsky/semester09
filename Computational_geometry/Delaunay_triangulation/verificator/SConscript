@@ -18,7 +18,8 @@
 import os.path
 import itertools
 
-Import('env')
+Import('global_env')
+env = global_env.Clone()
 
 #env['Gch'] = env.Gch('precompiled.hpp')[0]
 
@@ -41,4 +42,6 @@ else:
     print "Using Debug configuration."
     env.MergeFlags(env.ParseFlags("-O0"))
 
-env.verificator = env.Program(target="verificator", source=['main.cpp'])
+global_env.verificator = env.Program(target="verificator", source=['main.cpp'])
+
+# vim: set filetype=python ts=4 sw=4 et:

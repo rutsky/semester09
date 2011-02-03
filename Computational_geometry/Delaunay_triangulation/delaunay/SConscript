@@ -18,17 +18,18 @@
 import os.path
 import itertools
 
-Import('env')
+Import('global_env')
+env = global_env.Clone()
 
 #env['Gch'] = env.Gch('precompiled.hpp')[0]
 
 configuration = ARGUMENTS.get('conf', None)
-if configuration not in ['release', 'valgrind']:
+if configuration not in ['release', 'valgrind', 'gprof']:
   configuration = 'debug'
 
 # Common build flags.
 env.MergeFlags(
-    env.ParseFlags("-W -Wall -g -I#boost -frounding-math "
+    env.ParseFlags("-W -Wall -g -I#include -I#boost -frounding-math "
                    "-DHAVE_CGAL -DUSE_CGAL_ON_INEXACT -lCGAL -lCGAL_Core"))
 
 # Build flags.
@@ -38,9 +39,15 @@ if configuration == 'release':
 elif configuration == 'valgrind':
     print "Using Valgrind configuration."
     env.MergeFlags(env.ParseFlags("-O -fno-inline"))
+elif configuration == 'gprof':
+    print "Using gprof configuration."
+    env.MergeFlags(env.ParseFlags("-O3 -pg -lc"))
 else:
     # Debug configuration.
     print "Using Debug configuration."
     env.MergeFlags(env.ParseFlags("-O0"))
 
-env.my_main_program = env.Program(target="delaunay", source=['main.cpp'])
+global_env.my_main_program = \
+    env.Program(target="delaunay", source=['main.cpp'])
+
+# vim: set filetype=python ts=4 sw=4 et:

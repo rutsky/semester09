@@ -18,7 +18,8 @@
 import os.path
 import itertools
 
-Import('env')
+Import('global_env')
+env = global_env.Clone()
 
 testing_env = Environment(tools=["default"])
 
@@ -46,3 +47,5 @@ source_files = Glob("*.cpp", strings=True)
 test_program = testing_env.Program(target="tests", source=source_files)
 
 run_tests = Command("unit_testing.passed", test_program, str(test_program[0].abspath))
+
+# vim: set filetype=python ts=4 sw=4 et:

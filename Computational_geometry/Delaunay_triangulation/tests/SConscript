@@ -23,7 +23,8 @@ import subprocess
 import tempfile
 import datetime
 
-Import('env')
+Import('global_env')
+env = global_env.Clone()
 
 failed_tests_limit = 1
 
