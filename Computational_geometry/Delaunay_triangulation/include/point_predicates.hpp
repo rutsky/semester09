@@ -218,16 +218,21 @@ namespace cg
       //        p1 ... p2   --- p0  - false
       return !(p1.x < p2.x);
     }
-    else if (p0.y < p1.y)
+    else
     {
-      return !(p1.y > p2.y);
-    }
-    else if (p0.y > p1.y)
-    {
-      return !(p1.y < p2.y);
+      BOOST_ASSERT(p0.x == p1.x);
+      
+      if (p0.y < p1.y)
+      {
+        return !(p1.y > p2.y);
+      }
+      else if (p0.y > p1.y)
+      {
+        return !(p1.y < p2.y);
+      }
     }
 
-    BOOST_ASSERT(p0 == p1 && p1 == p2);
+    BOOST_ASSERT(p0 == p1);
     return true;
   }
 
