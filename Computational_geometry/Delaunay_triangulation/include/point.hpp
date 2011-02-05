@@ -55,14 +55,30 @@ namespace cg
     {
       BOOST_ASSERT(i >= 0 && i < dim);
       // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t const *>(this)[i];
+      //return reinterpret_cast<scalar_t const *>(this)[i];
+      // There is no hope!
+      if (i == 0)
+        return x;
+      else
+      {
+        BOOST_ASSERT(i == 1);
+        return y;
+      }
     }
 
     scalar_t       & operator [] ( int i )
     {
       BOOST_ASSERT(i >= 0 && i < dim);
       // TODO: We hope that padding is zero.
-      return reinterpret_cast<scalar_t *>(this)[i];
+      //return reinterpret_cast<scalar_t *>(this)[i];
+      // There is no hope!
+      if (i == 0)
+        return x;
+      else
+      {
+        BOOST_ASSERT(i == 1);
+        return y;
+      }
     }
   };
 }
