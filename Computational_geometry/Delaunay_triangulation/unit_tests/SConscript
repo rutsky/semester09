@@ -17,6 +17,7 @@
 
 import os.path
 import itertools
+import re
 
 Import('global_env')
 env = global_env.Clone()
@@ -31,21 +32,32 @@ wo_cgal_env = env.Clone(CPPDEFINES=wo_cgal_cpp_defines)
 
 main_file = 'unit_testing.cpp'
 source_files = set(Glob("*.cpp", strings=True)) - set([main_file])
-objects = [wo_cgal_env.Object(main_file)]
+objects = [
+    env.Object(main_file)]
+wo_cgal_objects = [
+    wo_cgal_env.Object(re.sub(r'\.cpp$', '_wo_cgal', main_file), main_file)]
 for source_file in source_files:
     if source_file.endswith('_wo_cgal.cpp'):
-        objects.append(wo_cgal_env.Object(source_file))
+        wo_cgal_objects.append(wo_cgal_env.Object(source_file))
     else:
         objects.append(env.Object(source_file))
-        #pass
     
-global_env.unit_tests = env.Program(target="unit_tests",
-    source=objects)
+global_env.unit_tests = \
+    env.Program(target="unit_tests",
+        source=objects)
+global_env.unit_tests_wo_cgal = \
+    wo_cgal_env.Program(target="unit_tests_wo_cgal",
+        source=wo_cgal_objects)
 
 run_tests = Command(
     ".passed", 
     global_env.unit_tests, 
     "{tests} && date -R > $TARGET".\
         format(tests=str(global_env.unit_tests[0].abspath)))
+run_tests_wo_cgal = Command(
+    ".passed_wo_cgal", 
+    global_env.unit_tests_wo_cgal, 
+    "{tests} && date -R > $TARGET".\
+        format(tests=str(global_env.unit_tests_wo_cgal[0].abspath)))
 
 # vim: set filetype=python ts=4 sw=4 et:
