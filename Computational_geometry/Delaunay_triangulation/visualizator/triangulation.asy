@@ -1,5 +1,7 @@
 import graph;
 
+// TODO: Don't draw duplicate points.
+
 void draw_triangulation(string points_file_name, string triangles_file_name)
 {
   size(800, 800);
