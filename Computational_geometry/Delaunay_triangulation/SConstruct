@@ -15,13 +15,63 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os.path
+
 #env = Environment(tools=["default", "gch"])
 global_env = Environment(tools=["default"])
 Export('global_env')
 
-SConscript("delaunay/SConscript", variant_dir="build/delaunay")
-SConscript("unit_tests/SConscript", variant_dir="build/unit_testing")
-SConscript("verificator/SConscript", variant_dir="build/verificator")
-SConscript("tests/SConscript")
+def get_argument(name, values, default=None):
+    if default is not None:
+        using_default = default
+        assert default in values
+    else:
+        using_default = values[0]
+
+    v = ARGUMENTS.get(name, using_default)
+    assert v in values
+
+    return v
+
+global_env.conf = get_argument('conf', 
+    ['debug', 'release', 'valgrind', 'gprof'])
+global_env.have_cgal = get_argument('have_cgal', [1, 0]) 
+print "Using '{0}' configuration (have_cgal={1})".\
+    format(global_env.conf, global_env.have_cgal)
+
+global_env.MergeFlags(global_env.ParseFlags("-g -W -Wall -frounding-math"))
+global_env.AppendUnique(CPPPATH=['#include', '#boost'])
+
+#print Program
+#print global_env['CCCOM']
+#print global_env.items()['CPPFLAGS']
+#print dir(global_env)
+
+if global_env.have_cgal:
+    global_env.AppendUnique(CPPDEFINES=['HAVE_CGAL', 'USE_CGAL_ON_INEXACT'])
+    global_env.AppendUnique(LIBS=['CGAL', 'CGAL_Core'])
+
+if global_env.conf == 'debug':
+    global_env.MergeFlags(global_env.ParseFlags("-O0"))
+elif global_env.conf == 'release':
+    global_env.MergeFlags(global_env.ParseFlags("-O3"))
+elif global_env.conf == 'valgrind':
+    # Leak checking.
+    global_env.MergeFlags(global_env.ParseFlags("-O -fno-inline"))
+elif global_env.conf == 'gprof':
+    # Performance profiling.
+    # For intruduction see:
+    # http://www.ibm.com/developerworks/library/l-gnuprof.html
+    global_env.MergeFlags(global_env.ParseFlags("-O2 -pg"))
+    #global_env.AppendUnique(LIBS='c_p')
+    global_env.AppendUnique(LINKFLAGS='-pg')
+
+SConscript(os.path.join("delaunay", "SConscript"), 
+    variant_dir=os.path.join("build", "delaunay", global_env.conf))
+SConscript(os.path.join("unit_tests", "SConscript"), 
+    variant_dir=os.path.join("build", "unit_testing", global_env.conf))
+SConscript(os.path.join("verificator", "SConscript"), 
+    variant_dir=os.path.join("build", "verificator", global_env.conf))
+SConscript(os.path.join("tests", "SConscript"))
 
 # vim: set filetype=python ts=4 sw=4 et:

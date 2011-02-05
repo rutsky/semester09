@@ -23,25 +23,6 @@ env = global_env.Clone()
 
 #env['Gch'] = env.Gch('precompiled.hpp')[0]
 
-configuration = ARGUMENTS.get('conf', None)
-if configuration not in ['release', 'valgrind']:
-  configuration = 'debug'
-
-# Common build flags.
-env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -I#include -frounding-math -lCGAL -lCGAL_Core -DHAVE_CGAL"))
-
-# Build flags.
-if configuration == 'release':
-    print "Using Release configuration."
-    env.MergeFlags(env.ParseFlags("-O3"))
-elif configuration == 'valgrind':
-    print "Using Valgrind configuration."
-    env.MergeFlags(env.ParseFlags("-O -fno-inline"))
-else:
-    # Debug configuration.
-    print "Using Debug configuration."
-    env.MergeFlags(env.ParseFlags("-O0"))
-
 global_env.verificator = env.Program(target="verificator", source=['main.cpp'])
 
 # vim: set filetype=python ts=4 sw=4 et:

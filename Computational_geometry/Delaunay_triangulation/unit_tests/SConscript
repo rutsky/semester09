@@ -21,31 +21,31 @@ import itertools
 Import('global_env')
 env = global_env.Clone()
 
-testing_env = Environment(tools=["default"])
+env.AppendUnique(
+    LIBPATH=['#boost-lib'],
+    LIBS=['boost_unit_test_framework'])
 
-configuration = ARGUMENTS.get('conf', None)
-if configuration not in ['release', 'valgrind']:
-  configuration = 'debug'
+wo_cgal_cpp_defines = list(set(env['CPPDEFINES']) - 
+            set(['HAVE_CGAL', 'USE_CGAL_ON_INEXACT']))
+wo_cgal_env = env.Clone(CPPDEFINES=wo_cgal_cpp_defines)
 
-# Common build flags.
-testing_env.MergeFlags(env.ParseFlags("-W -Wall -g -I#boost -L#boost-lib -I#include -frounding-math -lCGAL -lCGAL_Core -lboost_unit_test_framework"))
+main_file = 'unit_testing.cpp'
+source_files = set(Glob("*.cpp", strings=True)) - set([main_file])
+objects = [wo_cgal_env.Object(main_file)]
+for source_file in source_files:
+    if source_file.endswith('_wo_cgal.cpp'):
+        objects.append(wo_cgal_env.Object(source_file))
+    else:
+        objects.append(env.Object(source_file))
+        #pass
+    
+global_env.unit_tests = env.Program(target="unit_tests",
+    source=objects)
 
-# Build flags.
-if configuration == 'release':
-    print "Using Release configuration."
-    testing_env.MergeFlags(env.ParseFlags("-O3"))
-elif configuration == 'valgrind':
-    print "Using Valgrind configuration."
-    testing_env.MergeFlags(env.ParseFlags("-O -fno-inline"))
-else:
-    # Debug configuration.
-    print "Using Debug configuration."
-    testing_env.MergeFlags(env.ParseFlags("-O0"))
-
-source_files = Glob("*.cpp", strings=True)
-
-test_program = testing_env.Program(target="tests", source=source_files)
-
-run_tests = Command("unit_testing.passed", test_program, str(test_program[0].abspath))
+run_tests = Command(
+    ".passed", 
+    global_env.unit_tests, 
+    "{tests} && date -R > $TARGET".\
+        format(tests=str(global_env.unit_tests[0].abspath)))
 
 # vim: set filetype=python ts=4 sw=4 et:

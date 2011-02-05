@@ -25,56 +25,7 @@ env = global_env.Clone()
 
 #env['Gch'] = env.Gch('precompiled.hpp')[0]
 
-configuration = ARGUMENTS.get('conf', None)
-if configuration not in ['release', 'valgrind', 'gprof']:
-  configuration = 'debug'
-
-# Common build flags.
-env.MergeFlags(env.ParseFlags("-W -Wall -frounding-math"))
-
-cgal_cpp_defines = ['HAVE_CGAL', 'USE_CGAL_ON_INEXACT']
-cgal_libs = ['CGAL', 'CGAL_Core']
-
-libs = []
-cpp_defines = []
-cpp_flags = []
-link_flags = []
-cpp_path = ['#include', '#boost']
-
-# Build flags.
-use_cgal = False
-if configuration == 'release':
-    print "Using Release configuration."
-    env.MergeFlags(env.ParseFlags("-O3 -g"))
-    use_cgal = True
-elif configuration == 'valgrind':
-    print "Using Valgrind configuration."
-    env.MergeFlags(env.ParseFlags("-O -g -fno-inline"))
-    use_cgal = True
-elif configuration == 'gprof':
-    print "Using gprof configuration."
-    env.MergeFlags(env.ParseFlags("-O2 -pg"))
-    #libs.append('c_p')
-    libs.append('c')
-    link_flags += ['-pg']
-    use_cgal = False # debug
-else:
-    # Debug configuration.
-    print "Using Debug configuration."
-    env.MergeFlags(env.ParseFlags("-O0"))
-    use_cgal = True
-
-if use_cgal:
-    cpp_defines += cgal_cpp_defines
-    libs += cgal_libs
-
-global_env.my_main_program = \
-    env.Program(target="delaunay", source=['main.cpp'],
-        CPPFLAGS=cpp_flags,
-        CPPDEFINES=cpp_defines,
-        CPPPATH=cpp_path,
-        LIBS=libs,
-        LINKFLAGS=link_flags,
-        )
+global_env.delaunay = \
+    env.Program(target="delaunay", source=['main.cpp'])
 
 # vim: set filetype=python ts=4 sw=4 et:

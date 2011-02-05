@@ -48,14 +48,13 @@ def normalize_output(output):
         result += "\n"
     return result
 
-def runTests(env, target, source):
-    import subprocess
+def run_tests(env, target, source):
     app = str(source[0].abspath)
     verificator = str(source[1].abspath)
     
     tests_dir = os.path.dirname(target[0].abspath)
     
-    test_files = Glob(os.path.join(tests_dir, "*.in"), strings=True)
+    test_files = map(str, target[2:])
     failed_tests = []
     for test_file in test_files:
         test_name = os.path.basename(re.sub(r"\.in$", "", test_file))
@@ -142,12 +141,19 @@ def runTests(env, target, source):
             pass
       
     if len(failed_tests) == 0:
-        #with open(str(target[0]), 'w') as f:
-        #    f.write("PASSED\n")
+        with open(str(target[0]), 'w') as f:
+            f.write(str(datetime.datetime.now()))
         print "All tests succeded"
     else:
         print "Following tests failed:\n  " + ", ".join(failed_tests)
 
-Command("test.passed", [env.my_main_program, env.verificator], runTests)
+test_files = Glob("*.in", strings=True)
+tests_cmd = Command(".passed", 
+    [env.delaunay, env.verificator] + test_files, 
+    run_tests)
+Clean(tests_cmd, 
+    map(lambda f: re.sub(r"\.in$", ".out", f), test_files) +
+    map(lambda f: re.sub(r"\.in$", ".err", f), test_files) +
+    map(lambda f: re.sub(r"\.in$", ".ver_err", f), test_files))
 
 # vim: set filetype=python et ts=4 sw=4:
