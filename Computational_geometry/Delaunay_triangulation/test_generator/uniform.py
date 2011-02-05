@@ -12,3 +12,5 @@ min_val = -gen_range / 2.0
 max_val = +gen_range / 2.0
 for i in xrange(n):
     print random.uniform(min_val, max_val), random.uniform(min_val, max_val)
+
+# vim: set ts=4 sw=4 et:
