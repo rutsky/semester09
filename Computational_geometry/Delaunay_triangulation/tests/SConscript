@@ -118,7 +118,7 @@ def runTests(env, target, source):
                     raise TestFailed()
             finally:
                 time = datetime.datetime.now() - start_time
-                print "    verification time:", time
+                print "    verification time: ", time
             
             # Compare with precomputated result.
             correct_result_file = os.path.join(tests_dir, test_name + ".valid_out")
@@ -148,4 +148,4 @@ def runTests(env, target, source):
 
 Command("test.passed", [env.my_main_program, env.verificator], runTests)
 
-# vim: set filetype=python et ts=4 sw=4
+# vim: set filetype=python et ts=4 sw=4:
