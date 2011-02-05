@@ -20,7 +20,8 @@
 #ifndef DELAUNAY_TRIANGULATION_HPP
 #define DELAUNAY_TRIANGULATION_HPP
 
-// Define DELAUNAY_DEBUG_VERIFY_ADJANCY for more debug.
+// Define DELAUNAY_DEBUG_VERIFY_ADJANCY to verify adjancy structure after each
+// modification (this will lead to O(N^2) algorithm asymptotic.
 
 #include <vector>
 #include <list>
