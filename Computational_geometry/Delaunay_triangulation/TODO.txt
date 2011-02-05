@@ -6,3 +6,4 @@
  * Add tests for different triangulations.
    - duplicate points tests
  * Add CGAL implementation of DT.
+ * Try to generate tests using QHull's rbox command.
