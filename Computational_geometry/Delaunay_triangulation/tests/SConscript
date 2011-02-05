@@ -17,6 +17,8 @@
 
 # TODO: Automatically create visualization for tests failed verification.
 # TODO: Provide quite COMSTR.
+# TODO: Sort test so that at first will be checked new tests (e.g. at 
+# first tests without output files).
 
 import os
 import os.path
