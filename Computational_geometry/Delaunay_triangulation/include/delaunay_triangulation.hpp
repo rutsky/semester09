@@ -912,8 +912,8 @@ namespace dt
         
         // Duplicate vertex. Skipping.
         // DEBUG
-        std::cerr << "Warning: duplicate vertex #" << vh << ": " <<
-            vertex_point(vh) << "\n";
+        //std::cerr << "Warning: duplicate vertex #" << vh << ": " <<
+        //    vertex_point(vh) << "\n";
       }
 
       // DEBUG
