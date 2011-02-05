@@ -1,11 +1,13 @@
- * Test that running time is O(N log N).
+ * Test that running time is O(N log N)
+   - log number of flips
+   - draw graphics number of points/time
  * Fix TODO from sources.
  * Add tests for different triangulations.
+   - duplicate points tests
+   - points in small integer grid tests
  * Implement correct testing structure using SCons.
  * Use CPPPATH instead of -I...: 
 http://www.scons.org/wiki/FrequentlyAskedQuestions#head-638361e9cba3fec0bc32698d3cc2961c8fc05d73
  * Use "Program('prog.c', LIBS=['foo', 'bar'], LIBPATH='.')" for linking with 
 libraries, not -L... -l...
- * Test working time.
  * Add CGAL implementation of DT.
- * Disable adjancy verification in release build.
