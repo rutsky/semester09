@@ -23,6 +23,8 @@
 #include <boost/test/unit_test.hpp>
 
 #undef HAVE_CGAL
+#undef USE_CGAL_PREDICATES
+#undef USE_CGAL_ON_INEXACT
 
 #include "point_predicates.hpp"
 

@@ -22,7 +22,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#define HAVE_CGAL
+#ifndef HAVE_CGAL
+#error "`HAVE_CGAL' definition is required for this tests"
+#endif
 
 #include "point_predicates.hpp"
 
