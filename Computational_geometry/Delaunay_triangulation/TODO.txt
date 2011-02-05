@@ -1,3 +1,4 @@
+ * Profile running time.
  * Test that running time is O(N log N)
    - log number of flips
    - draw graphics number of points/time
