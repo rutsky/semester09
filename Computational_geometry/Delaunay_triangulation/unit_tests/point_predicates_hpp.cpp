@@ -22,17 +22,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#ifndef HAVE_CGAL
-#error "`HAVE_CGAL' definition is required for this tests"
-#endif
-
 #include "point_predicates.hpp"
 
 #include "point_types.hpp"
 
 using namespace cg;
 
-BOOST_AUTO_TEST_SUITE(point_predicates_hpp_cgal)
+BOOST_AUTO_TEST_SUITE(point_predicates_hpp)
 
 BOOST_AUTO_TEST_CASE(test_exact_orientation)
 {
@@ -62,6 +58,13 @@ BOOST_AUTO_TEST_CASE(test_exact_orientation)
   BOOST_CHECK_EQUAL(exact_orientation(p1_1, p0_0, p1_1), or_collinear);
 
   BOOST_CHECK_EQUAL(exact_orientation(p1_1, p1_1, p1_1), or_collinear);
+
+#ifndef HAVE_CGAL
+  // TODO: Suspicious test.
+  BOOST_CHECK_THROW(exact_orientation(
+      point_2(-1e9, -1e9 + 1e-4), point_2(0, 0), point_2(1e9 + 1e-4, 1e9)), 
+      inexact_computations_exception);
+#endif // HAVE_CGAL
 }
 
 BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_triangle)
@@ -83,6 +86,17 @@ BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_triangle)
   
   BOOST_CHECK_EQUAL(exact_side_of_oriented_triangle(p0_0, p2_0, p0_2, p1_1), 
       or_on_boundary);
+
+#ifndef HAVE_CGAL
+  // TODO:
+  //BOOST_CHECK_THROW(exact_side_of_oriented_triangle(
+  //    point_2(1e-16, 1e-16), point_2(1e10, 1e-10), point_2(1e-10, 1e10), 
+  //    point_2(0.5e10, 1e-16)),
+  //    inexact_computations_exception);
+
+  BOOST_CHECK_THROW(exact_side_of_oriented_triangle(p0_0, p0_0, p0_2, p1_1),
+      invalid_argument);
+#endif // HAVE_CGAL
 }
 
 BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
@@ -125,6 +139,10 @@ BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
     
     BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p, q, r, s),
         or_on_negative_side);
+
+    BOOST_CHECK_EQUAL(exact_side_of_oriented_circle(p0_0, p1_0, p0_1, 
+        point_2(1, 1 - 1e-10)),
+        or_on_positive_side);
   }
 }
 
@@ -136,4 +154,17 @@ BOOST_AUTO_TEST_CASE(test_exact_turns)
   BOOST_CHECK(exact_is_collinear(p0_0, p1_0, point_2(2, 0))); 
 }
 
+BOOST_AUTO_TEST_CASE(test_exact_is_collinear_points_lie_along_line)
+{
+  point_2 p0_0(0, 0), p2_0(2, 0), p0_2(0, 2), p2_2(2, 2),
+    p1_0(1, 0), p0_1(0, 1), p1_1(1, 1), p3_3(3, 3);
+    
+  BOOST_CHECK(exact_is_collinear_points_lie_along_line(p0_0, p1_0, p2_0));
+  BOOST_CHECK(!exact_is_collinear_points_lie_along_line(p0_0, p2_0, p1_0));
+
+  BOOST_CHECK(exact_is_collinear_points_lie_along_line(p0_0, p0_0, p1_0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+// vim: set et ts=2 sw=2:

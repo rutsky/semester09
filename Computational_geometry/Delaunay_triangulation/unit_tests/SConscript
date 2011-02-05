@@ -37,10 +37,9 @@ objects = [
 wo_cgal_objects = [
     wo_cgal_env.Object(re.sub(r'\.cpp$', '_wo_cgal', main_file), main_file)]
 for source_file in source_files:
-    if source_file.endswith('_wo_cgal.cpp'):
-        wo_cgal_objects.append(wo_cgal_env.Object(source_file))
-    else:
-        objects.append(env.Object(source_file))
+    wo_cgal_objects.append(wo_cgal_env.Object(
+        re.sub(r'\.cpp$', '_wo_cgal', source_file), source_file))
+    objects.append(env.Object(source_file))
     
 global_env.unit_tests = \
     env.Program(target="unit_tests",
