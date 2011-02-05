@@ -16,6 +16,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # TODO: Automatically create visualization for tests failed verification.
+# TODO: Provide quite COMSTR.
 
 import os
 import os.path
@@ -54,7 +55,7 @@ def run_tests(env, target, source):
     
     tests_dir = os.path.dirname(target[0].abspath)
     
-    test_files = map(str, target[2:])
+    test_files = map(str, source[2:])
     failed_tests = []
     for test_file in test_files:
         test_name = os.path.basename(re.sub(r"\.in$", "", test_file))
@@ -150,7 +151,7 @@ def run_tests(env, target, source):
 test_files = Glob("*.in", strings=True)
 tests_cmd = Command(".passed", 
     [env.delaunay, env.verificator] + test_files, 
-    run_tests)
+    run_tests, COMSTR="Running tests.")
 Clean(tests_cmd, 
     map(lambda f: re.sub(r"\.in$", ".out", f), test_files) +
     map(lambda f: re.sub(r"\.in$", ".err", f), test_files) +
