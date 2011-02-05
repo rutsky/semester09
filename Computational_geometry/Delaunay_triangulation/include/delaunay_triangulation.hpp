@@ -311,6 +311,7 @@ namespace dt
         boost::bind(&self_t::addVertex, boost::ref(*this), _1));
 
       // Flip border triangles so that final triangulation will be convex.
+      // TODO: Remove this.
 #if 0
       // Locate triangle in final triangulation with two infinite vertices.
       triangle_handle_t trh = 0;
