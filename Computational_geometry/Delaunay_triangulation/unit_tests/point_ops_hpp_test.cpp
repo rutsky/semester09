@@ -41,4 +41,14 @@ BOOST_AUTO_TEST_CASE(test_tuple)
   BOOST_CHECK_EQUAL(y, p.y);
 }
 
+BOOST_AUTO_TEST_CASE(test_operator_less)
+{
+  cg::point_2 p0_0(0, 0), p1_0(1, 0);
+  BOOST_CHECK(p0_0 < p1_0);
+  BOOST_CHECK(!(p1_0 < p0_0));
+  BOOST_CHECK(!(p0_0 < p0_0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+// vim: set et ts=2 sw=2:
