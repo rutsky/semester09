@@ -460,7 +460,8 @@ namespace dt
       // Last 3 points from imaginary triangle that contains all points.
       return vertexBuffer_.size() - 3;
     }
-    
+
+    // For external points access.
     point_t point( size_t idx ) const
     {
       BOOST_ASSERT(idx < points_size());
@@ -468,6 +469,7 @@ namespace dt
     }
 
   protected:
+    // For internal points access.
     point_t const & vertex_point( vertex_handle_t vh ) const
     {
       return vertexBuffer_.at(vh);
@@ -911,7 +913,7 @@ namespace dt
         // Duplicate vertex. Skipping.
         // DEBUG
         std::cerr << "Warning: duplicate vertex #" << vh << ": " <<
-            point(vh) << "\n";
+            vertex_point(vh) << "\n";
       }
 
       // DEBUG
@@ -1211,17 +1213,18 @@ namespace dt
           {
             return std::make_pair(loc_triangle, trh);
           }
-          else if (orient == cg::or_on_boundary)
-          {
-            return std::make_pair(loc_edge, trh);
-          }
           else
           {
-            BOOST_ASSERT((
-                    vertex_point(vh) == vertex_point(tr.vertex(0)) ||
-                    vertex_point(vh) == vertex_point(tr.vertex(1)) ||
-                    vertex_point(vh) == vertex_point(tr.vertex(2))));
-            return std::make_pair(loc_vertex, trh);
+            BOOST_ASSERT(orient == cg::or_on_boundary);
+
+            if (vertex_point(vh) == vertex_point(tr.vertex(0)) ||
+                vertex_point(vh) == vertex_point(tr.vertex(1)) ||
+                vertex_point(vh) == vertex_point(tr.vertex(2)))
+            {
+              return std::make_pair(loc_vertex, trh);
+            }
+            else
+              return std::make_pair(loc_edge, trh);
           }
         }
         else
