@@ -161,7 +161,7 @@ namespace cg
           std::back_inserter(usedIndices));
       std::sort(usedIndices.begin(), usedIndices.end());
       usedIndices.erase(std::unique(usedIndices.begin(), usedIndices.end()),
-        usedIndices.end());
+          usedIndices.end());
 
       // Check range of indices.
       if (usedIndices.back() >= vertexBuffer.size())
@@ -175,11 +175,12 @@ namespace cg
       // Check is used indices reference equal vertices.
       vertex_buffer_t usedPoints;
       BOOST_FOREACH(size_t vertIdx, usedIndices)
+      {
         usedPoints.push_back(vertexBuffer[vertIdx]);
+      }
       std::sort(usedPoints.begin(), usedPoints.end());
       typename vertex_buffer_t::iterator equalPointsIt =
-          std::unique(usedPoints.begin(),
-                      usedPoints.end());
+          std::unique(usedPoints.begin(), usedPoints.end());
       if (equalPointsIt != usedPoints.end())
       {
         // TODO: output incorrect indices.
