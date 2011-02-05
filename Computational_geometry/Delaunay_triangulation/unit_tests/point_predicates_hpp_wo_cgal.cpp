@@ -122,4 +122,15 @@ BOOST_AUTO_TEST_CASE(test_exact_side_of_oriented_circle)
       or_on_positive_side);
 }
 
+BOOST_AUTO_TEST_CASE(test_exact_is_collinear_points_lie_along_line)
+{
+  point_2 p0_0(0, 0), p2_0(2, 0), p0_2(0, 2), p2_2(2, 2),
+    p1_0(1, 0), p0_1(0, 1), p1_1(1, 1), p3_3(3, 3);
+    
+  BOOST_CHECK(exact_is_collinear_points_lie_along_line(p0_0, p1_0, p2_0));
+  BOOST_CHECK(!exact_is_collinear_points_lie_along_line(p0_0, p2_0, p1_0));
+
+  BOOST_CHECK(exact_is_collinear_points_lie_along_line(p0_0, p0_0, p1_0));
+} 
+
 BOOST_AUTO_TEST_SUITE_END()
