@@ -974,7 +974,7 @@ namespace dt
     {
       if (isFiniteTriangle(trh))
       {
-        // Finite triangle
+        // Finite triangle.
 
         if (isFiniteVertex(vh))
         {
