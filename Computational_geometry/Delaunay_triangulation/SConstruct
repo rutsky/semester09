@@ -52,7 +52,9 @@ print "Using '{0}' configuration (have_cgal={1})".\
 
 
 if sys.platform == 'win32':
-    pass
+    # See documentation on compiler flags here:
+    # <http://msdn.microsoft.com/en-us/library/fwkeyyhe%28v=VS.90%29.aspx>.
+    global_env.AppendUnique(CPPFLAGS='/W3 /EHsc /Zi ')
 else:
     global_env.MergeFlags(global_env.ParseFlags("-g -W -Wall -frounding-math"))
 global_env.AppendUnique(CPPPATH=['#include', '#boost'])
@@ -63,9 +65,9 @@ if global_env.have_cgal:
 
 if sys.platform == 'win32':
     if global_env.conf == 'debug':
-        pass
+        global_env.AppendUnique(CPPFLAGS='/Od /RTC1 /MDd ')
     elif global_env.conf == 'release':
-        pass
+        global_env.AppendUnique(CPPFLAGS='/O2 /Oi /GL /MD ')
 
 else:
     if global_env.conf == 'debug':
