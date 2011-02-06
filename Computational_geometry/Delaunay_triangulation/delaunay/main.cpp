@@ -36,7 +36,7 @@ int main()
   // Otherwise this statement will be interpreted as function declaration
   // in MS VS 2008 Express Edition.
   triangulation_t triangulation((std::istream_iterator<cg::point_2>(std::cin)),
-                                (std::istream_iterator<cg::point_2>());
+                                (std::istream_iterator<cg::point_2>()));
 
   typedef
     std::ostream_iterator<cg::triangle_vertices_indices_t>
