@@ -56,7 +56,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-I../boost -I../include -I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I../include -I/usr/include -frounding-math -DHAVE_CGAL -DUSE_CGAL_ON_INEXACT</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
@@ -78,7 +78,7 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <commandLine>-I../boost -I../include -I/usr/include -frounding-math</commandLine>
+          <commandLine>-I../boost -I../include -I/usr/include -frounding-math -DHAVE_CGAL -DUSE_CGAL_ON_INEXACT</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
