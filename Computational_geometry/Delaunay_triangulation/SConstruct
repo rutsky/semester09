@@ -15,10 +15,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import os.path
 
-#env = Environment(tools=["default", "gch"])
-global_env = Environment(tools=["default"])
+tools = ["default"]
+if sys.platform == 'win32':
+    tools.append("msvs")
+
+global_env = Environment(tools=tools)
 Export('global_env')
 
 def get_argument(name, values, default=None):

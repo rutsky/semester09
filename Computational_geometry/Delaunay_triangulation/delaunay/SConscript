@@ -25,7 +25,19 @@ env = global_env.Clone()
 
 #env['Gch'] = env.Gch('precompiled.hpp')[0]
 
+sources = ['main.cpp']
+
 global_env.delaunay = \
-    env.Program(target="delaunay", source=['main.cpp'])
+    env.Program(target="delaunay", source=sources)
+
+#env.MSVSProject(
+#    target='delaunay' + env['MSVSPROJECTSUFFIX'],
+#    srcs=sources,
+#    #incs=barincs,
+#    #localincs=barlocalincs,
+#    #resources=barresources,
+#    #misc=barmisc,
+#    buildtarget=global_env.delaunay,
+#    variant='Release')
 
 # vim: set filetype=python ts=4 sw=4 et:
