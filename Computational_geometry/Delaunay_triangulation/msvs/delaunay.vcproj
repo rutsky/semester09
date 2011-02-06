@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\include;..\boost"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,6 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\include;..\boost"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -170,12 +172,88 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath="..\delaunay\main.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\include\delaunay_triangulation.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\delaunay_triangulation_verification.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\determinant.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\exceptions.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\indexed_triangle.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\inexact_computations_ex.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\orientation.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_io.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_ops.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_predicates.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_predicates_fwd.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_predicates_impl_cgal.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_predicates_impl_interval.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_types.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\point_utils.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\utils.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\xmath.hpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
