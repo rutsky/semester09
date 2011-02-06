@@ -15,6 +15,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# TODO: Don't build CGAL version if global_env.have_cgal is false.
+
 import os.path
 import itertools
 import re
