@@ -37,6 +37,8 @@ class TestFailed(Exception):
     pass
 
 def normalize_output(output):
+    output = output.replace('\r', '')
+
     indices = map(int, output.split())
     assert len(indices) % 3 == 0
     
@@ -128,7 +130,7 @@ def run_tests(env, target, source):
             correct_result_file = os.path.join(tests_dir, test_name + ".valid_out")
             if os.path.exists(correct_result_file):
                 with open(correct_result_file, 'r') as f:
-                    test_correct_result = f.read()
+                    test_correct_result = f.read().replace('\r', '')
                 if test_correct_result != output:
                     print "    Test failed due to different output."
                     raise TestFailed()
