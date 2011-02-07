@@ -82,22 +82,22 @@ fi
 
 if true; then
   for n in `seq 1000 1000 100000`; do
-    SUFFIX=`printf '%05d' $n`.in
+    SUFFIX=`printf '%06d' $n`.in
 
     # Uniform.
-    python uniform.py $n > \
+    python lattice_uniform.py $n 0 20000 0 20000 > \
         $TESTS_DIR/big_uniform_$SUFFIX
 
     # Ellipse.
-    python ellipse.py $n > \
+    python lattice_near_ellipse.py $n > \
         $TESTS_DIR/big_ellipse_$SUFFIX
 
     # Circle.
-    python circle.py $n > \
+    python lattice_near_circle.py $n > \
         $TESTS_DIR/big_circle_$SUFFIX
 
     # Parabola.
-    python parabola.py $n > \
+    python lattice_parabola.py $n > \
         $TESTS_DIR/big_parabola_$SUFFIX
 
     # 95% ellipse 5% uniform.

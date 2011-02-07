@@ -8,8 +8,8 @@ else:
     print "Usage:\n  {0} <Number of points>".format(sys.argv[0])
     sys.exit(0)
 
-range_max = 1000
-coef = 1.0 / 1000
+range_max = 20000
+coef = 1.0 / 20000
 for i in xrange(n):
     x = int(round(random.uniform(0, range_max)))
     y = int(round(coef * x ** 2))
