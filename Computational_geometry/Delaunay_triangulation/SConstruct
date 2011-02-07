@@ -87,8 +87,8 @@ else:
 
 SConscript(os.path.join("delaunay", "SConscript"), 
     variant_dir=os.path.join("build", "delaunay", global_env.conf))
-SConscript(os.path.join("verificator", "SConscript"), 
-    variant_dir=os.path.join("build", "verificator", global_env.conf))
+SConscript(os.path.join("verification", "SConscript"), 
+    variant_dir=os.path.join("build", "verification", global_env.conf))
 SConscript(os.path.join("tests", "SConscript"))
 
 if sys.platform != 'win32':
