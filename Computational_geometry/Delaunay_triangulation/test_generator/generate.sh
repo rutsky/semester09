@@ -43,21 +43,29 @@ if false; then
   done
 fi
 
-if false; then
-  # Points on circle with rbox.
-  for n in `seq 5 5 100`; do
-    for i in `seq 1 2`; do
-      rbox $n s D2 | tail --lines=+3 - > \
-          $TESTS_DIR/circle_rbox_`printf '%03d' $n`_$i.in
-    done
-  done
-fi
-
 if true; then
-  # Points on ellipse.
   for n in `seq 5 5 100`; do
     for i in `seq 1 2`; do
-      python ellipse.py $n > $TESTS_DIR/ellipse_`printf '%03d' $n`_$i.in
+      SUFFIX=`printf '%03d' $n`_$i.in
+
+      # Points on circle with rbox.
+      #rbox $n s D2 | tail --lines=+3 - > \
+      #   $TESTS_DIR/circle_rbox_$SUFFIX
+
+      # Points on ellipse.
+      #python ellipse.py $n > $TESTS_DIR/ellipse_$SUFFIX
+
+      # Lattice points close to ellipse.
+      #python lattice_near_ellipse.py $n > \
+      #    $TESTS_DIR/lattice_near_ellipse_$SUFFIX
+
+      # Points on parabola.
+      python parabola.py $n > \
+          $TESTS_DIR/parabola_$SUFFIX
+
+      # Lattice points on parabola.
+      python lattice_parabola.py $n > \
+          $TESTS_DIR/lattice_parabola_$SUFFIX
     done
   done
 fi
