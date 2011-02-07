@@ -115,7 +115,8 @@ def run_tests(env, target, source):
 
                 secs = (time.microseconds + 
                     (time.seconds + time.days * 24 * 3600) * 10**6) / 10.0**6
-                with open(os.path.join(tests_dir, test_name + ".time")) as f:
+                time_file = os.path.join(tests_dir, test_name + ".time")
+                with open(time_file, "w") as f:
                     f.write(str(secs) + "\n")
 
             # Write result.
