@@ -17,6 +17,9 @@
 
 # TODO: Automatically create visualization for tests failed verification.
 # TODO: Provide quite COMSTR.
+# TODO: Output total running time.
+# TODO: For each tests regenerate output only if existent output is older
+# than triangulation binary (similarly with verification).
 
 import os
 import os.path
