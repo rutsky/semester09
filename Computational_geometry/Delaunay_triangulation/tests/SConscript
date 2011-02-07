@@ -17,8 +17,6 @@
 
 # TODO: Automatically create visualization for tests failed verification.
 # TODO: Provide quite COMSTR.
-# TODO: Sort test so that at first will be checked new tests (e.g. at 
-# first tests without output files).
 
 import os
 import os.path
@@ -60,9 +58,25 @@ def run_tests(env, target, source):
     tests_dir = os.path.dirname(target[0].abspath)
     
     test_files = map(str, source[2:])
+
+    def get_test_name(test_file):
+        return os.path.splitext(os.path.basename(test_file))[0]
+
+    # Sort tests.
+    tests_with_output = filter(
+        lambda t: 
+            os.path.exists(
+                os.path.join(tests_dir, get_test_name(t) + '.out')), 
+        test_files)
+    tests_with_output.sort()
+    tests_without_output = list(set(test_files) - set(tests_with_output))
+    tests_without_output.sort()
+
+    test_files = tests_without_output + tests_with_output
+
     failed_tests = []
     for test_file in test_files:
-        test_name = os.path.basename(re.sub(r"\.in$", "", test_file))
+        test_name = get_test_name(test_file)
         print " *** Running '{0}'".format(test_name)
         
         # Read test input.
