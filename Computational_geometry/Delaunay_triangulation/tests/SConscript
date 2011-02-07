@@ -78,15 +78,15 @@ def run_tests(env, target, source):
             try:
                 process = subprocess.Popen([app], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = process.communicate(test_data)
-		if len(stderr) > 0:
+        if len(stderr) > 0:
                     print "      stderr:\n{0}".format(stderr)
-		    with open(test_err_file, 'w') as f:
-		        f.write(stderr)
+            with open(test_err_file, 'w') as f:
+                f.write(stderr)
                 if process.returncode != 0: 
                     print "Test failed with error code {0}".format(
-		        process.returncode)
-		    if len(stdout) > 0:
-	                print "      stdout:\n{0}".format(stdout)
+                process.returncode)
+            if len(stdout) > 0:
+                    print "      stdout:\n{0}".format(stdout)
                     raise TestFailed()
             finally:
                 time = datetime.datetime.now() - start_time
@@ -109,12 +109,12 @@ def run_tests(env, target, source):
                 process = subprocess.Popen([verificator, test_file, test_result_file],
                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 verification_stdout, verification_stderr = process.communicate()
-		if len(verification_stdout) > 0:
-		     print "      stdout:\n{0}".format(verification_stdout)
-		if len(verification_stderr) > 0:
-		     print "      stderr:\n{0}".format(verification_stderr)
-		     with open(test_err_file, 'w') as f:
-                         f.write(verification_stderr)
+        if len(verification_stdout) > 0:
+            print "      stdout:\n{0}".format(verification_stdout)
+        if len(verification_stderr) > 0:
+            print "      stderr:\n{0}".format(verification_stderr)
+            with open(test_err_file, 'w') as f:
+                f.write(verification_stderr)
 
                 if process.returncode != 0:
                     print "Verification returned error code {0}.".format(
@@ -127,7 +127,7 @@ def run_tests(env, target, source):
             # Compare with precomputated result.
             correct_result_file = os.path.join(tests_dir, test_name + ".valid_out")
             if os.path.exists(correct_result_file):
-                with open(correct_result_file, 'r') as f:
+                with open(correct_result_file, 'rt') as f:
                     test_correct_result = f.read()
                 if test_correct_result != output:
                     print "    Test failed due to different output."
@@ -138,8 +138,8 @@ def run_tests(env, target, source):
             print
             if len(failed_tests) >= failed_tests_limit:
                 print "Number of failed test exceeded {0}. "\
-		    "Skipping left tests.".format(failed_tests_limit)
-		break
+            "Skipping left tests.".format(failed_tests_limit)
+        break
         else:
             pass
       
