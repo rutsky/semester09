@@ -1,5 +1,7 @@
 import graph;
 
+// TODO: Draw O point.
+
 void draw_graph(string data_file_name, string data_label, string graph_label)
 {
   size(600, 400, IgnoreAspect);
