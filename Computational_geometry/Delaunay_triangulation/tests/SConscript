@@ -86,13 +86,18 @@ def run_tests(env, target, source):
         try:
             test_err_file = os.path.join(tests_dir, test_name + ".err")
             if os.path.exists(test_err_file):
-                print "    Remove obsolete error log: '{0}'".format(os.path.relpath(test_err_file))
+                print "    Remove obsolete error log: '{0}'".\
+                    format(os.path.relpath(test_err_file))
                 os.remove(test_err_file)
         
             # Run DT.
             start_time = datetime.datetime.now()
             try:
-                process = subprocess.Popen([app], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.Popen(
+                    [app, os.path.join(tests_dir, test_name + ".info")],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
                 stdout, stderr = process.communicate(test_data)
                 if len(stderr) > 0:
                     print "      stderr:\n{0}".format(stderr)
