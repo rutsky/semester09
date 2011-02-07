@@ -1,3 +1,4 @@
+ * Render performance graphics.
  * Port to Windows.
  * Profile running time.
  * Test that running time is O(N log N)
@@ -5,6 +6,5 @@
    - draw graphics number of points/time
  * Fix TODO from sources.
  * Add tests for different triangulations.
-   - duplicate points tests
  * Add CGAL implementation of DT.
  * Try to generate tests using QHull's rbox command.
