@@ -43,12 +43,21 @@ if false; then
   done
 fi
 
-if true; then
+if false; then
   # Points on circle with rbox.
   for n in `seq 5 5 100`; do
     for i in `seq 1 2`; do
       rbox $n s D2 | tail --lines=+3 - > \
           $TESTS_DIR/circle_rbox_`printf '%03d' $n`_$i.in
+    done
+  done
+fi
+
+if true; then
+  # Points on ellipse.
+  for n in `seq 5 5 100`; do
+    for i in `seq 1 2`; do
+      python ellipse.py $n > $TESTS_DIR/ellipse_`printf '%03d' $n`_$i.in
     done
   done
 fi
