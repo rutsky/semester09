@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include "delaunay_triangulation.hpp"
 #include "point.hpp"
 #include "point_io.hpp"
@@ -27,16 +29,16 @@
 
 int main()
 {
-  // Reset random counter (for stable testing).
-  // TODO: Not necessarilly defines determined shuffling of points.
-  std::srand(0);
+  boost::mt19937 randGen;
 
   typedef dt::delaunay_triangulation<cg::point_2> triangulation_t;
   // NOTE: Extra brackets around constructor arguments are required!
   // Otherwise this statement will be interpreted as function declaration
   // in MS VS 2008 Express Edition.
+  // TODO: Check that this note is not obsolete after adding randGen argument.
   triangulation_t triangulation((std::istream_iterator<cg::point_2>(std::cin)),
-                                (std::istream_iterator<cg::point_2>()));
+                                (std::istream_iterator<cg::point_2>()),
+                                randGen);
 
   typedef
     std::ostream_iterator<cg::triangle_vertices_indices_t>

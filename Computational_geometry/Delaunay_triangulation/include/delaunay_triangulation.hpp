@@ -46,9 +46,6 @@
 #include "utils.hpp"
 #include "indexed_triangle.hpp"
 
-// TODO: For determined points shuffling random generator should be passed
-// to triangulation.
-
 namespace dt
 {
   template< class PointType >
@@ -242,8 +239,9 @@ namespace dt
     typedef std::vector<triangle_t> triangles_t;
 
   public:
-    template< class PointInIt >
-    delaunay_triangulation( PointInIt first, PointInIt beyond )
+    template< class PointInIt, class RndGeneratorEngine >
+    delaunay_triangulation( PointInIt first, PointInIt beyond,
+                            RndGeneratorEngine &rndGen )
     {
       if (first == beyond)
       {
@@ -303,12 +301,12 @@ namespace dt
       shuffledIndices.reserve(vertexBuffer_.size() - 3);
       for (vertex_handle_t vh = 3; vh < vertexBuffer_.size(); ++vh)
         shuffledIndices.push_back(vh);
-      // TODO: Not determined implementation dependent shuffling.
-      std::random_shuffle(shuffledIndices.begin(), shuffledIndices.end());
+      cg::random_shuffle(shuffledIndices.begin(), shuffledIndices.end(),
+          rndGen);
 
       // Insert input points.
       std::for_each(shuffledIndices.begin(), shuffledIndices.end(),
-        boost::bind(&self_t::addVertex, boost::ref(*this), _1));
+          boost::bind(&self_t::addVertex, boost::ref(*this), _1));
 
       // Flip border triangles so that final triangulation will be convex.
       // TODO: Remove this.

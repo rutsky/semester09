@@ -29,6 +29,8 @@
 #include <boost/function.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/algorithm/minmax_element.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
 
 namespace cg
 {
@@ -63,6 +65,19 @@ namespace cg
     return std::make_pair(
         point_t(*x.first, *y.first),
         point_t(*x.second, *y.second));
+  }
+
+  template< class RndIterator, class RndGen >
+  void random_shuffle( RndIterator first, RndIterator beyond, RndGen &rndGen )
+  {
+    for (RndIterator it = first + 1; it != beyond; ++it)
+    {
+      boost::uniform_int<> dist(0, it - first);
+      boost::variate_generator<RndGen &, boost::uniform_int<> >
+          die(rndGen, dist);
+
+      std::iter_swap(it, first + die());
+    }
   }
 }
 
