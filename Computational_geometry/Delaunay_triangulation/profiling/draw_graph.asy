@@ -12,10 +12,10 @@ void draw_graph(string data_file_name, string data_label, string graph_label)
   real[] npoints = a[0];
   real[] val = a[1];
 
-  draw(graph(npoints, val), blue, "Number Of Points");
+  draw(graph(npoints, val), blue);
 
-  xaxis(data_label, BottomTop, LeftTicks);
-  yaxis(Left, blue, RightTicks);
+  xaxis("Number Of Points", Bottom, LeftTicks);
+  yaxis(data_label, Left, RightTicks);
 
   label(shift(5mm * N) * graph_label, point(N), E);
 }
