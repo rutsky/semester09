@@ -81,7 +81,7 @@ if false; then
 fi
 
 if true; then
-  for n in `seq 1000 100 1100`; do
+  for n in `seq 1000 1000 100000`; do
     SUFFIX=`printf '%05d' $n`.in
 
     # Uniform.

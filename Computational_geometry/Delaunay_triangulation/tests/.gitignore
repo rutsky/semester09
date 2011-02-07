@@ -3,4 +3,5 @@
 /*.err
 /*.info
 /*.time
+/big_*.in
 /.passed
