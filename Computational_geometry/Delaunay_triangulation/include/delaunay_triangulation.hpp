@@ -242,6 +242,9 @@ namespace dt
     template< class PointInIt, class RndGeneratorEngine >
     delaunay_triangulation( PointInIt first, PointInIt beyond,
                             RndGeneratorEngine &rndGen )
+      : nFlips_(0)
+      , nViewedTrianglesInLocalization_(0)
+      , nDelaunayTests_(0)
     {
       if (first == beyond)
       {
@@ -321,6 +324,30 @@ namespace dt
     {
       BOOST_ASSERT(idx < points_size());
       return vertexBuffer_[idx + 3];
+    }
+
+    // Number of stored triangles in used structure.
+    size_t stored_triangles_num() const
+    {
+      return triangles_.size();
+    }
+
+    // Number of performed flips.
+    size_t flips_num() const
+    {
+      return nFlips_;
+    }
+
+    // Number of traversed triangles during point location.
+    size_t viewed_triangles_in_localization_num() const
+    {
+      return nViewedTrianglesInLocalization_;
+    }
+
+    // Number of point-in-circle tests.
+    size_t delaunay_tests_num() const
+    {
+      return nDelaunayTests_;
     }
 
   protected:
@@ -450,6 +477,8 @@ namespace dt
     void flip( triangle_handle_t trh, int const idx )
     {
       verifyAdjancy();
+
+      ++nFlips_;
       
       BOOST_ASSERT(triangle(trh).vertex(idx) != invalid_vertex_handle);
 
@@ -827,6 +856,8 @@ namespace dt
     //
     bool is_flip_required( triangle_handle_t trh, vertex_handle_t vh )
     {
+      ++nDelaunayTests_;
+      
       if (isFiniteTriangle(trh))
       {
         // Finite triangle.
@@ -1052,6 +1083,8 @@ namespace dt
       {
         triangle_t const &tr = triangle(trh);
 
+        ++nViewedTrianglesInLocalization_;
+
         // Assert that vertex inside or on boundary of current triangle.
         BOOST_ASSERT(exact_side_of_oriented_triangle(trh, vh) != 
                 cg::or_on_negative_side);
@@ -1129,6 +1162,14 @@ namespace dt
     vertex_buffer_t vertexBuffer_;
     // First triangle is containing all points imaginary triangle.
     triangles_t     triangles_;
+
+    // Debug information.
+    // Number of performed flips.
+    size_t          nFlips_;
+    // Number of traversed triangles during point location.
+    size_t          nViewedTrianglesInLocalization_;
+    // Number of point-in-cirle tests.
+    size_t          nDelaunayTests_;
   };
 }
 

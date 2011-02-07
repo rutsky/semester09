@@ -18,6 +18,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 
 #include <boost/random/mersenne_twister.hpp>
 
@@ -27,7 +28,7 @@
 #include "point_predicates.hpp"
 #include "point_types.hpp"
 
-int main()
+int main( int argc, char *argv[] )
 {
   boost::mt19937 randGen;
 
@@ -45,4 +46,25 @@ int main()
     out_iterator_t;
   std::copy(triangulation.begin(), triangulation.end(),
     out_iterator_t(std::cout));
+
+  if (argc == 2)
+  {
+    // Single argument - name of file in which debug information should be
+    // placed.
+    std::ofstream infoFile(argv[1]);
+    if (!infoFile)
+    {
+      perror(argv[1]);
+      return -1;
+    }
+
+    // Number of stored triangles in used structure.
+    infoFile << triangulation.stored_triangles_num() << "\n";
+    // Number of performed flips.
+    infoFile << triangulation.flips_num() << "\n";
+    // Number of traversed triangles during point location.
+    infoFile << triangulation.viewed_triangles_in_localization_num() << "\n";
+    // Number of point-in-circle tests.
+    infoFile << triangulation.delaunay_tests_num() << "\n";
+  }
 }
