@@ -11,7 +11,7 @@ if false; then
   done
 fi
 
-if true; then
+if false; then
   for n in `seq 100 100 5000`; do
     for i in `seq 1 5`; do
       SUFFIX=`printf '%05d' $n`_$i.in
@@ -20,8 +20,10 @@ if true; then
       #python uniform.py $n > $TESTS_DIR/uniform_$SUFFIX
 
       # 95% of points on ellipse 5% uniformly distributed.
+      # TODO: use ellipse95_uniform5.sh
       v2=$((n / 20))
       v1=$((n - $v2))
+      # TODO: Use TEMP=`mktemp`
       TEMP=.tmp
       python lattice_uniform.py $v2 -550 550 -250 250 > $TEMP
       python lattice_near_ellipse.py $v1 >> $TEMP
@@ -75,6 +77,32 @@ if false; then
       python lattice_parabola.py $n > \
           $TESTS_DIR/lattice_parabola_$SUFFIX
     done
+  done
+fi
+
+if true; then
+  for n in `seq 1000 100 1100`; do
+    SUFFIX=`printf '%05d' $n`.in
+
+    # Uniform.
+    python uniform.py $n > \
+        $TESTS_DIR/big_uniform_$SUFFIX
+
+    # Ellipse.
+    python ellipse.py $n > \
+        $TESTS_DIR/big_ellipse_$SUFFIX
+
+    # Circle.
+    python circle.py $n > \
+        $TESTS_DIR/big_circle_$SUFFIX
+
+    # Parabola.
+    python parabola.py $n > \
+        $TESTS_DIR/big_parabola_$SUFFIX
+
+    # 95% ellipse 5% uniform.
+    ./ellipse95_uniform5.sh $n > \
+        $TESTS_DIR/big_ellipse95_uniform5_$SUFFIX
   done
 fi
 
