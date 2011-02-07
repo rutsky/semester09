@@ -11,11 +11,23 @@ if false; then
   done
 fi
 
-if false; then
-  # Big uniform tests.
+if true; then
   for n in `seq 100 100 5000`; do
     for i in `seq 1 5`; do
-      python uniform.py $n > $TESTS_DIR/uniform_`printf '%05d' $n`_$i.in
+      SUFFIX=`printf '%05d' $n`_$i.in
+
+      # Big uniform tests.
+      #python uniform.py $n > $TESTS_DIR/uniform_$SUFFIX
+
+      # 95% of points on ellipse 5% uniformly distributed.
+      v2=$((n / 20))
+      v1=$((n - $v2))
+      TEMP=.tmp
+      python lattice_uniform.py $v2 -550 550 -250 250 > $TEMP
+      python lattice_near_ellipse.py $v1 >> $TEMP
+
+      shuf $TEMP > $TESTS_DIR/lattice_ellipse_and_uniform_$SUFFIX
+      rm -rf $TEMP
     done
   done
 fi
@@ -33,31 +45,27 @@ if false; then
     for i in `seq 1 5`; do
       python lattice_uniform.py $n 0 7 0 7 > \
           $TESTS_DIR/lattice_uniform_8x8_`printf '%03d' $n`_$i.in
-    done
-  done
-  for n in `seq 3 99`; do
-    for i in `seq 1 5`; do
       python lattice_uniform.py $n 0 19 0 2 > \
           $TESTS_DIR/lattice_uniform_3x20_`printf '%03d' $n`_$i.in
     done
   done
 fi
 
-if true; then
+if false; then
   for n in `seq 5 5 100`; do
     for i in `seq 1 2`; do
       SUFFIX=`printf '%03d' $n`_$i.in
 
       # Points on circle with rbox.
-      #rbox $n s D2 | tail --lines=+3 - > \
-      #   $TESTS_DIR/circle_rbox_$SUFFIX
+      rbox $n s D2 | tail --lines=+3 - > \
+         $TESTS_DIR/circle_rbox_$SUFFIX
 
       # Points on ellipse.
-      #python ellipse.py $n > $TESTS_DIR/ellipse_$SUFFIX
+      python ellipse.py $n > $TESTS_DIR/ellipse_$SUFFIX
 
       # Lattice points close to ellipse.
-      #python lattice_near_ellipse.py $n > \
-      #    $TESTS_DIR/lattice_near_ellipse_$SUFFIX
+      python lattice_near_ellipse.py $n > \
+          $TESTS_DIR/lattice_near_ellipse_$SUFFIX
 
       # Points on parabola.
       python parabola.py $n > \
