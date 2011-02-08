@@ -82,8 +82,9 @@ namespace cg
     };
 
     // TODO: Output messages without dot and line feed at end.
-    // TODO: It's O(N^2) but can be reduced to O(N^2) if point location will
-    // be optimized.
+    // TODO: Should work as O(N log N), but when all points on single circle
+    // it works definetely slower, this must be a problem with used point 
+    // localization tool.
     template< class PointInIt, class TriangleInIt, class MessageBuffer >
     inline
     triangulation_verification_result verify_triangulation(
