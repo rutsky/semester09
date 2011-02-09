@@ -265,7 +265,9 @@ namespace dt
                                         vertexBuffer_.end());
 
       // Construct imaginary triangle that contains all points.
-      
+
+      // TODO: Actual positions of infinite vertices must never be checked,
+      // so there is no point in they calculation.
       // TODO: Not safe for floating point overflow.
       // TODO: Use something instead of sqrt(2.0) etc.
       // NOTE: Exact bounding triangle is not really needed, but when it exact
