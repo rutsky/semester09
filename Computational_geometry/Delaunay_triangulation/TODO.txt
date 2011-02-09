@@ -10,3 +10,4 @@
  * Add tests for different triangulations.
  * Add CGAL implementation of DT.
  * Try to generate tests using QHull's rbox command.
+ * When compiled under Windows *.pdb file putted in project root folder.
