@@ -8,7 +8,7 @@ else:
     print "Usage:\n  {0} <Number of points>".format(sys.argv[0])
     sys.exit(0)
 
-a = 10000
+a = 9000
 b = 7000
 for i in xrange(n):
     t = random.uniform(0, 2 * math.pi)

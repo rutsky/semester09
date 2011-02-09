@@ -85,20 +85,20 @@ if true; then
     SUFFIX=`printf '%06d' $n`.in
 
     # Uniform.
-    python lattice_uniform.py $n 0 20000 0 20000 > \
-        $TESTS_DIR/big_uniform_$SUFFIX
+    # python lattice_uniform.py $n 0 20000 0 20000 > \
+    #     $TESTS_DIR/big_uniform_$SUFFIX
 
     # Ellipse.
-    python lattice_near_ellipse.py $n > \
-        $TESTS_DIR/big_ellipse_$SUFFIX
+    # python lattice_near_ellipse.py $n > \
+    #     $TESTS_DIR/big_ellipse_$SUFFIX
 
     # Circle.
-    python lattice_near_circle.py $n > \
-        $TESTS_DIR/big_circle_$SUFFIX
+    # python lattice_near_circle.py $n > \
+    #     $TESTS_DIR/big_circle_$SUFFIX
 
     # Parabola.
-    python lattice_parabola.py $n > \
-        $TESTS_DIR/big_parabola_$SUFFIX
+    # python lattice_parabola.py $n > \
+    #     $TESTS_DIR/big_parabola_$SUFFIX
 
     # 95% ellipse 5% uniform.
     ./ellipse95_uniform5.sh $n > \

@@ -12,7 +12,7 @@ n=$1
 v2=$((n / 20))
 v1=$((n - $v2))
 TEMP=`mktemp`
-python lattice_uniform.py $v2 -550 550 -250 250 > $TEMP
+python lattice_uniform.py $v2 -10000 10000 -10000 10000 > $TEMP
 python lattice_near_ellipse.py $v1 >> $TEMP
 
 shuf $TEMP
