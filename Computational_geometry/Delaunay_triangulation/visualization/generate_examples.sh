@@ -4,7 +4,7 @@
 
 drawcmd=./draw.sh
 examples=examples/
-tests=../tests/t
+tests=../tests
 big_tests=../tests/big
 
 for big_test in big_uniform_001000 big_ellipse_001000 big_circle_001000 \
@@ -13,11 +13,16 @@ for big_test in big_uniform_001000 big_ellipse_001000 big_circle_001000 \
   mv $big_test.in.pdf $examples
 done
 
-for test in circle_022 ellipse_020_1 circle_rbox_020_1.in \
+for test in circle_022 ellipse_020_1 circle_rbox_020_1 \
       lattice_ellipse_and_uniform_00100_1 lattice_near_ellipse_020_1 \
       lattice_parabola_020_1 lattice_uniform_3x20_020_1 \
       lattice_uniform_8x8_020_1 parabola_020_1 uniform_00020_1; do
   $drawcmd $tests/$test.in $tests/$test.out
+  mv $test.in.pdf $examples
+done
+
+for test in lattice_ellipse_and_uniform_05000_1; do
+  $drawcmd $tests/$test.in $tests/$test.out false
   mv $test.in.pdf $examples
 done
 
