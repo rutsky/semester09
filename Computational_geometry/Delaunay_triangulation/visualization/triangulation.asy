@@ -2,7 +2,8 @@ import graph;
 
 // TODO: Don't draw duplicate points.
 
-void draw_triangulation(string points_file_name, string triangles_file_name)
+void draw_triangulation(string points_file_name, string triangles_file_name, 
+                        bool draw_points=true)
 {
   size(800, 800);
   
@@ -24,16 +25,21 @@ void draw_triangulation(string points_file_name, string triangles_file_name)
     draw(p0--p1--p2--cycle);
   }
   
-  // Draw points.
-  int idx = 0;
-  for (real[] p : points)
+  if (draw_points)
   {
-    pair v = (p[0], p[1]);
-  
-    dot(v, red);
-    label(string(idx) + " (" + string(p[0]) + "," + string(p[1]) + ")", 
-        v, E, red);
-    
-    idx += 1;
+    // Draw points.
+	  int idx = 0;
+	  for (real[] p : points)
+	  {
+	    pair v = (p[0], p[1]);
+	  
+	    dot(v, red);
+	    label(string(idx) + " (" + string(p[0]) + "," + string(p[1]) + ")", 
+		        v, E, red);
+	    
+	    idx += 1;
+    }
   }
 }
+
+// vim: et ts=2 sw=2:

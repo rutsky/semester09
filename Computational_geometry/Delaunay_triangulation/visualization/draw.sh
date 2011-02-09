@@ -1,11 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ "$#" -ne "2" ]; then
+if [ "$#" -lt "2" ]; then
   echo "Usage:"
-  echo "  "$0" points_file triangles_file"
+  echo "  "$0" points_file triangles_file [draw_points]"
   exit 0
 fi
 
-asy -f pdf -nointeractiveView -o `basename $1`.pdf -c 'from "triangulation.asy" access draw_triangulation; draw_triangulation("'$1'", "'$2'");'
+if [ -n "$3" ]; then
+  draw_cmd='draw_triangulation("'$1'", "'$2'", '$3');'
+else
+  draw_cmd='draw_triangulation("'$1'", "'$2'");'
+fi
 
+cmd='from "triangulation.asy" access draw_triangulation; '$draw_cmd
+asy -f pdf -nointeractiveView -o `basename $1`.pdf -c "$cmd"
+  
 # vim: et ts=2 sw=2:
