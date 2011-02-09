@@ -40,7 +40,7 @@ def get_argument(name, values, default=None):
 if sys.platform == 'win32':
     configurations = ['release', 'debug']
 else:
-    configurations = ['debug', 'release', 'valgrind', 'gprof']
+    configurations = ['release', 'debug', 'valgrind', 'gprof']
 
 global_env.conf = get_argument('conf', configurations) 
 global_env.have_cgal = get_argument('have_cgal', [1, 0]) 
