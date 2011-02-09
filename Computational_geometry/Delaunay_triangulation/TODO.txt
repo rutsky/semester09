@@ -1,4 +1,5 @@
  * -frounding-math on Windows
+ * Rewrite tests generators using single module generator.py.
  * Render performance graphics.
  * Port to Windows.
  * Profile running time.
