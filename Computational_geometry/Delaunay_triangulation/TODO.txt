@@ -1,13 +1,8 @@
  * -frounding-math on Windows
  * Rewrite tests generators using single module generator.py.
- * Render performance graphics.
  * Port to Windows.
  * Profile running time.
- * Test that running time is O(N log N)
-   - log number of flips
-   - draw graphics number of points/time
  * Fix TODO from sources.
- * Add tests for different triangulations.
  * Add CGAL implementation of DT.
  * Try to generate tests using QHull's rbox command.
  * When compiled under Windows *.pdb file putted in project root folder.
