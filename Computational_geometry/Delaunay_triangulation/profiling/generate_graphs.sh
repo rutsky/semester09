@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 for test in uniform ellipse circle parabola ellipse95_uniform5; do
   echo "Processing '"$test"'"
