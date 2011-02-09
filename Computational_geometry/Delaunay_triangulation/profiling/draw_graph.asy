@@ -16,7 +16,7 @@ void draw_graph(string data_file_name, string data_label, string graph_label)
 
   draw(graph(npoints, val), blue);
 
-  xaxis("Number Of Points", Bottom, LeftTicks);
+  xaxis("Number of points", Bottom, LeftTicks);
   yaxis(data_label, Left, RightTicks);
 
   label(shift(5mm * N) * graph_label, point(N), E);
