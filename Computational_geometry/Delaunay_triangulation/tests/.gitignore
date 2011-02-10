@@ -4,4 +4,5 @@
 /*.info
 /*.time
 /big_*.in
+/big/
 /.passed
