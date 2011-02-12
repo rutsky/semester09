@@ -4,3 +4,5 @@ Implementation:
   (or other) dictionary. If needed hacks with chaning word form will be 
   applied (like removing trailing -s, -es, -ed, etc)
   3. Compare with list of known words and phrases and output new words.
+
+ * Write in .tex and generate .odt with tex4ht.
