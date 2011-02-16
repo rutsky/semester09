@@ -1,5 +1,5 @@
- * Replace text links with icons
-
+ * Replace text links with icons.
+ * Shuffle sentences in subtitles.
 
 Implementation:
   1. Read subtitile text with pysrt.
