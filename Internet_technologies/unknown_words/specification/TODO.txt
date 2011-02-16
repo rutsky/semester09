@@ -1,3 +1,6 @@
+ * Replace text links with icons
+
+
 Implementation:
   1. Read subtitile text with pysrt.
   2. Construct word and phrases list by greedely searching them into Muellers
