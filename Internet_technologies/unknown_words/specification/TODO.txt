@@ -1,3 +1,5 @@
+ * Don't export into PDF editor's comments.
+ * Add functional specifications.
  * Replace text links with icons.
  * Shuffle sentences in subtitles.
 
