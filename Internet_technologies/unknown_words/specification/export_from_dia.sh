@@ -4,7 +4,7 @@ for f in *.dia; do
   diagram=`echo $f | sed 's/\.dia$//'`
   TEMP=`tempfile -s .eps`
   dia -e $TEMP $f
-  epstool -i $TEMP $diagram.eps
+  epstool -i $TEMP --dpi 200 $diagram.eps
   rm $TEMP
 done
 
