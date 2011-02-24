@@ -1,0 +1,25 @@
+ * Visualization of program developing.
+
+ * Эволюция web-интерфейсов
+  - средний пользователь
+  - число пользователей
+  - как выглядел сайт
+  - технологии
+  - доступность интернета разным классам людей
+  - скорость интернета
+  - ограничения по траффику
+  - производительность клиентских машин (браузеров)
+  - число сайтов, доступная в интернете информация
+  - сервисы, доступные через интернет
+  - тонкий клиент
+  - SAAS (Software As A Service)
+  - технологии: HTML, JavaScript, Flash, AJAX, Silverlight, Java
+
+SGML -> HTML, XML
+
+Сопровождать музыкой и символикой эпох.
+
+https://secure.wikimedia.org/wikipedia/en/wiki/World_Wide_Web
+https://secure.wikimedia.org/wikipedia/en/wiki/Internet
+
+
