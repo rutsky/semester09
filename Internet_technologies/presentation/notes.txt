@@ -17,7 +17,6 @@
   - скорость интернета
   - ограничения по траффику
   - производительность клиентских машин (браузеров)
-  - число сайтов
   - доступная в интернете информация
   - сервисы, доступные через интернет
   - тонкий клиент
@@ -44,19 +43,8 @@ Statistics:
  <http://www.useit.com/alertbox/web-growth.html>
 
 Web 1.0
- * "the web as an information portal"
- * "information exclusivity, be the first to own the content"
- * "dividing the world wide web into usable directories"
- * "everyone has their personal own little corner in the cyberspace"
- * "lacks: context, interaction, scalability"
 
 Web 2.0
- * "the web as a platform"
- * "focus on the power of the community to create and validate"
- * "the power of a seemingly freer form of organization (“tags”)"
- * "setting up “hooks” for future integration (RSS, API)"
- * "lacks: personalization, true portability, interoperability"
-
 
 Web 3.0
 
@@ -66,6 +54,14 @@ Resources
 Evolution of web design:
  * "The Evolution of Web Design" by Cameron Chapman
  <http://sixrevisions.com/web_design/the-evolution-of-web-design/>
+ * "The evolution of web design" by Mirko Humbert
+ <http://designreviver.com/articles/the-evolution-of-web-design/>
+ * Nice example of web design evolution
+ <http://cssmysite.com/>
+ * "The Evolution of Corporate Web Sites" by Richard MacManus
+ <http://www.digital-web.com/articles/the_evolution_of_corporate_web_sites/>
+ * "The Design Evolution of Popular Websites" by Henry Jones
+ <http://webdesignledger.com/inspiration/the-design-evolution-of-popular-websites>
 
 Web 1.0, 2.0, 3.0.
  * "The Evolution of Web 3.0" by Marta Strickland
