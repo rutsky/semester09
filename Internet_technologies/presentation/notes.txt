@@ -1,5 +1,3 @@
- * Visualization of program developing.
-
  * Эволюция web-интерфейсов
   - средний пользователь
   - число пользователей
