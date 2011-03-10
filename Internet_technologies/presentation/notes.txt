@@ -1,19 +1,29 @@
- * Visualization of program developing.
+Тема: Эволюция веб интерфейсов.
+ - как информация, распространяемая в Интернете, подавалась пользователю и 
+получалась от него.
 
+Представление информации:
+ - веб-дизайн (web design)
+ - технологии
+
+Получение информации от пользователя:
+ - ...
+ - технологии
+ 
  * Эволюция web-интерфейсов
   - средний пользователь
-  - число пользователей
   - как выглядел сайт
-  - технологии
   - доступность интернета разным классам людей
   - скорость интернета
   - ограничения по траффику
   - производительность клиентских машин (браузеров)
-  - число сайтов, доступная в интернете информация
+  - доступная в интернете информация
   - сервисы, доступные через интернет
   - тонкий клиент
-  - SAAS (Software As A Service)
-  - технологии: HTML, JavaScript, Flash, AJAX, Silverlight, Java
+  - технологии: HTML, Web (1.0, 2.0, 3.0), JavaScript, Flash, AJAX, 
+  Silverlight, Java, SaaS.
+  - web application
+  - юзабилити
 
 SGML -> HTML, XML
 
@@ -22,4 +32,45 @@ SGML -> HTML, XML
 https://secure.wikimedia.org/wikipedia/en/wiki/World_Wide_Web
 https://secure.wikimedia.org/wikipedia/en/wiki/Internet
 
+Statistics:
+ * Internet users in the World: 
+ <http://www.internetworldstats.com/emarketing.htm>
+ * Number of websites from 1993 to 1997:
+ <http://www.mit.edu/people/mkgray/net/web-growth-summary.html>
+ * Number of websites:
+ <http://news.netcraft.com/archives/2011/03/09/march-2011-web-server-survey.html>
+ * Number of websites:
+ <http://www.useit.com/alertbox/web-growth.html>
 
+Web 1.0
+
+Web 2.0
+
+Web 3.0
+
+
+Resources
+
+Evolution of web design:
+ * "The Evolution of Web Design" by Cameron Chapman
+ <http://sixrevisions.com/web_design/the-evolution-of-web-design/>
+ * "The evolution of web design" by Mirko Humbert
+ <http://designreviver.com/articles/the-evolution-of-web-design/>
+ * Nice example of web design evolution
+ <http://cssmysite.com/>
+ * "The Evolution of Corporate Web Sites" by Richard MacManus
+ <http://www.digital-web.com/articles/the_evolution_of_corporate_web_sites/>
+ * "The Design Evolution of Popular Websites" by Henry Jones
+ <http://webdesignledger.com/inspiration/the-design-evolution-of-popular-websites>
+
+Web 1.0, 2.0, 3.0.
+ * "The Evolution of Web 3.0" by Marta Strickland
+ <http://www.slideshare.net/mstrickland/the-evolution-of-web-30>
+ * "Evolution Web 1.0, Web 2.0 to Web 3.0"
+ <http://www.youtube.com/watch?v=bsNcjya56v8>
+
+Other:
+ * "The History of Web Browsers" by Jacob Gube
+ <http://sixrevisions.com/web-development/the-history-of-web-browsers/>
+ * "A Little History of the World Wide Web"
+ <http://www.w3.org/History.html>
