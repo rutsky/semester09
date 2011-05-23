@@ -1,4 +1,3 @@
-import threading
 #  This file is part of network emulation test model.
 #
 #  Copyright (C) 2010, 2011  Vladimir Rutsky <altsysrq@gmail.com>
