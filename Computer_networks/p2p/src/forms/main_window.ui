@@ -47,7 +47,7 @@
  <connections>
   <connection>
    <sender>action_Quit</sender>
-   <signal>activated()</signal>
+   <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>close()</slot>
    <hints>
