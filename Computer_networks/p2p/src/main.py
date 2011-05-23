@@ -87,7 +87,7 @@ def main():
     # Handle exceptions in Qt threads.
     sys.excepthook = excepthook
 
-    # Register a signal handler to catch ctrl+C
+    # Register a signal handler to catch Ctrl+C
     # TODO: Don't work
     signal.signal(signal.SIGINT, handle_int_signal)
 
