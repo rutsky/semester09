@@ -18,6 +18,7 @@
 # Based on examples provided with cx_Freeze.
 
 import sys
+import os
 
 from cx_Freeze import setup, Executable
 
@@ -25,7 +26,8 @@ base = None
 if sys.platform == "win32":
     base = "Win32GUI"
 
-include_files = [('main_window.ui', 'main_window.ui')]
+include_files = [
+    (os.path.join('forms', 'main_window.ui'), os.path.join('forms', 'main_window.ui'))]
 includes = ['sip', 'encodings.ascii', 'encodings.utf_8', 'encodings.hex_codec']
 
 setup(

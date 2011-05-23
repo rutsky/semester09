@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        PyQt4.uic.loadUi('main_window.ui', self)
+        PyQt4.uic.loadUi('forms/main_window.ui', self)
 
         # Scene working rectangle.
         self.scene_rect = QRectF(-150, -105, 300, 210)
