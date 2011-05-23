@@ -73,7 +73,7 @@ def _test():
                 colors = [(p1[i].red(), p1[i].green(), p1[i].blue())
                     for i in xrange(10)]
                 colors.sort()
-                print colors
+                print "Must be random:", colors
 
     do_tests(Tests, qt=True)
 
