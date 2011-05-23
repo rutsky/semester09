@@ -22,3 +22,5 @@ Export('env')
 SConscript("report/SConscript")
 SConscript("report2/SConscript")
 SConscript("src/SConscript")
+
+# vim: set filetype=python ts=4 sw=4 et:

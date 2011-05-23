@@ -372,3 +372,5 @@ def _test(timeout=1):
 
 if __name__ == "__main__":
     _test(timeout=None)
+
+# vim: set ts=4 sw=4 et:

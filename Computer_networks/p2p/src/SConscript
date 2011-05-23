@@ -27,3 +27,5 @@ build_cx_freeze = env.Command("build_cx-freeze", sources,
 Clean(build_cx_freeze, ['build'])
 
 Default()
+
+# vim: set filetype=python ts=4 sw=4 et:

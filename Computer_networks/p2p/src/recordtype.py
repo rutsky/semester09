@@ -194,3 +194,5 @@ if __name__ == '__main__':
     print TestResults(*doctest.testmod())
 
     _test()
+
+# vim: set ts=4 sw=4 et:

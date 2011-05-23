@@ -648,3 +648,5 @@ if __name__ == "__main__":
         ]
     
     _test(disabled_loggers=disabled_loggers, level=0)
+
+# vim: set ts=4 sw=4 et:

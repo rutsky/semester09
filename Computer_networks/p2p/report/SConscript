@@ -64,3 +64,5 @@ Depends(report_pdf, [graph_wsize, graph_wsize_loss,
     graph_loss])
 
 Default(report_pdf)
+
+# vim: set filetype=python ts=4 sw=4 et:

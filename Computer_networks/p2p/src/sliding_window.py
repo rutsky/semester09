@@ -745,3 +745,5 @@ def _statistics():
 if __name__ == "__main__":
     #_test(level=None)
     _statistics()
+
+# vim: set ts=4 sw=4 et:

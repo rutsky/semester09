@@ -132,3 +132,5 @@ def _main_test():
 # TODO: Add tests for this module.
 if __name__ == "__main__":
     _main_test()
+
+# vim: set ts=4 sw=4 et:

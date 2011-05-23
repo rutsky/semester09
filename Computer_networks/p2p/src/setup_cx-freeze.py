@@ -42,3 +42,5 @@ setup(
         },
     executables=[Executable("main.py", base=base)],
     )
+
+# vim: set ts=4 sw=4 et:
