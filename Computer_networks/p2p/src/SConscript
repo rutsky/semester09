@@ -19,12 +19,24 @@ import os
 
 Import('env')
 
-sources = Glob("*.py", strings=True) + Glob("*.ui", strings=True)
+python_sources = list(
+    set(Glob("*.py", strings=True)) - 
+    set(["setup.py", "setup_cx-freeze.py"]))
+
+sources = \
+    python_sources + \
+    Glob(os.path.join("forms", "*.ui"), strings=True) + \
+    Glob(os.path.join("i18n", "*.ts"), strings=True)
 
 build_cx_freeze = env.Command("build_cx-freeze", sources,
     "python setup_cx-freeze.py build",
     chdir=True)
 Clean(build_cx_freeze, ['build'])
+
+lupdate = env.Command("lupdate",
+    ["network_model.pro"], # TODO
+    "pylupdate4 network_model.pro",
+    chdir=True)
 
 Default()
 
