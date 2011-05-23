@@ -10,6 +10,7 @@ delivering between connected routers which is not really good (and realistic).
  * Implement blocking reads with timeout.
  * Use `bytearray' instead of `str' for array of bytes in transmission.
  * Add global time control (pause/start).
+ * Closing window with application don't actually stops application.
 
 GUI:
  * Close colors. Should get colors sequently from hue range.
