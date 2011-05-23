@@ -1,4 +1,3 @@
-import os.path
 #  This file is part of network emulation test model.
 #
 #  Copyright (C) 2010, 2011  Vladimir Rutsky <altsysrq@gmail.com>
@@ -29,6 +28,7 @@ if sys.version_info[:2] < (2, 7):
 else:
     import unittest
 import logging
+import os
 from itertools import ifilter
 
 from PyQt4.QtGui import *
