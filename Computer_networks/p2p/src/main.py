@@ -21,11 +21,19 @@ __license__ = "GPL"
 import sys
 
 from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 
 from main_window import MainWindow
 
 def main():
+    # Load translator.
+    translator = QTranslator()
+    translator.load('i18n/ru_RU')
+
     app = QApplication(sys.argv)
+
+    # Apply translator.
+    app.installTranslator(translator)
 
     w = MainWindow()
 
