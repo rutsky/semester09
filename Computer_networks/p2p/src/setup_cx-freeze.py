@@ -30,7 +30,7 @@ includes = ['sip', 'encodings.ascii', 'encodings.utf_8', 'encodings.hex_codec']
 
 setup(
     name="network_model",
-    version="0.1",
+    version="0.2",
     description="Network emulation test model",
     author='Vladimir Rutsky',
     author_email='altsysrq@gmail.com',
