@@ -123,6 +123,10 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.panel)
         self.panel.nRoutersSlider.valueChanged.connect(
             self.on_routers_num_changed)
+        self.panel.shakeRoutersButton.clicked.connect(
+            self.shake_routers)
+        self.panel.stopRoutersButton.clicked.connect(
+            self.stop_routers)
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
