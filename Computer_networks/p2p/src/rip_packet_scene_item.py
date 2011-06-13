@@ -54,18 +54,23 @@ class RIPPacketItem(QGraphicsObject):
             QPointF(-self._width / 2.0, 0),
             QSizeF(self._width, self._height / 2.0))
 
+        self._src_pen = QPen(self._src_color, 0)
+        self._src_brush = QBrush(self._src_color)
+        self._dest_pen = QPen(self._dest_color, 0)
+        self._dest_brush = QBrush(self._dest_color)
+
     def boundingRect(self):
         adjust = 1
 
         return self._size_rect.adjusted(-adjust, -adjust, adjust, adjust)
 
     def paint(self, painter, style_option, widget):
-        painter.setPen(QPen(self._src_color, 0))
-        painter.setBrush(QBrush(self._src_color))
+        painter.setPen(self._src_pen)
+        painter.setBrush(self._src_brush)
         painter.drawRect(self._src_rect)
 
-        painter.setPen(QPen(self._dest_color, 0))
-        painter.setBrush(QBrush(self._dest_color))
+        painter.setPen(self._dest_pen)
+        painter.setBrush(self._dest_brush)
         painter.drawRect(self._dest_rect)
 
 def _test(timeout=1):
