@@ -34,6 +34,7 @@ from PyQt4.Qt import *
 import config
 from router_scene_item import RouterItem
 from link_scene_item import LinkItem
+from main_dockable_panel import MainDockableWidget
 
 if config.use_openGL:
     from PyQt4.QtOpenGL import *
@@ -87,6 +88,9 @@ class MainWindow(QMainWindow):
 
         # Disable spatial indexing since all objects will be moving.
         self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+
+        self.panel = MainDockableWidget(self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.panel)
         
         # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())

@@ -27,7 +27,11 @@ if sys.platform == "win32":
     base = "Win32GUI"
 
 include_files = [
-    (os.path.join('forms', 'main_window.ui'), os.path.join('forms', 'main_window.ui'))]
+    (os.path.join('forms', 'main_window.ui'), 
+            os.path.join('forms', 'main_window.ui')),
+    (os.path.join('forms', 'main_dockable_panel.ui'), 
+            os.path.join('forms', 'main_dockable_panel.ui')),
+    ]
 includes = ['sip', 'encodings.ascii', 'encodings.utf_8', 'encodings.hex_codec']
 
 setup(
