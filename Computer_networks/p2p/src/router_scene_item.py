@@ -120,16 +120,23 @@ class RouterItem(QGraphicsObject):
         update_rate = 20 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
 
-        self.destroyed.connect(self.on_destroy)
+        #self.destroyed.connect(self.on_destroy)
 
-    @pyqtSlot()
-    def on_destroy(self):
-        # FIXME: never called.
-        self._logger.info("{0}.on_destroy()".format(self))
+    #@pyqtSlot()
+    #def on_destroy(self):
+    #    # FIXME: never called.
+    #    self._logger.info("{0}.on_destroy()".format(self))
+    #
+    #    self._stop_networking()
 
+    def __del__(self):
+        #super(RouterItem, self).__del__()
+        print self,".__del__()" # DEBUG
         self._stop_networking()
 
     def _start_networking(self):
+        self._logger.info("{0}._start_networking()".format(self))
+
         self._datagram_router = DatagramRouter(
             router_name=self.name,
             link_manager=self._link_manager)
@@ -145,6 +152,8 @@ class RouterItem(QGraphicsObject):
             self._rip_service.dynamic_routing_table())
 
     def _stop_networking(self):
+        self._logger.info("{0}._stop_networking()".format(self))
+
         self._rip_service.terminate()
         self._service_manager.terminate()
         self._datagram_router.terminate()

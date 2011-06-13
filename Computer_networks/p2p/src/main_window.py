@@ -118,6 +118,23 @@ class MainWindow(QMainWindow):
         self._working_thread = threading.Thread(target=self._work)
         self._working_thread.start()
 
+    def __del__(self):
+        #super(MainWindow, self).__del__()
+        print self, "__del__" # DEBUG
+
+        for r1 in self.routers:
+            for r2 in self.routers:
+                if (r1, r2) in self.links:
+        #            self.links[(r1, r2)].enabled = False
+                    self.links[(r1, r2)].terminate()
+
+        for r in self.routers:
+            # TODO
+            r._stop_networking()
+
+        #import sliding_window
+        #print sliding_window.worker._frame_transmitters
+
     def closeEvent(self, event):
         # TODO: It is possible to hit close button twice. Must do
         # deinitialization on destroy event.
@@ -209,13 +226,15 @@ def _test(timeout=1, disabled_loggers=None, level=None):
                     process_events_with_timeout(timeout)
 
             def test_main(self):
-                self.w = MainWindow()
-                self.w.show()
+                w = MainWindow()
+                w.show()
 
-                for i in xrange(5):
-                    self.w.add_router()
+                #for i in xrange(5):
+                #    w.add_router()
+                w.add_router()
+                w.add_router()
 
-                self.w.shake_routers()
+                w.shake_routers()
 
                 self.finished = True
 
