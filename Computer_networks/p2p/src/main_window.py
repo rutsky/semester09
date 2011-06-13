@@ -219,7 +219,6 @@ class MainWindow(QMainWindow):
         return name
 
     def add_router(self):
-        print self.visible_routers
         if self.visible_routers < config.max_routers_num:
             r = self.routers[self.visible_routers]
             r.enabled = True
