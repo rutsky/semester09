@@ -7,15 +7,15 @@ infinite cycles. Some event system should be used.
 background threads infinite loops.
  * In protocols above frame transfer we relying on correct fragments 
 delivering between connected routers which is not really good (and realistic).
+(Actually it is realistic: currently link level tends to include reliable 
+transfer.)
  * Implement blocking reads with timeout.
  * Use `bytearray' instead of `str' for array of bytes in transmission.
  * Add global time control (pause/start).
- * Closing window with application don't actually stops application.
 
 GUI:
  * Close colors. Should get colors sequently from hue range.
  * Add/remove router.
  * Manual adding of persistent links.
  * Add buttons to stop/shake all routers.
- * File->Quit (or Ctrl+Q) don't work on recent Python 2.7 and PyQt.
  * Add window with statistics about loss packets etc.
