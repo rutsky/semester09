@@ -21,6 +21,7 @@ __license__ = "GPL"
 __all__ = ["LinkItem"]
 
 import time
+import math
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -201,7 +202,7 @@ class LinkItem(QGraphicsObject):
         extra = max(self._visual_link_width,
             self._visual_route_start_offset +
                 routes_count * self._visual_route_offset_step +
-                    self._visual_route_line_width)
+                    self._visual_route_line_width) * math.sqrt(2) # magic const
 
         return QRectF(self.src_point,
             QSizeF(self.dest_point.x() - self.src_point.x(),
