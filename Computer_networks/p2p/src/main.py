@@ -48,11 +48,11 @@ def excepthook(excepttype, exceptvalue, tracebackobj):
 
         sys.stderr.write(full_exception_text)
 
-        msg_box = qt4.QMessageBox(
-            qt4.QMessageBox.Critical,
+        msg_box = QMessageBox(
+            QMessageBox.Critical,
             "Unhandled exception",
             "Unhandled exception.",
-            qt4.QMessageBox.Close,
+            QMessageBox.Close,
             # TODO: Fails with:
             # TypeError: arguments did not match any overloaded call:
             #   QMessageBox(QWidget parent=None): argument 1 has unexpected type 'Icon'
@@ -68,7 +68,7 @@ def excepthook(excepttype, exceptvalue, tracebackobj):
         msg_box.setDetailedText(full_exception_text)
         #msg_box.setSizeGripEnabled(True)
         #msg_box.adjustSize()
-        msg_box.setDefaultButton(qt4.QMessageBox.Close)
+        msg_box.setDefaultButton(QMessageBox.Close)
 
         msg_box.exec_()
         #raise IgnoreException
