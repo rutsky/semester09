@@ -18,12 +18,14 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["Palette", "palette"]
+__all__ = ["Palette", "FixedPalette", "palette"]
 
 import random
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+import config
 
 def random_color(generator=random):
     color = QColor()
@@ -46,7 +48,32 @@ class Palette(object):
 
         return self._palette[idx]
 
-palette = Palette()
+# TODO: Not generic interface.
+class FixedPalette(object):
+    def __init__(self, size, seed=0):
+        super(FixedPalette, self).__init__()
+
+        self._size = size
+        self._generator = random.Random(seed)
+
+        self._palette = []
+
+    def __getitem__(self, idx):
+        assert isinstance(idx, int) and idx >= 0
+        while len(self._palette) <= idx:
+            if idx < self._size:
+                v = 1.0 * idx / self._size
+                class G(object):
+                    def random(self):
+                        return v
+
+                self._palette.append(random_color(G()))
+            else:
+                self._palette.append(random_color(self._generator))
+
+        return self._palette[idx]
+
+palette = FixedPalette(config.max_routers_num)
 
 # TODO: Implement binary division palette.
 
@@ -70,6 +97,25 @@ def _test():
 
             def test_test(self):
                 p1 = Palette()
+                colors = [(p1[i].red(), p1[i].green(), p1[i].blue())
+                    for i in xrange(10)]
+                colors.sort()
+                print "Must be random:", colors
+
+        class TestFixedPalette(unittest.TestCase):
+            def test_main(self):
+                p = FixedPalette(4)
+                p[10]
+
+            def test_deterministic(self):
+                p1 = FixedPalette(4)
+                p2 = FixedPalette(4)
+                p1[100]
+                p2[200]
+                self.assertEqual(p1[30], p2[30])
+
+            def test_test(self):
+                p1 = FixedPalette(4)
                 colors = [(p1[i].red(), p1[i].green(), p1[i].blue())
                     for i in xrange(10)]
                 colors.sort()
