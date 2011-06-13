@@ -27,10 +27,18 @@ from PyQt4.QtGui import *
 
 import config
 
-def random_color(generator=random):
+# TODO: Rename to "color_from_rgb" etc.
+# TODO: Move to separate module.
+def rgb_color(r, g, b):
+    return QColor(r, g, b)
+
+def hsv01_color(h, s, v):
     color = QColor()
-    color.setHsvF(generator.random(), 1.0, 1.0)
+    color.setHsvF(h, s, v)
     return color
+
+def random_color(generator=random):
+    return hsv01_color(generator.random(), 1.0, 1.0)
 
 # TODO: Not generic interface.
 class Palette(object):
@@ -49,6 +57,7 @@ class Palette(object):
         return self._palette[idx]
 
 # TODO: Not generic interface.
+# TODO: Tests.
 class FixedPalette(object):
     def __init__(self, size, seed=0):
         super(FixedPalette, self).__init__()
@@ -73,7 +82,30 @@ class FixedPalette(object):
 
         return self._palette[idx]
 
-palette = FixedPalette(config.max_routers_num)
+# TODO: Tests.
+class Palette16(object):
+    def __init__(self, size, seed=0):
+        super(Palette16, self).__init__()
+
+        self._size = size
+        self._generator = random.Random(seed)
+
+        c = rgb_color
+        self._palette = [
+            c(255, 0, 0), c(0, 255, 0), c(0, 0, 255), c(255, 255, 0),
+            c(255, 0, 255), c(0, 255, 255), c(187, 187, 187), c(221, 119, 119),
+            c(119, 221, 119), c(221, 221, 119), c(119, 119, 221),
+            c(221, 119, 238),
+            c(187, 255, 255), c(238, 187, 0), c(127, 0, 0), c(0, 127, 0)]
+
+    def __getitem__(self, idx):
+        assert isinstance(idx, int) and idx >= 0
+        while len(self._palette) <= idx:
+            self._palette.append(random_color(self._generator))
+
+        return self._palette[idx]
+
+palette = Palette16(config.max_routers_num)
 
 # TODO: Implement binary division palette.
 
