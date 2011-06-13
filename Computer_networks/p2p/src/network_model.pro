@@ -39,7 +39,7 @@ SOURCES = main.py \
   total_ordering.py \
   main_dockable_panel.py
 TRANSLATIONS = i18n/ru_RU.ts
-FORMS = forms/main_window.ui, \
+FORMS = forms/main_window.ui \
   forms/main_dockable_panel.ui
 
 # vim: ts=2 sw=2 et:
