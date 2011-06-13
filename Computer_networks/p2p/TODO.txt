@@ -15,7 +15,5 @@ transfer.)
 
 GUI:
  * Close colors. Should get colors sequently from hue range.
- * Add/remove router.
  * Manual adding of persistent links.
- * Add buttons to stop/shake all routers.
  * Add window with statistics about loss packets etc.
