@@ -89,17 +89,19 @@ class MainWindow(QMainWindow):
         # Disable spatial indexing since all objects will be moving.
         self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
-        self.panel = MainDockableWidget(self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.panel)
-        
         # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
         self.name_it = itertools.count(0)
         self.routers = []
+        self.visible_routers = 0
 
-        # (src, dest) -> link
-        self.links = {}
+        # Symmetrical matrix of links between routers.
+        self.links = [
+            [None for c in xrange(config.max_routers_num)]
+                for r in xrange(config.max_routers_num)]
+        # List of all links.
+        self.links_list = []
 
         self.connection_distance = 50
         self.disconnection_distance = 70
@@ -114,6 +116,14 @@ class MainWindow(QMainWindow):
         self._update_link_timer_id = \
             self.startTimer(int(1000 / link_update_rate))
 
+        self.generate_routers()
+            
+        # Main panel.
+        self.panel = MainDockableWidget(self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.panel)
+        self.panel.nRoutersSlider.valueChanged.connect(
+            self.on_routers_num_changed)
+
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
         self._exit_lock = threading.RLock()
@@ -126,11 +136,9 @@ class MainWindow(QMainWindow):
         #super(MainWindow, self).__del__()
         print self, "__del__" # DEBUG
 
-        for r1 in self.routers:
-            for r2 in self.routers:
-                if (r1, r2) in self.links:
-        #            self.links[(r1, r2)].enabled = False
-                    self.links[(r1, r2)].terminate()
+        for l in self.links_list:
+#            l.enabled = False
+            l.terminate()
 
         for r in self.routers:
             # TODO
@@ -150,20 +158,32 @@ class MainWindow(QMainWindow):
 
     def timerEvent(self, event):
         if event.timerId() == self._refresh_timer_id:
-            for router in self.routers:
+            for router in self.routers[:self.visible_routers]:
                 router.advance(self._dt)
 
         elif event.timerId() == self._update_link_timer_id:
-            for (r1, r2), link in self.links.iteritems():
-                if r1.distance(r2) >= self.disconnection_distance:
-                    link.enabled = False
+            for r1_idx in xrange(self.visible_routers):
+                for r2_idx in xrange(r1_idx + 1, self.visible_routers):
+                    r1 = self.routers[r1_idx]
+                    r2 = self.routers[r2_idx]
+                    link = self.links[r1_idx][r2_idx]
+                    if r1.distance(r2) >= self.disconnection_distance:
+                        link.enabled = False
 
-            for idx, r1 in enumerate(self.routers):
-                for r2 in self.routers[idx + 1:]:
+            for r1_idx in xrange(self.visible_routers):
+                for r2_idx in xrange(r1_idx + 1, self.visible_routers):
+                    r1 = self.routers[r1_idx]
+                    r2 = self.routers[r2_idx]
+                    link = self.links[r1_idx][r2_idx]
+                    
                     if r1.distance(r2) <= self.connection_distance:
-                        self.links[(r1, r2)].enabled = True
+                        link.enabled = True
 
-    def add_router(self, pos=None):
+    def generate_routers(self):
+        for i in xrange(config.max_routers_num):
+            self._generate_router()
+
+    def _generate_router(self, pos=None):
         name = self.name_it.next()
 
         if pos is None:
@@ -176,18 +196,40 @@ class MainWindow(QMainWindow):
         else:
             router_pos = pos
 
-        router = RouterItem(name)
+        router = RouterItem(name, enabled=False)
         self.scene.addItem(router)
         router.setPos(router_pos)
 
-        for r in self.routers:
-            link = LinkItem(r, router)
+        r_idx = len(self.routers)
+        for r2_idx in xrange(len(self.routers)):
+            r2 = self.routers[r2_idx]
+
+            link = LinkItem(router, r2, enabled=False)
             self.scene.addItem(link)
-            self.links[(r, router)] = link
+            self.links_list.append(link)
+            self.links[r_idx][r2_idx] = link
+            self.links[r2_idx][r_idx] = link
 
         self.routers.append(router)
 
         return name
+
+    def add_router(self):
+        print self.visible_routers
+        if self.visible_routers < config.max_routers_num:
+            r = self.routers[self.visible_routers]
+            r.enabled = True
+            #for r2_idx in xrange(self.visible_routers):
+            #    self.links[self.visible_routers][r2_idx].enabled = True
+            self.visible_routers += 1
+
+    def remove_router(self):
+        if self.visible_routers > 0:
+            r = self.routers[self.visible_routers - 1]
+            r.enabled = False
+            for r2_idx in xrange(self.visible_routers - 1):
+                self.links[self.visible_routers - 1][r2_idx].enabled = False
+            self.visible_routers -= 1
 
     @pyqtSlot()
     def stop_routers(self):
@@ -198,6 +240,13 @@ class MainWindow(QMainWindow):
     def shake_routers(self):
         for router in self.routers:
             router.velocity = random_velocity(*self.router_velocity_range)
+
+    @pyqtSlot(int)
+    def on_routers_num_changed(self, nRouters):
+        while nRouters > self.visible_routers:
+            self.add_router()
+        while nRouters < self.visible_routers:
+            self.remove_router()
 
     def _work(self):
         # TODO: move to __init__()

@@ -30,6 +30,8 @@ rip_update_period = 7
 rip_inf_timeout = 30
 rip_remove_timeout = 60
 
+max_routers_num = 16
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 

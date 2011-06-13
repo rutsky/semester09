@@ -309,6 +309,11 @@ class LinkItem(QGraphicsObject):
     def timerEvent(self, event):
         old_src_table = self.src_table
         old_dest_table = self.dest_table
+
+        # TODO
+        if self.src.rip_service is None or self.dest.rip_service is None:
+            return
+
         self.src_table = self.src.rip_service.dynamic_routing_table().table()
         self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
 

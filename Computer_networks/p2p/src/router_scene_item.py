@@ -73,7 +73,7 @@ class ControllableRouterServiceManager(RouterServiceManager):
         return self._controllable_services
 
 class RouterItem(QGraphicsObject):
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None, enabled=True):
         super(RouterItem, self).__init__(parent)
 
         assert router_name.is_valid(name)
@@ -115,7 +115,11 @@ class RouterItem(QGraphicsObject):
 
         self._drag_points = deque(maxlen=10)
 
+        self._enabled = False
+        self.hide()
         self._start_networking()
+
+        self.enabled = enabled
 
         update_rate = 20 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
@@ -133,6 +137,28 @@ class RouterItem(QGraphicsObject):
         #super(RouterItem, self).__del__()
         print self,".__del__()" # DEBUG
         self._stop_networking()
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        if self._enabled != bool(value):
+            self._enabled = bool(value)
+
+            if self._enabled:
+                # Link up.
+                self._router_up()
+            else:
+                # Link down.
+                self._router_down()
+
+    def _router_up(self):
+        self.show()
+
+    def _router_down(self):
+        self.hide()
 
     def _start_networking(self):
         self._logger.info("{0}._start_networking()".format(self))
@@ -244,6 +270,13 @@ class RouterItem(QGraphicsObject):
         super(RouterItem, self).mouseMoveEvent(event)
 
     def timerEvent(self, event):
+        if not self.enabled:
+            return
+
+        # TODO
+        if self._service_manager is None:
+            return
+
         for protocol, service_transmitter in \
                 self._service_manager.services.items():
             while True:

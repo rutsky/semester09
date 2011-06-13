@@ -96,12 +96,10 @@ def main():
 
     w = MainWindow()
 
-    for i in xrange(16):
-        w.add_router()
-
-    w.shake_routers()
-
     w.show()
+
+    w.panel.nRoutersSlider.setValue(10)
+    w.shake_routers()
 
     sys.exit(app.exec_())
     
