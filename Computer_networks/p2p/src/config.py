@@ -34,6 +34,8 @@ max_routers_num = 16
 image_cut_rows = 10
 image_cut_columns = 10
 
+image_transfer_send_period = 1
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 

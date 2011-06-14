@@ -36,6 +36,8 @@ from router_scene_item import RouterItem
 from link_scene_item import LinkItem
 from main_dockable_panel import MainDockableWidget
 from transmission_widget import TransmissionWidget
+from image_transfer_router_scene_item import SendImageRouterItem, \
+    ReceiveImageRouterItem
 
 if config.use_openGL:
     from PyQt4.QtOpenGL import *
@@ -154,6 +156,7 @@ class MainWindow(QMainWindow):
 
         for l in self.links_list:
 #            l.enabled = False
+            assert l is not None
             l.terminate()
 
         for r in self.routers:
@@ -196,10 +199,18 @@ class MainWindow(QMainWindow):
                         link.enabled = True
 
     def generate_routers(self):
-        for i in xrange(config.max_routers_num):
+        def send_wrapper(name, **kwargs):
+            return SendImageRouterItem(name, 1, **kwargs)
+
+        self._generate_router(router_class=send_wrapper)
+        self._generate_router(router_class=ReceiveImageRouterItem)
+        self._send_image_router = self.routers[0]
+        self._receive_image_router = self.routers[1]
+
+        for i in xrange(2, config.max_routers_num):
             self._generate_router()
 
-    def _generate_router(self, pos=None):
+    def _generate_router(self, pos=None, router_class=RouterItem):
         name = self.name_it.next()
 
         if pos is None:
@@ -212,7 +223,7 @@ class MainWindow(QMainWindow):
         else:
             router_pos = pos
 
-        router = RouterItem(name, enabled=False)
+        router = router_class(name, enabled=False)
         self.scene.addItem(router)
         router.setPos(router_pos)
 
@@ -239,7 +250,7 @@ class MainWindow(QMainWindow):
             self.visible_routers += 1
 
     def remove_router(self):
-        if self.visible_routers > 0:
+        if self.visible_routers > 2: # 2 --- number of predefined routers
             r = self.routers[self.visible_routers - 1]
             r.enabled = False
             for r2_idx in xrange(self.visible_routers - 1):

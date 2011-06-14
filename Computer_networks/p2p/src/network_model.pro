@@ -38,7 +38,9 @@ SOURCES = main.py \
   timer.py \
   total_ordering.py \
   main_dockable_panel.py \
-  transmission_widget.py
+  transmission_widget.py \
+  image_transfer_router_scene_item.py \
+  data_transfer.py
 TRANSLATIONS = i18n/ru_RU.ts
 FORMS = forms/main_window.ui \
   forms/main_dockable_panel.ui \

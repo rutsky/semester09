@@ -348,7 +348,7 @@ class RouterItem(QGraphicsObject):
         return QLineF(
             self.mapFromItem(self, 0, 0),
             self.mapFromItem(other_router, 0, 0)).length()
-            
+
 def _test(timeout=1, level=None):
     # TODO: Use in separate file to test importing functionality.
 
