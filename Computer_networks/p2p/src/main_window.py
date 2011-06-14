@@ -35,6 +35,7 @@ import config
 from router_scene_item import RouterItem
 from link_scene_item import LinkItem
 from main_dockable_panel import MainDockableWidget
+from transmission_widget import TransmissionWidget
 
 if config.use_openGL:
     from PyQt4.QtOpenGL import *
@@ -127,6 +128,17 @@ class MainWindow(QMainWindow):
             self.shake_routers)
         self.panel.stopRoutersButton.clicked.connect(
             self.stop_routers)
+
+        # Transmission widget.
+        self.transmission = TransmissionWidget(self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.transmission)
+        self.transmission.load_image("images/forest.jpg")
+        #self.panel.nRoutersSlider.valueChanged.connect(
+        #    self.on_routers_num_changed)
+        #self.panel.shakeRoutersButton.clicked.connect(
+        #    self.shake_routers)
+        #self.panel.stopRoutersButton.clicked.connect(
+        #    self.stop_routers)
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.

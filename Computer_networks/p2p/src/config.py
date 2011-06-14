@@ -31,6 +31,8 @@ rip_inf_timeout = 30
 rip_remove_timeout = 60
 
 max_routers_num = 16
+image_cut_rows = 10
+image_cut_columns = 10
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

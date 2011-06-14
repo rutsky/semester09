@@ -37,9 +37,11 @@ SOURCES = main.py \
   testing.py \
   timer.py \
   total_ordering.py \
-  main_dockable_panel.py
+  main_dockable_panel.py \
+  transmission_widget.py
 TRANSLATIONS = i18n/ru_RU.ts
 FORMS = forms/main_window.ui \
-  forms/main_dockable_panel.ui
+  forms/main_dockable_panel.ui \
+  forms/transmission_widget.ui
 
 # vim: ts=2 sw=2 et:
