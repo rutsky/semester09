@@ -20,6 +20,8 @@ __license__ = "GPL"
 
 __all__ = ["EchoPacketItem"]
 
+# TODO: Module not used?
+
 import time
 
 from PyQt4.QtGui import *
