@@ -61,8 +61,9 @@ class LinkItem(QGraphicsObject):
         self.src_point = None
         self.dest_point = None
 
-        # List of LinkItem.TransmittingPacket
-        self._transmitting_packets = []
+        # { id: LinkItem.TransmittingPacket }
+        self._transmitting_direct_packets = {}
+        self._transmitting_reverse_packets = {}
 
         # Edge color.
         self.color = Qt.black
@@ -150,40 +151,74 @@ class LinkItem(QGraphicsObject):
 
     def _link_down(self):
         self._src_frame_transmitter.enabled = False
+        assert not self._transmitting_direct_packets
         self._dest_frame_transmitter.enabled = False
+        assert not self._transmitting_reverse_packets
 
         self.src.link_manager.remove_link(self.dest.name)
         self.dest.link_manager.remove_link(self.src.name)
 
         self.hide()
 
-        for tr_packet in self._transmitting_packets:
-            tr_packet.packet_item.setParent(None)
-            self.link_end_by_name(tr_packet.packet.dest).\
-                deliver_packet(tr_packet.packet, True)
-        self._transmitting_packets = []
+    def _create_transmitting_packet_scene_item(self, protocol, packet):
+        if protocol == RIPService.protocol:
+            return RIPPacketItem(packet, self)
+        elif protocol == DataSendService.protocol:
+            return ImageTransferPacketItem(packet, self)
+        else:
+            self._logger.warning(
+                "Request to create scene item for unknown protocol {0}. "
+                "Packet: {1}".format(protocol, packet))
 
-    @pyqtSlot(int, float, float, Packet)
-    def _on_src_packet_send(self, id_, send_time, deliver_time, packet):
+    @pyqtSlot(int, float, float, int, Packet)
+    def _on_src_packet_send(self, id_, send_time, deliver_time, protocol,
+                            packet):
         # TODO
         self._logger.debug("_on_src_packet_send: {0} {1} {2} {3}".format(
             id_, send_time, deliver_time, packet))
 
-    @pyqtSlot(int)
-    def _on_src_packet_received(self, id_):
+        scene_item = self._create_transmitting_packet_scene_item(
+            protocol, packet)
+        #scene_item.setParent(self)
+
+        tr_packet = LinkItem.TransmittingPacket(
+            packet, send_time, deliver_time, scene_item)
+        self._adjust_transmitting_packet(tr_packet)
+
+        self._transmitting_direct_packets[id_] = tr_packet
+
+    @pyqtSlot(int, bool)
+    def _on_src_packet_received(self, id_, is_success):
         # TODO
         self._logger.debug("_on_src_packet_received: {0}".format(id_))
 
-    @pyqtSlot(int, float, float, Packet)
-    def _on_dest_packet_send(self, id_, send_time, deliver_time, packet):
+        self._transmitting_direct_packets[id_].packet_item.setParent(None)
+        del self._transmitting_direct_packets[id_]
+
+    @pyqtSlot(int, float, float, int, Packet)
+    def _on_dest_packet_send(self, id_, send_time, deliver_time, protocol,
+                            packet):
         # TODO
         self._logger.debug("_on_dest_packet_send: {0} {1} {2} {3}".format(
             id_, send_time, deliver_time, packet))
 
-    @pyqtSlot(int)
-    def _on_dest_packet_received(self, id_):
+        scene_item = self._create_transmitting_packet_scene_item(
+            protocol, packet)
+        #scene_item.setParent(self)
+
+        tr_packet = LinkItem.TransmittingPacket(
+            packet, send_time, deliver_time, scene_item)
+        self._adjust_transmitting_packet(tr_packet)
+
+        self._transmitting_reverse_packets[id_] = tr_packet
+
+    @pyqtSlot(int, bool)
+    def _on_dest_packet_received(self, id_, is_success):
         # TODO
         self._logger.debug("_on_dest_packet_received: {0}".format(id_))
+
+        self._transmitting_reverse_packets[id_].packet_item.setParent(None)
+        del self._transmitting_reverse_packets[id_]
 
     def length(self):
         return QLineF(
@@ -315,6 +350,8 @@ class LinkItem(QGraphicsObject):
     def _adjust_transmitting_packet(self, tr_packet):
         # TODO: may be call prepareGeometryChange()?
 
+        self._logger.debug("_adjust_transmitting_packet: {0}".format(tr_packet))
+
         if self.is_singular():
             tr_packet.packet_item.hide()
             return
@@ -326,7 +363,12 @@ class LinkItem(QGraphicsObject):
             (curtime - tr_packet.start_time) /
                 (tr_packet.end_time - tr_packet.start_time))
 
-        if tr_packet.packet.src == self.src.name:
+        # TODO: Currently packets delivered faster then they poped from queue.
+        if progress == 1.0:
+            tr_packet.packet_item.hide()
+            return
+
+        if tr_packet.packet.delivered_from == self.dest.name:
             line = QLineF(self.src_point, self.dest_point)
         else:
             line = QLineF(self.dest_point, self.src_point)
@@ -341,8 +383,9 @@ class LinkItem(QGraphicsObject):
         tr_packet.packet_item.setPos(position)
         tr_packet.packet_item.setRotation(-line.angle() - 90.0)
 
-        if isinstance(tr_packet.packet_item, ImageTransferPacketItem):
-            print tr_packet
+        # DEBUG
+        #if isinstance(tr_packet.packet_item, ImageTransferPacketItem):
+        #    print tr_packet
 
     def timerEvent(self, event):
         old_src_table = self.src_table
@@ -359,49 +402,18 @@ class LinkItem(QGraphicsObject):
             self._recalculate_routes()
             self.update()
 
-        new_transmitting_packets = []
-        for transmitting_packet in self._transmitting_packets:
-            if transmitting_packet.end_time <= time.time():
-                # Packet delivered.
-                transmitting_packet.packet_item.setParent(None)
-                self.link_end_by_name(transmitting_packet.packet.dest).\
-                    deliver_packet(transmitting_packet.packet, False)
-            else:
-                new_transmitting_packets.append(transmitting_packet)
-        self._transmitting_packets = new_transmitting_packets
-
-        for tr_packet in self._transmitting_packets:
+        for tr_packet in self._transmitting_direct_packets.values() + \
+                self._transmitting_reverse_packets.values():
             self._adjust_transmitting_packet(tr_packet)
 
-    def transmit_packet(self, protocol, packet):
-        transmit_time = packet.time * config.packets_delivery_time_factor
-
-        current_time = time.time()
-        if protocol == RIPService.protocol:
-            packet_item = RIPPacketItem(packet, self)
-            transmitting_packet = LinkItem.TransmittingPacket(
-                packet, current_time, current_time + transmit_time, packet_item)
-            self._transmitting_packets.append(transmitting_packet)
-
-            self._adjust_transmitting_packet(transmitting_packet)
-        elif protocol == DataSendService.protocol:
-            print "Image transfer!", packet # DEBUG
-            packet_item = ImageTransferPacketItem(packet, self)
-            transmitting_packet = LinkItem.TransmittingPacket(
-                packet, current_time, current_time + transmit_time, packet_item)
-            self._transmitting_packets.append(transmitting_packet)
-
-            self._adjust_transmitting_packet(transmitting_packet)
-        else:
-            # TODO: Log this case.
-            pass
-
-def _test(timeout=1):
+def _test(level=None, timeout=1):
     # TODO: Use in separate file to test importing functionality.
 
     from testing import unittest, do_tests, process_events_with_timeout
     
     from router_scene_item import RouterItem
+    from image_transfer_router_scene_item import SendImageRouterItem, \
+        ReceiveImageRouterItem
 
     class Tests(object):
         class TestLinkItem(unittest.TestCase):
@@ -436,9 +448,26 @@ def _test(timeout=1):
 
                 self.finished = True
 
-    do_tests(Tests, qt=True)
+            def test_image_transfer(self):
+                self.ri1 = SendImageRouterItem(0, 1)
+                self.ri2 = ReceiveImageRouterItem(1)
+
+                self.scene.addItem(self.ri1)
+                self.scene.addItem(self.ri2)
+
+                self.ri1.setPos(-100, -50)
+                self.ri2.setPos(100, 50)
+
+                self.li = LinkItem(self.ri1, self.ri2, enabled=True)
+                self.scene.addItem(self.li)
+
+                self.ri1.send_data(range(100))
+
+                self.finished = True
+
+    do_tests(Tests, level=level, qt=True)
 
 if __name__ == "__main__":
-    _test(timeout=None)
+    _test(level=0, timeout=None)
 
 # vim: set ts=4 sw=4 et:

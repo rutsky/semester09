@@ -35,6 +35,7 @@ from datagram import DatagramRouter
 from service_manager import RouterServiceManager
 from rip import RIPService
 
+"""
 class ControllableRouterServiceManager(RouterServiceManager):
     class ControllableServiceInfo(RouterServiceManager.ServiceInfo):
         def __init__(self, *args, **kwargs):
@@ -71,6 +72,7 @@ class ControllableRouterServiceManager(RouterServiceManager):
     @property
     def services(self):
         return self._controllable_services
+"""
 
 class RouterItem(QGraphicsObject):
     def __init__(self, name, parent=None, enabled=True):
@@ -102,7 +104,7 @@ class RouterItem(QGraphicsObject):
         self._links = {}
 
         # packet -> protocol
-        self._packets_for_delivery = {}
+        #self._packets_for_delivery = {}
 
         self._link_manager = RouterLinkManager()
         self._datagram_router = None
@@ -167,7 +169,7 @@ class RouterItem(QGraphicsObject):
             router_name=self.name,
             link_manager=self._link_manager)
         self._service_manager = \
-            ControllableRouterServiceManager(self._datagram_router)
+            RouterServiceManager(self._datagram_router)
         self._rip_service_transmitter = self._service_manager.register_service(
             RIPService.protocol)
 
@@ -277,34 +279,34 @@ class RouterItem(QGraphicsObject):
         if self._service_manager is None:
             return
 
-        for protocol, service_transmitter in \
-                self._service_manager.services.items():
-            while True:
-                try:
-                    packet = service_transmitter.receive_queue.get(block=False)
-                except Queue.Empty:
-                    break
+#        for protocol, service_transmitter in \
+#                self._service_manager.services.items():
+#            while True:
+#                try:
+#                    packet = service_transmitter.receive_queue.get(block=False)
+#                except Queue.Empty:
+#                    break
+#
+#                self._packets_for_delivery[packet] = protocol
+#
+#                link = self.link_to_router(packet.delivered_from)
+#                link.transmit_packet(protocol, packet)
 
-                self._packets_for_delivery[packet] = protocol
-                
-                link = self.link_to_router(packet.delivered_from)
-                link.transmit_packet(protocol, packet)
-
-    def deliver_packet(self, packet, is_failed):
-        if not is_failed:
-            protocol = self._packets_for_delivery[packet]
-            service_transmitter = self._service_manager.services[protocol]
-            service_transmitter.actual_receive_queue.put(packet)
-
-            self._logger.debug(
-                "Delivered packet (waiting queue len is {0}):\n"
-                "  {1}".format(len(self._packets_for_delivery), packet))
-        else:
-            self._logger.debug(
-                "Packet not delivered (waiting queue len is {0}):\n"
-                "  {1}".format(len(self._packets_for_delivery), packet))
-
-        del self._packets_for_delivery[packet]
+#    def deliver_packet(self, packet, is_failed):
+#        if not is_failed:
+#            protocol = self._packets_for_delivery[packet]
+#            service_transmitter = self._service_manager.services[protocol]
+#            service_transmitter.actual_receive_queue.put(packet)
+#
+#            self._logger.debug(
+#                "Delivered packet (waiting queue len is {0}):\n"
+#                "  {1}".format(len(self._packets_for_delivery), packet))
+#        else:
+#            self._logger.debug(
+#                "Packet not delivered (waiting queue len is {0}):\n"
+#                "  {1}".format(len(self._packets_for_delivery), packet))
+#
+#        del self._packets_for_delivery[packet]
 
     def _return_to_scene(self, pos):
         new_pos = QPointF(pos)

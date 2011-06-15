@@ -40,11 +40,11 @@ from datagram import Datagram, InvalidDatagramException
 
 class ControllableFrameTransmitter(FrameTransmitter, QObject):
     # Arguments: local packet id, start transmit time (in seconds),
-    # end transmit time (in seconds), packet.
-    packet_send = pyqtSignal(int, float, float, Packet)
+    # end transmit time (in seconds), protocol, packet.
+    packet_send = pyqtSignal(int, float, float, int, Packet)
 
-    # Arguments: local packet id.
-    packet_received = pyqtSignal(int)
+    # Arguments: local packet id, is packet successfully transmitted.
+    packet_received = pyqtSignal(int, bool)
 
     class _HeapItem(recordtype('HeapItemBase',
             'delivery_time id raw_datagram packet')):
@@ -66,6 +66,16 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
         super(ControllableFrameTransmitter, self).__init__(*args, **kwargs)
 
+    def _link_down(self):
+        for heap_item in self._transmitting_heap:
+            self._logger.debug(
+                "Deferred packet delivered with failure due to link down: "
+                "{0}".format(str(heap_item.packet)))
+            self.packet_received.emit(heap_item.id, False)
+        self._transmitting_heap = []
+        self._delivered_frames_queue = []
+        super(ControllableFrameTransmitter, self)._link_down()
+        
     def _non_blocking_receive(self):
         """Returns raw datagram if any received."""
 
@@ -85,7 +95,7 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
                 heapq.heappop(self._transmitting_heap)
 
                 self._logger.debug("Deferred packet delivered: {0}".format(str(packet)))
-                self.packet_received.emit(id_)
+                self.packet_received.emit(id_, True)
             else:
                 break
 
@@ -97,7 +107,7 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
             try:
                 datagram = Datagram.deserialize(raw_datagram)
-                type_, packet = datagram_to_packet(datagram, self._src_name)
+                protocol, packet = datagram_to_packet(datagram, self._src_name)
 
                 # Decoded packet --- put it on queue and emit signal about
                 # new packet transmission.
@@ -120,7 +130,7 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
                         transmit_time, str(packet)))
 
                 self.packet_send.emit(heap_item.id,
-                    current_time, delivery_time, packet)
+                    current_time, delivery_time, protocol, packet)
             except InvalidDatagramException, InvalidPacketException:
                 self._logger.warning(
                     "Received raw datagram is not packet: 0x{0}".format(
