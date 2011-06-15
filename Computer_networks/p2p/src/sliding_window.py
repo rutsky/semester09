@@ -743,7 +743,7 @@ def _statistics():
             csv_writer.writerow((prob, time_, frames_count))
 
 if __name__ == "__main__":
-    #_test(level=None)
-    _statistics()
+    _test(level=None)
+    #_statistics()
 
 # vim: set ts=4 sw=4 et:
