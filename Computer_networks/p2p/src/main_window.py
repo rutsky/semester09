@@ -329,12 +329,14 @@ def _test(timeout=1, disabled_loggers=None, level=None):
 if __name__ == "__main__":
     disabled_loggers = []
     for r in xrange(config.max_routers_num):
-        #disabled_loggers.append("DatagramRouter.router={0}".format(r))
+        disabled_loggers.append("DatagramRouter.router={0}".format(r))
         disabled_loggers.append("RIPService.router={0}".format(r))
-        #disabled_loggers.append("RouterServiceManager.router={0}".format(r))
+        disabled_loggers.append("RouterServiceManager.router={0}".format(r))
 
         for rr in xrange(config.max_routers_num):
             disabled_loggers.append("FrameTransmitter.{0}->{1}".format(r, rr))
+            disabled_loggers.append("ControllableFrameTransmitter.{0}->{1}".format(r, rr))
+            disabled_loggers.append("LinkItem.{0}->{1}".format(r, rr))
     
     _test(timeout=None, disabled_loggers=disabled_loggers, level=0)
 
