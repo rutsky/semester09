@@ -88,17 +88,8 @@ class LinkItem(QGraphicsObject):
         self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
         self._recalculate_routes()
 
-        #self.destroyed.connect(self.on_destroy)
-
         update_rate = 10 # frames per second
         self._timer_id = self.startTimer(int(1000.0 / update_rate))
-
-    #@pyqtSlot()
-    #def on_destroy(self):
-    #    # FIXME: never called.
-    #    print "{0}.on_destroy()".format(self) # TODO: use logger
-    #    self._src_frame_transmitter.terminate()
-    #    self._dest_frame_transmitter.terminate()
 
     def __del__(self):
         print self, "__del__()" # DEBUG
