@@ -315,11 +315,8 @@ def _test(timeout=1, disabled_loggers=None, level=None):
                 w = MainWindow()
                 w.show()
 
-                #for i in xrange(5):
-                #    w.add_router()
-                w.add_router()
-                w.add_router()
-                w.add_router()
+                for i in xrange(3):
+                    w.add_router()
 
                 w.shake_routers()
 
