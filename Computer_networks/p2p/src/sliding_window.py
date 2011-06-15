@@ -379,6 +379,7 @@ class FrameTransmitter(object):
                 return None
 
     def update(self):
+        """Send/receive frames. Called from working thread."""
         # Send frames.
         if (not self._frames_data_to_send.empty() and
                 self._send_window.can_add_next()):
