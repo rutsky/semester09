@@ -35,7 +35,7 @@ from datagram import DatagramRouter
 from service_manager import RouterServiceManager
 from rip import RIPService
 from router_scene_item import RouterItem
-from data_transfer import DataSendService
+from data_transfer import DataSendService, DataReceiveService
 
 class SendImageRouterItem(RouterItem):
     def __init__(self, name, dest_name, parent=None, enabled=True):
@@ -52,7 +52,7 @@ class SendImageRouterItem(RouterItem):
             DataSendService.protocol)
 
         self._transfer_service = DataSendService(self.name, self._link_manager,
-            self._rip_service_transmitter, self._dest_name)
+            self._transfer_service_transmitter, self._dest_name)
 
     def _stop_networking(self):
         #print self, "_stop_networking" # DEBUG
@@ -63,9 +63,39 @@ class SendImageRouterItem(RouterItem):
 
         self._transfer_service = None
 
+    def send_data(self, data_it):
+        print "send_data" # DEBUG
+        self._transfer_service.reset_transfer_queue()
+        self._transfer_service.new_session()
+        self._transfer_service.append_to_transfer_queue(data_it)
+
 class ReceiveImageRouterItem(RouterItem):
     def __init__(self, name, parent=None, enabled=True):
+        self._transfer_service = None
+        self._transfer_service_transmitter = None
         super(ReceiveImageRouterItem, self).__init__(name, parent, enabled)
+
+    def _start_networking(self):
+        #print self, "_start_networking" # DEBUG
+        super(ReceiveImageRouterItem, self)._start_networking()
+
+        self._transfer_service_transmitter = self._service_manager.register_service(
+            DataSendService.protocol)
+
+        self._transfer_service = DataReceiveService(self.name, self._link_manager,
+            self._transfer_service_transmitter)
+
+    def _stop_networking(self):
+        #print self, "_stop_networking" # DEBUG
+        super(ReceiveImageRouterItem, self)._stop_networking()
+
+        assert self._transfer_service is not None
+        self._transfer_service.terminate()
+
+        self._transfer_service = None
+
+    def receive_TODO(self):
+        pass
 
 def _test(timeout=1, level=None):
     # TODO: Use in separate file to test importing functionality.

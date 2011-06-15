@@ -36,6 +36,8 @@ from frame import SimpleFrameTransmitter
 from sliding_window import FrameTransmitter
 from rip import RIPService
 from rip_packet_scene_item import RIPPacketItem
+from data_transfer import DataSendService
+from image_transfer_packet_scene_item import ImageTransferPacketItem
 
 class LinkItem(QGraphicsObject):
     TransmittingPacket = recordtype('TransmittingPacket',
@@ -307,6 +309,9 @@ class LinkItem(QGraphicsObject):
         tr_packet.packet_item.setPos(position)
         tr_packet.packet_item.setRotation(-line.angle() - 90.0)
 
+        if isinstance(tr_packet.packet_item, ImageTransferPacketItem):
+            print tr_packet
+
     def timerEvent(self, event):
         old_src_table = self.src_table
         old_dest_table = self.dest_table
@@ -347,6 +352,17 @@ class LinkItem(QGraphicsObject):
             self._transmitting_packets.append(transmitting_packet)
 
             self._adjust_transmitting_packet(transmitting_packet)
+        elif protocol == DataSendService.protocol:
+            print "Image transfer!", packet # DEBUG
+            packet_item = ImageTransferPacketItem(packet, self)
+            transmitting_packet = LinkItem.TransmittingPacket(
+                packet, current_time, current_time + transmit_time, packet_item)
+            self._transmitting_packets.append(transmitting_packet)
+
+            self._adjust_transmitting_packet(transmitting_packet)
+        else:
+            # TODO: Log this case.
+            pass
 
 def _test(timeout=1):
     # TODO: Use in separate file to test importing functionality.

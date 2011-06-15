@@ -111,6 +111,7 @@ class DataSendService(object):
                 do_transfer = True
 
             if do_transfer:
+                self._logger.debug("Send data packet")
                 raw_data = TransferData(self._session_key, data).serialize()
                 self._service_transmitter.send_data(
                     self._dest_router_name, raw_data)
@@ -130,6 +131,72 @@ class DataSendService(object):
             # TODO: Should "sleep" in timer: restart timer after each send
             # packet.
             time.sleep(self._send_period)
+
+            time.sleep(config.thread_sleep_time)
+
+class DataReceiveService(object):
+    def __init__(self, router_name, router_link_manager, service_transmitter,
+            **kwargs):
+        super(DataReceiveService, self).__init__()
+
+        self._router_name = router_name
+        self._link_manager = router_link_manager
+        self._service_transmitter = service_transmitter
+
+        # TODO: Initial state should be undefined.
+        self._session_key = 0 # TODO: is lock required?
+
+        self._logger = logging.getLogger("DataReceiveService.router={0}".format(
+            self._router_name))
+
+        self._transfer_data_queue = Queue.Queue()
+
+        # If working thread will be able to acquire the lock, then it should
+        # terminate himself.
+        self._exit_lock = threading.RLock()
+        self._exit_lock.acquire()
+
+        self._working_thread = threading.Thread(target=self._work)
+        self._working_thread.start()
+
+    # TODO
+    def terminate(self):
+        # Release exit lock and wait until working thread will not terminate.
+        self._exit_lock.release()
+        self._working_thread.join()
+
+    # TODO
+    def receive_queue(self):
+        return self._transfer_data_queue
+
+    def _work(self):
+        def handle_receive():
+            try:
+                data = self._transfer_data_queue.get_nowait()
+            except Queue.Empty:
+                have_data = False
+            else:
+                have_data = True
+
+            if have_data:
+                self._logger.debug("Receive data packet")
+                # TODO
+                
+                #raw_data = TransferData(self._session_key, data).serialize()
+                #self._service_transmitter.send_data(
+                #    self._dest_router_name, raw_data)
+
+        self._logger.info("Working thread started")
+
+        while True:
+            if self._exit_lock.acquire(False):
+                # Obtained exit lock. Terminate.
+
+                self._exit_lock.release()
+                self._logger.info("Exit working thread")
+                return
+
+            handle_receive()
 
             time.sleep(config.thread_sleep_time)
 

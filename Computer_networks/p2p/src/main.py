@@ -98,7 +98,7 @@ def main():
 
     w.show()
 
-    w.panel.nRoutersSlider.setValue(10)
+    w.panel.nRoutersSlider.setValue(2)
     w.shake_routers()
 
     sys.exit(app.exec_())

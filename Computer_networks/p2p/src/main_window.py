@@ -134,6 +134,8 @@ class MainWindow(QMainWindow):
         # Transmission widget.
         self.transmission = TransmissionWidget(self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.transmission)
+        self.transmission.restartTransmissionButton.clicked.connect(
+            self.on_restart_transmission)
         self.transmission.load_image("images/forest.jpg")
         #self.panel.nRoutersSlider.valueChanged.connect(
         #    self.on_routers_num_changed)
@@ -204,8 +206,8 @@ class MainWindow(QMainWindow):
 
         self._generate_router(router_class=send_wrapper)
         self._generate_router(router_class=ReceiveImageRouterItem)
-        self._send_image_router = self.routers[0]
-        self._receive_image_router = self.routers[1]
+        self.send_image_router = self.routers[0]
+        self.receive_image_router = self.routers[1]
 
         for i in xrange(2, config.max_routers_num):
             self._generate_router()
@@ -274,6 +276,11 @@ class MainWindow(QMainWindow):
         while nRouters < self.visible_routers:
             self.remove_router()
 
+    @pyqtSlot()
+    def on_restart_transmission(self):
+        data = range(100) # TODO
+        self.send_image_router.send_data(data)
+
     def _work(self):
         # TODO: move to __init__()
         logger = logging.getLogger("{0}._work".format(self))
@@ -312,8 +319,11 @@ def _test(timeout=1, disabled_loggers=None, level=None):
                 #    w.add_router()
                 w.add_router()
                 w.add_router()
+                w.add_router()
 
                 w.shake_routers()
+
+                #w.send_image_router.send_data(range(100))
 
                 self.finished = True
 
@@ -321,12 +331,12 @@ def _test(timeout=1, disabled_loggers=None, level=None):
 
 if __name__ == "__main__":
     disabled_loggers = []
-    for r in xrange(20):
-        disabled_loggers.append("DatagramRouter.router={0}".format(r))
+    for r in xrange(config.max_routers_num):
+        #disabled_loggers.append("DatagramRouter.router={0}".format(r))
         disabled_loggers.append("RIPService.router={0}".format(r))
-        disabled_loggers.append("RouterServiceManager.router={0}".format(r))
+        #disabled_loggers.append("RouterServiceManager.router={0}".format(r))
 
-        for rr in xrange(20):
+        for rr in xrange(config.max_routers_num):
             disabled_loggers.append("FrameTransmitter.{0}->{1}".format(r, rr))
     
     _test(timeout=None, disabled_loggers=disabled_loggers, level=0)

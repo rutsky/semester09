@@ -287,7 +287,7 @@ class RouterItem(QGraphicsObject):
 
                 self._packets_for_delivery[packet] = protocol
                 
-                link = self.link_to_router(packet.src)
+                link = self.link_to_router(packet.delivered_from)
                 link.transmit_packet(protocol, packet)
 
     def deliver_packet(self, packet, is_failed):
