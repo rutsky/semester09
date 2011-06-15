@@ -186,6 +186,16 @@ def _test():
             def test_kwargs(self):
                 a = self.A(a=1, b=2, c=3)
 
+        class TestRecordtypeDetuple(unittest.TestCase):
+            def test_detuple(self):
+                A = recordtype('A', 'a, b, c')
+                a = A(1, 2, 3)
+
+                x, y, z = a
+                self.assertEqual(x, a.a)
+                self.assertEqual(y, a.b)
+                self.assertEqual(z, a.c)
+
     do_tests(Tests)
 
 if __name__ == '__main__':
