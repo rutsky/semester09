@@ -18,7 +18,7 @@
 __author__  = "Vladimir Rutsky <altsysrq@gmail.com>"
 __license__ = "GPL"
 
-__all__ = ["Packet", "RouterServiceManager"]
+__all__ = ["Packet", "InvalidPacketException", "RouterServiceManager"]
 
 """Manager for services built on top of DatagramRouter.
 """
@@ -34,6 +34,9 @@ from recordtype import recordtype
 
 import config
 from datagram import datagram
+
+class InvalidPacketException(Exception):
+    pass
 
 # TODO: Mess with `time'.
 class Packet(recordtype('PacketBase', 'src dest data delivered_from time')):
@@ -68,6 +71,9 @@ def packet_to_datagram(packet, protocol):
 
 def datagram_to_packet(datagram, delivered_from):
     time_data_len = struct.calcsize("d")
+    if len(datagram.data) < time_data_len:
+        raise InvalidPacketException()
+
     time_ = struct.unpack("d", datagram.data[-time_data_len:])[0]
 
     return datagram.type, Packet(src=datagram.src, dest=datagram.dest,
