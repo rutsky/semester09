@@ -41,15 +41,13 @@ def process_events_with_timeout(timeout=None, callback=None):
 
     app = QCoreApplication.instance()
     timer = Timer(timeout) if timeout is not None else DummyTimer()
-    while any(map(lambda w: w.isVisible(),
-            app.topLevelWidgets())):
+    while any(map(lambda w: w.isVisible(), app.topLevelWidgets())):
         if callback is not None:
             callback()
 
         app.processEvents()
         if timer.is_expired():
-            for w in ifilter(lambda w: w.isVisible(),
-                    app.topLevelWidgets()):
+            for w in ifilter(lambda w: w.isVisible(), app.topLevelWidgets()):
                 w.close()
 
 def do_tests(tests_class, qt=False, init_logging=True, disabled_loggers=None,
