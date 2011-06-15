@@ -33,7 +33,7 @@ import palette
 import config
 from duplex_link import FullDuplexLink
 from frame import SimpleFrameTransmitter
-from sliding_window import FrameTransmitter
+from controllable_frame_transmitter import ControllableFrameTransmitter
 from rip import RIPService
 from rip_packet_scene_item import RIPPacketItem
 from data_transfer import DataSendService
@@ -76,10 +76,14 @@ class LinkItem(QGraphicsObject):
         sft1 = SimpleFrameTransmitter(node=l1)
         sft2 = SimpleFrameTransmitter(node=l2)
         self._src_frame_transmitter = \
-            FrameTransmitter(simple_frame_transmitter=sft1,
+            ControllableFrameTransmitter(
+                src_name=self.src.name, dest_name=self.dest.name,
+                simple_frame_transmitter=sft1,
                 debug_src=self.src.name, debug_dest=self.dest.name)
         self._dest_frame_transmitter = \
-            FrameTransmitter(simple_frame_transmitter=sft2,
+            ControllableFrameTransmitter(
+                src_name=self.dest.name, dest_name=self.src.name,
+                simple_frame_transmitter=sft2,
                 debug_src=self.dest.name, debug_dest=self.src.name)
 
         self.enabled = enabled
