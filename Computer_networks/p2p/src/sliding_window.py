@@ -293,8 +293,10 @@ class FrameTransmitter(object):
         self._debug_dest = kwargs.pop('debug_dest', '?')
         super(FrameTransmitter, self).__init__(*args, **kwargs)
 
-        self._logger = logging.getLogger("FrameTransmitter.{0}->{1}".format(
-            self._debug_src, self._debug_dest))
+        if not hasattr(self, "_logger"):
+            self._logger = logging.getLogger(
+                "FrameTransmitter.{0}->{1}".format(
+                    self._debug_src, self._debug_dest))
 
         # Queue of tuples (is_last, frame_data).
         self._frames_data_to_send = Queue.Queue()
