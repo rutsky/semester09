@@ -41,7 +41,8 @@ SOURCES = main.py \
   transmission_widget.py \
   image_transfer_router_scene_item.py \
   data_transfer.py \
-  image_transfer_packet_scene_item.py
+  image_transfer_packet_scene_item.py \
+  controllable_frame_transmitter.py
 TRANSLATIONS = i18n/ru_RU.ts
 FORMS = forms/main_window.ui \
   forms/main_dockable_panel.ui \
