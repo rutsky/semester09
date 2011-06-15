@@ -347,6 +347,7 @@ class FrameTransmitter(object):
         self._worker.remove_frame_transmitter(self)
 
     def send(self, data_string):
+        """Sends raw datagram."""
         with self._enabled_lock:
             if self._enabled:
                 # Subdivide data string on frames and put them into working
@@ -363,6 +364,7 @@ class FrameTransmitter(object):
                 pass
 
     def receive(self, block=True):
+        """Returns raw datagram if any received."""
         with self._enabled_lock:
             if self._enabled:
                 while True:
