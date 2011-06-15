@@ -376,18 +376,22 @@ def _test(timeout=1):
 
                 process_events_with_timeout(timeout)
 
+                self.li.terminate()
+                self.ri1._stop_networking() # TODO
+                self.ri2._stop_networking() # TODO
+
             def test_main(self):
-                ri1 = RouterItem(1)
-                ri2 = RouterItem(2)
+                self.ri1 = RouterItem(1)
+                self.ri2 = RouterItem(2)
                 
-                self.scene.addItem(ri1)
-                self.scene.addItem(ri2)
+                self.scene.addItem(self.ri1)
+                self.scene.addItem(self.ri2)
 
-                ri1.setPos(-100, -50)
-                ri2.setPos(100, 50)
+                self.ri1.setPos(-100, -50)
+                self.ri2.setPos(100, 50)
 
-                li = LinkItem(ri1, ri2, enabled=True)
-                self.scene.addItem(li)
+                self.li = LinkItem(self.ri1, self.ri2, enabled=True)
+                self.scene.addItem(self.li)
 
                 self.finished = True
 
