@@ -39,6 +39,7 @@ class InvalidPacketException(Exception):
     pass
 
 # TODO: Mess with `time'.
+# TODO: `delivered_from' is additional not required information.
 class Packet(recordtype('PacketBase', 'src dest data delivered_from time')):
     def __init__(self, *args, **kwargs):
         if len(args) < 5 and 'time' not in kwargs:
