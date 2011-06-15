@@ -41,6 +41,7 @@ class FrameType(object):
     ack  = 2
 
 class InvalidFrameException(Exception):
+    # TODO: Remove dummy constructor.
     def __init__(self, *args, **kwargs):
         super(InvalidFrameException, self).__init__(*args, **kwargs)
 
