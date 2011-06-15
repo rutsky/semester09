@@ -163,10 +163,13 @@ class DatagramRouter(object):
         self._datagrams_to_send.put(datagram)
 
     def receive(self, block=True):
+        """Returns received datagram: (delivered router name, datagram).
+        (None, None) when in non-blocking mode no datagram received.
+        """
         try:
             return self._received_datagrams.get(block)
         except Queue.Empty:
-            return None
+            return None, None
 
     def set_routing_table(self, new_routing_table):
         with self._routing_table_lock:
@@ -185,7 +188,7 @@ class DatagramRouter(object):
                     "pass it up for processing ")
 
                 # Diagram addressed to current host.
-                self._received_datagrams.put(datagram)
+                self._received_datagrams.put((from_router, datagram))
             else:
                 if next_router in connected_routers:
                     # Retransmit to next router
@@ -323,10 +326,10 @@ def _test(level=None):
             def test_transmit(self):
                 self.dt1.send(datagram(1, 1, 2, "unreachable test"))
 
-                self.assertEqual(self.dt1.receive(block=False), None)
+                self.assertEqual(self.dt1.receive(block=False)[1], None)
 
                 self.dt1.send(datagram(13, 1, 1, "test"))
-                d = self.dt1.receive()
+                d = self.dt1.receive()[1]
                 self.assertEqual(d.type, 13)
                 self.assertEqual(d.src, 1)
                 self.assertEqual(d.dest, 1)
@@ -335,13 +338,13 @@ def _test(level=None):
                 self.dt1.send(datagram(14, 1, 1, "test 1"))
                 self.dt1.send(datagram(15, 1, 1, "test 2"))
 
-                d = self.dt1.receive()
+                d = self.dt1.receive()[1]
                 self.assertEqual(d.type, 14)
                 self.assertEqual(d.src, 1)
                 self.assertEqual(d.dest, 1)
                 self.assertEqual(d.data, "test 1")
 
-                d = self.dt1.receive()
+                d = self.dt1.receive()[1]
                 self.assertEqual(d.type, 15)
                 self.assertEqual(d.src, 1)
                 self.assertEqual(d.dest, 1)
@@ -380,40 +383,40 @@ def _test(level=None):
             def test_transmit(self):
                 d12 = datagram(12, 1, 2, "test")
                 self.dr1.send(d12)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
 
                 self.dr2.send(d12)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
 
                 d21 = datagram(13, 2, 1, "test 2")
                 self.dr2.send(d21)
-                self.assertEqual(self.dr1.receive(), d21)
+                self.assertEqual(self.dr1.receive()[1], d21)
 
                 self.dr1.send(d21)
-                self.assertEqual(self.dr1.receive(), d21)
+                self.assertEqual(self.dr1.receive()[1], d21)
 
                 text = "".join(map(chr, xrange(256)))
                 d_big = datagram(130, 1, 2, text * 5)
                 self.dr1.send(d_big)
-                self.assertEqual(self.dr2.receive(), d_big)
+                self.assertEqual(self.dr2.receive()[1], d_big)
 
                 d12_2 = datagram(14, 1, 2, "test 2")
                 d12_3 = datagram(14, 1, 2, "test 3")
 
                 self.dr1.send(d12)
                 self.dr1.send(d12_2)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
                 self.dr1.send(d12_3)
-                self.assertEqual(self.dr2.receive(), d12_2)
-                self.assertEqual(self.dr2.receive(), d12_3)
+                self.assertEqual(self.dr2.receive()[1], d12_2)
+                self.assertEqual(self.dr2.receive()[1], d12_3)
 
             def test_invalid_datagram(self):
                 self.ft1.send("raw test!")
-                self.assertEqual(self.dr2.receive(block=False), None)
+                self.assertEqual(self.dr2.receive(block=False)[1], None)
 
                 d12 = datagram(12, 1, 2, "test")
                 self.dr1.send(d12)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
 
             def tearDown(self):
                 self.dr1.terminate()
@@ -452,32 +455,32 @@ def _test(level=None):
             def test_transmit(self):
                 d12 = datagram(12, 1, 2, "test")
                 self.dr1.send(d12)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
 
                 self.dr2.send(d12)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
 
                 d21 = datagram(13, 2, 1, "test 2")
                 self.dr2.send(d21)
-                self.assertEqual(self.dr1.receive(), d21)
+                self.assertEqual(self.dr1.receive()[1], d21)
 
                 self.dr1.send(d21)
-                self.assertEqual(self.dr1.receive(), d21)
+                self.assertEqual(self.dr1.receive()[1], d21)
 
                 text = "".join(map(chr, xrange(256)))
                 d_big = datagram(130, 1, 2, text * 3)
                 self.dr1.send(d_big)
-                self.assertEqual(self.dr2.receive(), d_big)
+                self.assertEqual(self.dr2.receive()[1], d_big)
 
                 d12_2 = datagram(14, 1, 2, "test 2")
                 d12_3 = datagram(14, 1, 2, "test 3")
 
                 self.dr1.send(d12)
                 self.dr1.send(d12_2)
-                self.assertEqual(self.dr2.receive(), d12)
+                self.assertEqual(self.dr2.receive()[1], d12)
                 self.dr1.send(d12_3)
-                self.assertEqual(self.dr2.receive(), d12_2)
-                self.assertEqual(self.dr2.receive(), d12_3)
+                self.assertEqual(self.dr2.receive()[1], d12_2)
+                self.assertEqual(self.dr2.receive()[1], d12_3)
 
             def tearDown(self):
                 self.dr1.terminate()

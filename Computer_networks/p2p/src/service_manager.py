@@ -36,9 +36,9 @@ import config
 from datagram import datagram
 
 # TODO: Mess with `time'.
-class Packet(recordtype('PacketBase', 'src dest data time')):
+class Packet(recordtype('PacketBase', 'src dest data delivered_from time')):
     def __init__(self, *args, **kwargs):
-        if len(args) < 4 and 'time' not in kwargs:
+        if len(args) < 5 and 'time' not in kwargs:
             kwargs['time'] = time.time()
         super(Packet, self).__init__(*args, **kwargs)
 
@@ -46,27 +46,32 @@ class Packet(recordtype('PacketBase', 'src dest data time')):
         return (
             self.src == other.src and
             self.dest == other.dest and
-            self.data == other.data)
+            self.data == other.data and
+            self.delivered_from == other.delivered_from)
 
     def __ne__(self, other):
         return not self == other
 
     def __str__(self):
-        return "Packet(src={src}, dest={dest}, time={time}, "\
+        return "Packet(src={src}, dest={dest}, "\
+            "delivered_from={delivered_from}, time={time}, "\
             "data=0x{data})".format(
                 src=self.src, dest=self.dest, data=self.data.encode('hex'),
+                delivered_from=self.delivered_from,
                 time=self.time)
 
 def packet_to_datagram(packet, protocol):
     time_data = struct.pack("d", packet.time)
     return datagram(type=protocol, src=packet.src,
-        dest=packet.dest, data=packet.data + time_data)
+        dest=packet.dest,
+        data=packet.data + time_data)
 
-def datagram_to_packet(datagram):
+def datagram_to_packet(datagram, delivered_from):
     time_data_len = struct.calcsize("d")
     time_ = struct.unpack("d", datagram.data[-time_data_len:])[0]
 
     return datagram.type, Packet(src=datagram.src, dest=datagram.dest,
+        delivered_from=delivered_from,
         data=datagram.data[:-time_data_len], time=time_)
 
 class RouterServiceManager(object):
@@ -88,7 +93,7 @@ class RouterServiceManager(object):
                 return None
 
         def send_data(self, dest, data):
-            self.send(Packet(self.name, dest, data))
+            self.send(Packet(self.name, dest, data, self.name))
 
         def receive_data(self, block=True):
             packet = self.receive(block)
@@ -172,11 +177,13 @@ class RouterServiceManager(object):
 
         def deliver_from_network():
             while True:
-                datagram = self._datagram_router.receive(block=False)
+                delivered_from, datagram = \
+                    self._datagram_router.receive(block=False)
                 if datagram is None:
                     break
                 else:
-                    protocol, packet = datagram_to_packet(datagram)
+                    protocol, packet = datagram_to_packet(
+                        datagram, delivered_from)
                     
                     with self._services_lock:
                         if protocol in self._services:
@@ -225,8 +232,8 @@ def _test(level=None):
         class TestPacket(unittest.TestCase):
             def test_main(self):
                 t = time.time()
-                p1 = Packet(    1,      2,      "3", t)
-                p2 = Packet(src=1, dest=2, data="3", time=t)
+                p1 = Packet(    1,      2,      "3", 4, t)
+                p2 = Packet(src=1, dest=2, data="3", delivered_from=4, time=t)
                 self.assertEqual(p1, p2)
                 self.assertEqual(p1.src,  1)
                 self.assertEqual(p1.dest, 2)
@@ -238,7 +245,7 @@ def _test(level=None):
                     datagram(30, p1.src, p1.dest, p1.data +
                         struct.pack("d", t)))
 
-                d1_type, p1_ = datagram_to_packet(d1)
+                d1_type, p1_ = datagram_to_packet(d1, 4)
                 self.assertEqual(d1_type, d1.type)
                 self.assertEqual(p1_, p1)
                 self.assertEqual(p1_.time, p1.time)
@@ -296,18 +303,18 @@ def _test(level=None):
 
                 s15 = self.sm1.register_service(15)
 
-                unreach_p10 = Packet(1, 2, "unreachable test (10)")
+                unreach_p10 = Packet(1, 2, "unreachable test (10)", 1)
                 s10.send(unreach_p10)
 
-                p10_1 = Packet(1, 1, "test (10)")
+                p10_1 = Packet(1, 1, "test (10)", 1)
                 s10.send(p10_1)
 
                 self.assertEqual(s10.receive(), p10_1)
 
                 self.assertEqual(s10.receive(block=False), None)
 
-                p15_1 = Packet(1, 1, "test (15)")
-                p10_2 = Packet(1, 1, "test 2 (10)")
+                p15_1 = Packet(1, 1, "test (15)", 1)
+                p10_2 = Packet(1, 1, "test 2 (10)", 1)
 
                 s10.send(p10_1)
                 s15.send(p15_1)
@@ -320,7 +327,7 @@ def _test(level=None):
                 self.assertEqual(s10.receive(block=False), None)
 
                 text = "".join(map(chr, xrange(256)))
-                p15_2 = Packet(1, 1, text * 10)
+                p15_2 = Packet(1, 1, text * 10, 1)
                 s15.send(p15_2)
                 s10.send(p10_1)
                 self.assertEqual(s10.receive(), p10_1)
