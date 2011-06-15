@@ -20,6 +20,7 @@ __license__ = "GPL"
 
 __all__ = ["LinkItem"]
 
+import logging
 import time
 import math
 
@@ -38,6 +39,7 @@ from rip import RIPService
 from rip_packet_scene_item import RIPPacketItem
 from data_transfer import DataSendService
 from image_transfer_packet_scene_item import ImageTransferPacketItem
+from service_manager import Packet
 
 class LinkItem(QGraphicsObject):
     TransmittingPacket = recordtype('TransmittingPacket',
@@ -46,6 +48,9 @@ class LinkItem(QGraphicsObject):
     def __init__(self, src_router, dest_router, enabled=False,
             loss_func=None, parent=None):
         super(LinkItem, self).__init__(parent)
+
+        self._logger = logging.getLogger(
+            "LinkItem.{0}->{1}".format(src_router.name, dest_router.name))
 
         self.src = src_router
         self.dest = dest_router
@@ -85,6 +90,16 @@ class LinkItem(QGraphicsObject):
                 src_name=self.dest.name, dest_name=self.src.name,
                 simple_frame_transmitter=sft2,
                 debug_src=self.dest.name, debug_dest=self.src.name)
+
+        self._src_frame_transmitter.packet_send.connect(
+            self._on_src_packet_send)
+        self._src_frame_transmitter.packet_received.connect(
+            self._on_src_packet_received)
+
+        self._dest_frame_transmitter.packet_send.connect(
+            self._on_dest_packet_send)
+        self._src_frame_transmitter.packet_received.connect(
+            self._on_dest_packet_received)
 
         self.enabled = enabled
 
@@ -147,6 +162,28 @@ class LinkItem(QGraphicsObject):
             self.link_end_by_name(tr_packet.packet.dest).\
                 deliver_packet(tr_packet.packet, True)
         self._transmitting_packets = []
+
+    @pyqtSlot(int, float, float, Packet)
+    def _on_src_packet_send(self, id_, send_time, deliver_time, packet):
+        # TODO
+        self._logger.debug("_on_src_packet_send: {0} {1} {2} {3}".format(
+            id_, send_time, deliver_time, packet))
+
+    @pyqtSlot(int)
+    def _on_src_packet_received(self, id_):
+        # TODO
+        self._logger.debug("_on_src_packet_received: {0}".format(id_))
+
+    @pyqtSlot(int, float, float, Packet)
+    def _on_dest_packet_send(self, id_, send_time, deliver_time, packet):
+        # TODO
+        self._logger.debug("_on_dest_packet_send: {0} {1} {2} {3}".format(
+            id_, send_time, deliver_time, packet))
+
+    @pyqtSlot(int)
+    def _on_dest_packet_received(self, id_):
+        # TODO
+        self._logger.debug("_on_dest_packet_received: {0}".format(id_))
 
     def length(self):
         return QLineF(
