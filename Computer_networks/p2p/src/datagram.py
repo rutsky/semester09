@@ -45,18 +45,21 @@ class InvalidDatagramException(Exception):
 # TODO: Rename `type' to `protocol'.
 class Datagram(object):
     # Datagram:
-    #     2      4     4      4             4     - field size
-    # *-------*-----*------*-----*--  --*-------*
-    # | proto | src | dest | len | data | CRC32 |
-    # *-------*-----*------*-----*--  --*-------*
+    #     2      4     4      8      4             4     - field size
+    # *-------*-----*------*------*-----*--  --*-------*
+    # | proto | src | dest | time | len | data | CRC32 |
+    # *-------*-----*------*------*-----*--  --*-------*
+    #
+    # time - is timestamp when datagram was sent from last router.
 
-    format_string = '<HLLL{0}sL'
+    format_string = '<HLLdL{0}sL'
     empty_datagram_size = struct.calcsize(format_string.format(0))
 
     def __init__(self, *args, **kwargs):
         self.type = kwargs.pop('type')
         self.src  = kwargs.pop('src')
         self.dest = kwargs.pop('dest')
+        self.time = kwargs.pop('time', time.time())
         self.data = kwargs.pop('data')
         super(Datagram, self).__init__(*args, **kwargs)
 
@@ -69,7 +72,7 @@ class Datagram(object):
         if crc is not None:
             return struct.pack(
                 self.format_string.format(len(self.data)),
-                self.type, self.src, self.dest, len(self.data),
+                self.type, self.src, self.dest, self.time, len(self.data),
                 self.data, crc)
         else:
             return self.serialize(self.crc())
@@ -83,8 +86,8 @@ class Datagram(object):
             raise InvalidDatagramException(
                 "Datagram too small, not enough fields")
 
-        datagram_type, datagram_src, datagram_dest, read_data_len, \
-            datagram_data, datagram_crc = \
+        datagram_type, datagram_src, datagram_dest, datagram_time, \
+            read_data_len, datagram_data, datagram_crc = \
                 struct.unpack(Datagram.format_string.format(data_len), datagram_str)
         
         if read_data_len != data_len:
@@ -93,7 +96,7 @@ class Datagram(object):
                     read_data_len, data_len))
 
         datagram = Datagram(type=datagram_type, src=datagram_src,
-            dest=datagram_dest, data=datagram_data)
+            dest=datagram_dest, time=datagram_time, data=datagram_data)
 
         if datagram_crc != datagram.crc():
             raise InvalidDatagramException(
@@ -104,8 +107,9 @@ class Datagram(object):
 
     def __str__(self):
         return \
-            "Datagram(type={type}, src={src}, dest={dest}, 0x{data})".format(
-                type=self.type, src=self.src, dest=self.dest,
+            "Datagram(type={type}, src={src}, dest={dest}, time={time}, " \
+                "0x{data})".format(
+                type=self.type, src=self.src, dest=self.dest, time=self.time,
                 data=self.data.encode('hex'))
 
     def __eq__(self, other):
@@ -113,6 +117,7 @@ class Datagram(object):
             self.type == other.type and
             self.src  == other.src  and
             self.dest == other.dest and
+            #self.time == other.time and # TODO: ?
             self.data == other.data)
 
     def __ne__(self, other):
@@ -195,6 +200,10 @@ class DatagramRouter(object):
 
                     self._logger.debug("  retransmit datagram")
 
+                    # Reset timestamp when datagram sent from last router.
+                    datagram.time = time.time()
+                    #print Datagram.deserialize(datagram.serialize()).time - datagram.time # DEBUG
+                    #assert Datagram.deserialize(datagram.serialize()).time == datagram.time # DEBUG
                     connected_routers[next_router].send(
                         datagram.serialize())
                 else:

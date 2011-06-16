@@ -359,6 +359,8 @@ class LinkItem(QGraphicsObject):
             tr_packet.packet_item.show()
 
         curtime = time.time()
+        assert curtime >= tr_packet.start_time
+        assert tr_packet.end_time >= tr_packet.start_time
         progress = min(1.0, 
             (curtime - tr_packet.start_time) /
                 (tr_packet.end_time - tr_packet.start_time))

@@ -82,9 +82,9 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
         # Update internal state.
         # TODO: Updates done only when this function is called.
 
-        current_time = time.time()
 
         # Check for delivered packets.
+        current_time = time.time()
         while self._transmitting_heap:
             delivery_time, id_, raw_datagram, packet = self._transmitting_heap[0]
 
@@ -107,13 +107,17 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
             try:
                 datagram = Datagram.deserialize(raw_datagram)
+                current_time = time.time()
                 protocol, packet = datagram_to_packet(datagram, self._src_name)
 
                 # Decoded packet --- put it on queue and emit signal about
                 # new packet transmission.
                 packet.time = current_time - packet.time
 
-                transmit_time = packet.time * \
+                real_transmit_time = current_time - datagram.time
+                assert real_transmit_time >= 0
+
+                transmit_time = real_transmit_time * \
                     config.packets_delivery_time_factor
                 delivery_time = current_time + transmit_time
 
