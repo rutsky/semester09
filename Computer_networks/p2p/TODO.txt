@@ -12,6 +12,7 @@ transfer.)
  * Implement blocking reads with timeout.
  * Use `bytearray' instead of `str' for array of bytes in transmission.
  * Add global time control (pause/start).
+ * Fix: No handlers could be found for logger "DatagramRouter.router=0"
 
 GUI:
  * Close colors. Should get colors sequently from hue range.
