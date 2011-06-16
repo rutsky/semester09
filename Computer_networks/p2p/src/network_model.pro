@@ -46,6 +46,7 @@ SOURCES = main.py \
 TRANSLATIONS = i18n/ru_RU.ts
 FORMS = forms/main_window.ui \
   forms/main_dockable_panel.ui \
-  forms/transmission_widget.ui
+  forms/transmission_widget.ui \
+  forms/statistics_widget.ui
 
 # vim: ts=2 sw=2 et:

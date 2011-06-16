@@ -33,6 +33,8 @@ include_files = [
             os.path.join('forms', 'main_dockable_panel.ui')),
     (os.path.join('forms', 'transmission_widget.ui'),
             os.path.join('forms', 'transmission_widget.ui')),
+    (os.path.join('forms', 'statistics_widget.ui'),
+            os.path.join('forms', 'statistics_widget.ui')),
 
     (os.path.join('i18n', 'ru_RU.qm'),
             os.path.join('i18n', 'ru_RU.qm')),
