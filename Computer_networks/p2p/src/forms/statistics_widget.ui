@@ -6,9 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>410</width>
-    <height>153</height>
+    <width>322</width>
+    <height>180</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>320</width>
+    <height>175</height>
+   </size>
+  </property>
+  <property name="features">
+   <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
   </property>
   <property name="windowTitle">
    <string>Statistics</string>
@@ -17,6 +26,9 @@
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <layout class="QGridLayout" name="gridLayout" columnstretch="1,0" columnminimumwidth="0,40">
+      <property name="verticalSpacing">
+       <number>12</number>
+      </property>
       <item row="0" column="1">
        <widget class="QLabel" name="incorrectRoutesRatioLabel">
         <property name="text">
@@ -69,6 +81,19 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
   </widget>

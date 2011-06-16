@@ -36,6 +36,7 @@ from router_scene_item import RouterItem
 from link_scene_item import LinkItem
 from main_dockable_panel import MainDockableWidget
 from transmission_widget import TransmissionWidget
+from statistics_widget import StatisticsWidget
 from image_transfer_router_scene_item import SendImageRouterItem, \
     ReceiveImageRouterItem
 
@@ -120,7 +121,12 @@ class MainWindow(QMainWindow):
             self.startTimer(int(1000 / transmitting_image_refresh_rate))
 
         self.generate_routers()
-            
+
+        # Statistics widget.
+        self.statistics = StatisticsWidget(self)
+        # TODO: Better if it will be statically floatable.
+        self.addDockWidget(Qt.RightDockWidgetArea, self.statistics)
+
         # Main panel.
         # TODO: Rename to `control_panel'.
         self.panel = MainDockableWidget(self)
@@ -139,7 +145,7 @@ class MainWindow(QMainWindow):
             self.on_display_router_connection_range_changed)
 
         # Transmission widget.
-        self.transmission = TransmissionWidget(self)
+        self.transmission = TransmissionWidget()
         self.addDockWidget(Qt.RightDockWidgetArea, self.transmission)
         self.transmission.restartTransmissionButton.clicked.connect(
             self.on_restart_transmission)
