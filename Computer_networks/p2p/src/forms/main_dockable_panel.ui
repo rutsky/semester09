@@ -19,18 +19,14 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,1" columnminimumwidth="0,20,0">
+     <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,1" columnminimumwidth="0,30,0">
       <property name="verticalSpacing">
        <number>12</number>
       </property>
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Connection inverse distance&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Connection distance&lt;sup&gt;1&lt;/sup&gt;:</string>
         </property>
        </widget>
       </item>
@@ -47,10 +43,13 @@ p, li { white-space: pre-wrap; }
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>30</number>
+         <number>100</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
         </property>
         <property name="value">
-         <number>30</number>
+         <number>100</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -65,7 +64,7 @@ p, li { white-space: pre-wrap; }
          <enum>QSlider::TicksAbove</enum>
         </property>
         <property name="tickInterval">
-         <number>2</number>
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -154,7 +153,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Disconnection inverse distance&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Disconnection distance&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -171,10 +170,10 @@ p, li { white-space: pre-wrap; }
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>30</number>
+         <number>100</number>
         </property>
         <property name="value">
-         <number>30</number>
+         <number>100</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -183,7 +182,7 @@ p, li { white-space: pre-wrap; }
          <enum>QSlider::TicksAbove</enum>
         </property>
         <property name="tickInterval">
-         <number>2</number>
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -196,7 +195,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt; Maximum number of disconnected/connected nodes which can be placed horizontally in scene.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt; Ratio of scene half size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -288,38 +287,6 @@ p, li { white-space: pre-wrap; }
     <hint type="destinationlabel">
      <x>182</x>
      <y>249</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>connectionDistSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>connectionDistLabel</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>322</x>
-     <y>125</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>239</x>
-     <y>125</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>disconnectionDistSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>disconnectionDistLabel</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>322</x>
-     <y>159</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>239</x>
-     <y>159</y>
     </hint>
    </hints>
   </connection>

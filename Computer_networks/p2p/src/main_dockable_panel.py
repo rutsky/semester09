@@ -55,20 +55,23 @@ class MainDockableWidget(QDockWidget):
 
     @pyqtSlot(int)
     def on_connection_dist_changed(self, value):
-        if value < self.disconnectionDistSlider.value():
+        if value > self.disconnectionDistSlider.value():
             value = self.disconnectionDistSlider.value()
             self.connectionDistSlider.setValue(value)
         else:
-            config.connection_distance = 0.5 * config.scene_width / value;
+            ratio = value / 100.0
+            self.connectionDistLabel.setText("{0:.2}".format(ratio))
+            config.connection_distance = 0.5 * config.scene_width * ratio
 
     @pyqtSlot(int)
     def on_disconnection_dist_changed(self, value):
-        if value > self.connectionDistSlider.value():
+        if value < self.connectionDistSlider.value():
             value = self.connectionDistSlider.value()
             self.disconnectionDistSlider.setValue(value)
         else:
-            config.disconnection_distance = 0.5 * config.scene_width / value;
-        
+            ratio = value / 100.0
+            self.disconnectionDistLabel.setText("{0:.2}".format(ratio))
+            config.disconnection_distance = 0.5 * config.scene_width * ratio
 
 def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.
