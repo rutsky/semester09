@@ -126,6 +126,7 @@ class MainWindow(QMainWindow):
         self.generate_routers()
             
         # Main panel.
+        # TODO: Rename to `control_panel'.
         self.panel = MainDockableWidget(self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.panel)
         self.panel.nRoutersSlider.valueChanged.connect(
@@ -144,6 +145,9 @@ class MainWindow(QMainWindow):
         self.transmission.openImageButton.clicked.connect(self.on_new_image)
 
         self._transmitted_parts = 0
+
+        # TODO: Tabs order.
+        self.tabifyDockWidget(self.transmission, self.panel)
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
