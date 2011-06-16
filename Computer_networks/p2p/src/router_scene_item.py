@@ -101,6 +101,8 @@ class RouterItem(QGraphicsObject):
             QPointF(-self.size.width() / 2.0, -self.size.height() / 2.0),
             self.size)
 
+        self._last_paint_bounding_rect = QRectF(self.size_rect)
+
         # connected router -> link to it
         self._links = {}
 
@@ -213,10 +215,9 @@ class RouterItem(QGraphicsObject):
     def boundingRect(self):
         adjust = 2
         
-        rect = QRectF(self.size_rect)
+        rect = QRectF(self._last_paint_bounding_rect)
         
-        #if config.display_router_connection_range:
-        if True:
+        if config.display_router_connection_range:
             rect = rect.united(QRectF(
                 -config.disconnection_distance,
                 -config.disconnection_distance,
@@ -235,6 +236,7 @@ class RouterItem(QGraphicsObject):
         painter.setPen(QPen(Qt.black, 0))
         painter.setBrush(QBrush(self.color))
         painter.drawEllipse(self.size_rect)
+        self._last_paint_bounding_rect = QRectF(self.size_rect)
 
         if config.display_router_connection_range:
             painter.setPen(QPen(Qt.red, 0))
@@ -246,6 +248,13 @@ class RouterItem(QGraphicsObject):
             painter.setBrush(QBrush())
             painter.drawEllipse(QPoint(),
                 config.connection_distance, config.connection_distance)
+
+            self._last_paint_bounding_rect = \
+                self._last_paint_bounding_rect.united(QRectF(
+                    -config.disconnection_distance,
+                    -config.disconnection_distance,
+                    config.disconnection_distance * 2,
+                    config.disconnection_distance * 2))
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionHasChanged and self.scene():

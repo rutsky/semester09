@@ -39,6 +39,12 @@ class MainDockableWidget(QDockWidget):
         self.renderNodesRangeCheckBox.stateChanged.connect(
             self.on_render_routers_changed)
 
+        self.connectionDistSlider.valueChanged.connect(
+            self.on_connection_dist_changed)
+
+        self.disconnectionDistSlider.valueChanged.connect(
+            self.on_disconnection_dist_changed)
+
     @pyqtSlot(int)
     def on_scene_traverse_time_changed(self, value):
         config.router_velocity_factor = config.scene_width / value
@@ -46,6 +52,23 @@ class MainDockableWidget(QDockWidget):
     @pyqtSlot(int)
     def on_render_routers_changed(self, value):
         config.display_router_connection_range = bool(value)
+
+    @pyqtSlot(int)
+    def on_connection_dist_changed(self, value):
+        if value < self.disconnectionDistSlider.value():
+            value = self.disconnectionDistSlider.value()
+            self.connectionDistSlider.setValue(value)
+        else:
+            config.connection_distance = 0.5 * config.scene_width / value;
+
+    @pyqtSlot(int)
+    def on_disconnection_dist_changed(self, value):
+        if value > self.connectionDistSlider.value():
+            value = self.connectionDistSlider.value()
+            self.disconnectionDistSlider.setValue(value)
+        else:
+            config.disconnection_distance = 0.5 * config.scene_width / value;
+        
 
 def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.

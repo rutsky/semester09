@@ -104,6 +104,8 @@ def main():
     w.panel.renderNodesRangeCheckBox.setCheckState(
         Qt.Checked if config.display_router_connection_range else
         Qt.Unchecked)
+    w.panel.connectionDistSlider.setValue(7)
+    w.panel.disconnectionDistSlider.setValue(6)
     w.shake_routers()
 
     sys.exit(app.exec_())

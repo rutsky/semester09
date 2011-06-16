@@ -133,6 +133,10 @@ class MainWindow(QMainWindow):
             self.stop_routers)
         self.panel.renderNodesRangeCheckBox.stateChanged.connect(
             self.on_display_router_connection_range_changed)
+        self.panel.connectionDistSlider.valueChanged.connect(
+            self.on_display_router_connection_range_changed)
+        self.panel.disconnectionDistSlider.valueChanged.connect(
+            self.on_display_router_connection_range_changed)
 
         # Transmission widget.
         self.transmission = TransmissionWidget(self)
@@ -339,6 +343,9 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(int)
     def on_display_router_connection_range_changed(self, value):
+        self._update_routers()
+
+    def _update_routers(self):
         for router in self.routers:
             router.update()
 
