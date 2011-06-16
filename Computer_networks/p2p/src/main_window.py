@@ -208,6 +208,7 @@ class MainWindow(QMainWindow):
             self._update_transmitting_image()
 
     def _update_transmitting_image(self):
+        new_positions = []
         while True:
             data = self.receive_image_router.receive()
 
@@ -215,10 +216,26 @@ class MainWindow(QMainWindow):
                 break
 
             print "Receive!!" # DEBUG
+            print data # DEBUG
 
-            print data
-            
-            x, y = data
+            new_positions.append(data)
+
+        if new_positions:
+            w = self.transmission.transmitted_pixmap.width()
+            h = self.transmission.transmitted_pixmap.height()
+            dw = w / config.image_cut_columns
+            dh = h / config.image_cut_rows
+
+            painter = QPainter(self.transmission.transmitted_pixmap)
+            for x, y in new_positions:
+                part_image = self.transmission.source_pixmap.\
+                    copy(x, y, dw, dh).toImage()
+                painter.drawImage(x, y, part_image)
+            painter.end()
+            del painter
+
+            self.transmission.transmitted_image_item.setPixmap(
+                self.transmission.transmitted_pixmap)
 
     def generate_routers(self):
         def send_wrapper(name, **kwargs):
@@ -298,6 +315,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_restart_transmission(self):
+        self.transmission.reload_image()
+        
         data = [(x, y) for y in xrange(config.image_cut_rows)
                             for x in xrange(config.image_cut_columns)]
         # TODO: Race condition.

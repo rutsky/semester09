@@ -71,7 +71,14 @@ class TransmissionWidget(QDockWidget):
 
         self.openImageButton.clicked.connect(self.on_open_image)
 
+        self.last_image_path = None
+
+    def reload_image(self):
+        self.load_image(self.last_image_path)
+
     def load_image(self, path):
+        self.last_image_path = path
+
         if self.source_image_item is not None:
             self.source_scene.removeItem(self.source_image_item)
             self.source_image_item = None
@@ -89,15 +96,16 @@ class TransmissionWidget(QDockWidget):
             Qt.KeepAspectRatio)
 
         self.transmitted_pixmap = QPixmap(pixmap.size())
+        self.transmitted_pixmap.fill(QColor(200, 200, 200))
 
         self.transmitted_image_item = QGraphicsPixmapItem()
-        self.transmitted_scene.addItem(self.source_image_item)
+        self.transmitted_scene.addItem(self.transmitted_image_item)
         self.transmitted_image_item.setVisible(True)
         self.transmitted_image_item.setPixmap(self.transmitted_pixmap)
         self.transmitted_scene.setSceneRect(0, 0,
             self.transmitted_pixmap.width(), self.transmitted_pixmap.height())
 
-        self.sourceGraphicsView.fitInView(self.source_image_item,
+        self.sourceGraphicsView.fitInView(self.transmitted_image_item,
             Qt.KeepAspectRatio)
 
     @pyqtSlot()
