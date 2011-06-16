@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>410</width>
+    <height>341</height>
    </rect>
   </property>
   <property name="features">
@@ -19,7 +19,7 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QGridLayout" name="gridLayout" columnminimumwidth="0,20,0">
+     <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,1" columnminimumwidth="0,20,0">
       <property name="verticalSpacing">
        <number>12</number>
       </property>
@@ -68,7 +68,10 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Average time for node to traverse whole scene:</string>
+         <string>Average time for node to traverse whole scene (in&amp;nbsp;seconds):</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::RichText</enum>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
