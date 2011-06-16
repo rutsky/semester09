@@ -99,7 +99,7 @@ class LinkItem(QGraphicsObject):
 
         self._dest_frame_transmitter.packet_send.connect(
             self._on_dest_packet_send)
-        self._src_frame_transmitter.packet_received.connect(
+        self._dest_frame_transmitter.packet_received.connect(
             self._on_dest_packet_received)
 
         self.enabled = enabled
