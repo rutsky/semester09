@@ -27,9 +27,7 @@ import logging
 import itertools
 import time
 import heapq
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+import Queue
 
 from recordtype import recordtype
 
@@ -38,14 +36,7 @@ from sliding_window import FrameTransmitter
 from service_manager import Packet, datagram_to_packet, InvalidPacketException
 from datagram import Datagram, InvalidDatagramException
 
-class ControllableFrameTransmitter(FrameTransmitter, QObject):
-    # Arguments: local packet id, start transmit time (in seconds),
-    # end transmit time (in seconds), protocol, packet.
-    packet_send = pyqtSignal(int, float, float, int, Packet)
-
-    # Arguments: local packet id, is packet successfully transmitted.
-    packet_received = pyqtSignal(int, bool)
-
+class ControllableFrameTransmitter(FrameTransmitter):
     class _HeapItem(recordtype('HeapItemBase',
             'delivery_time id raw_datagram packet')):
         pass
@@ -56,12 +47,17 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
         # TODO: Overflow-vulnerable.
         # DEBUG
-        #import random
-        #self._id_it = itertools.count(random.randint(0, 100))
-        self._id_it = itertools.count(0)
+        import random
+        self._id_it = itertools.count(random.randint(0, 10000))
+        #self._id_it = itertools.count(0)
 
         self._transmitting_heap = []
         self._delivered_frames_queue = []
+
+        # Tuples (local packet id, start transmit time (in seconds),
+        # end transmit time (in seconds), protocol, packet).
+        # Tuples (local packet id, is packet successfully transmitted).
+        self.send_receive_queue = Queue.Queue()
 
         self._logger = logging.getLogger(
             "ControllableFrameTransmitter.{0}->{1}".format(
@@ -74,7 +70,7 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
             self._logger.debug(
                 "Deferred packet with id={0} delivered with failure due to link down: "
                 "{1}".format(heap_item.id, str(heap_item.packet)))
-            self.packet_received.emit(heap_item.id, False)
+            self.send_receive_queue.put((heap_item.id, False))
         self._transmitting_heap = []
         self._delivered_frames_queue = []
         super(ControllableFrameTransmitter, self)._link_down()
@@ -99,7 +95,7 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
                 self._logger.debug("Deferred packet with id={0} " \
                     "delivered: {1}".format(id_, str(packet)))
-                self.packet_received.emit(id_, True)
+                self.send_receive_queue.put((id_, True))
             else:
                 break
 
@@ -137,8 +133,8 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
                     "(deliver in {0} seconds) with id={1}: {2}".format(
                         transmit_time, heap_item.id, str(packet)))
 
-                self.packet_send.emit(heap_item.id,
-                    current_time, delivery_time, protocol, packet)
+                self.send_receive_queue.put((heap_item.id,
+                    current_time, delivery_time, protocol, packet))
             except InvalidDatagramException, InvalidPacketException:
                 self._logger.warning(
                     "Received raw datagram is not packet: 0x{0}".format(

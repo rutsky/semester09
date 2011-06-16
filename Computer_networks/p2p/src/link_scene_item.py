@@ -23,6 +23,7 @@ __all__ = ["LinkItem"]
 import logging
 import time
 import math
+import Queue
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -92,16 +93,6 @@ class LinkItem(QGraphicsObject):
                 simple_frame_transmitter=sft2,
                 debug_src=self.dest.name, debug_dest=self.src.name)
 
-        self._src_frame_transmitter.packet_send.connect(
-            self._on_src_packet_send)
-        self._src_frame_transmitter.packet_received.connect(
-            self._on_src_packet_received)
-
-        self._dest_frame_transmitter.packet_send.connect(
-            self._on_dest_packet_send)
-        self._dest_frame_transmitter.packet_received.connect(
-            self._on_dest_packet_received)
-
         self.enabled = enabled
 
         self.src_table = self.src.rip_service.dynamic_routing_table().table()
@@ -151,9 +142,9 @@ class LinkItem(QGraphicsObject):
 
     def _link_down(self):
         self._src_frame_transmitter.enabled = False
-        assert not self._transmitting_direct_packets
+        #assert not self._transmitting_direct_packets
         self._dest_frame_transmitter.enabled = False
-        assert not self._transmitting_reverse_packets
+        #assert not self._transmitting_reverse_packets
 
         self.src.link_manager.remove_link(self.dest.name)
         self.dest.link_manager.remove_link(self.src.name)
@@ -396,6 +387,30 @@ class LinkItem(QGraphicsObject):
         # TODO
         if self.src.rip_service is None or self.dest.rip_service is None:
             return
+
+        # Update packets.
+        while True:
+            try:
+                msg = self._src_frame_transmitter.send_receive_queue.get_nowait()
+            except Queue.Empty:
+                break
+            # TODO!
+            if len(msg) > 2:
+                self._on_src_packet_send(*msg)
+            else:
+                self._on_src_packet_received(*msg)
+
+        while True:
+            try:
+                msg = self._dest_frame_transmitter.send_receive_queue.get_nowait()
+            except Queue.Empty:
+                break
+            # TODO!
+            if len(msg) > 2:
+                self._on_dest_packet_send(*msg)
+            else:
+                self._on_dest_packet_received(*msg)
+
 
         self.src_table = self.src.rip_service.dynamic_routing_table().table()
         self.dest_table = self.dest.rip_service.dynamic_routing_table().table()
