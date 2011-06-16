@@ -228,11 +228,6 @@ class MainWindow(QMainWindow):
 
             painter = QPainter(self.transmission.transmitted_pixmap)
             for x, y in new_positions:
-                print ">>", x, y
-                #part_image = self.transmission.source_pixmap.\
-                #    copy(x, y, dw, dh).toImage()
-                #painter.drawImage(x, y, part_image)
-
                 painter.drawImage(x * dw, y * dh,
                     self.transmission.source_pixmap.toImage(),
                     x * dw, y * dh, dw, dh)
