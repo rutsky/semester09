@@ -24,6 +24,7 @@ import random
 import logging
 import threading
 import itertools
+import collections
 import time
 
 import PyQt4.uic
@@ -120,6 +121,10 @@ class MainWindow(QMainWindow):
         self._update_transmitting_image_timer_id = \
             self.startTimer(int(1000 / transmitting_image_refresh_rate))
 
+        statistics_refresh_rate = 1 # times per second
+        self._statistics_timer_id = \
+            self.startTimer(int(1000 / statistics_refresh_rate))
+
         self.generate_routers()
 
         # Statistics widget.
@@ -153,6 +158,8 @@ class MainWindow(QMainWindow):
         self.transmission.openImageButton.clicked.connect(self.on_new_image)
 
         self._transmitted_parts = 0
+        self._topology_change_times = collections.deque(
+            maxlen=config.num_of_topology_changes_in_stat)
 
         # TODO: Tabs order.
         self.tabifyDockWidget(self.transmission, self.panel)
@@ -196,25 +203,51 @@ class MainWindow(QMainWindow):
                 router.advance(self._dt)
 
         elif event.timerId() == self._update_link_timer_id:
+            self._first_update_link_timer_id = \
+                not hasattr(self, "_first_update_link_timer_id")
+
+            # Disconnect routers that are far away each other.
             for r1_idx in xrange(self.visible_routers):
                 for r2_idx in xrange(r1_idx + 1, self.visible_routers):
                     r1 = self.routers[r1_idx]
                     r2 = self.routers[r2_idx]
                     link = self.links[r1_idx][r2_idx]
-                    if r1.distance(r2) >= config.disconnection_distance:
+                    if link.enabled and \
+                            r1.distance(r2) >= config.disconnection_distance:
                         link.enabled = False
 
+                        if not self._first_update_link_timer_id:
+                            self._topology_change_times.append(time.time())
+
+            # Connect close routers.
             for r1_idx in xrange(self.visible_routers):
                 for r2_idx in xrange(r1_idx + 1, self.visible_routers):
                     r1 = self.routers[r1_idx]
                     r2 = self.routers[r2_idx]
                     link = self.links[r1_idx][r2_idx]
                     
-                    if r1.distance(r2) <= config.connection_distance:
+                    if not link.enabled and \
+                            r1.distance(r2) <= config.connection_distance:
                         link.enabled = True
+
+                        if not self._first_update_link_timer_id:
+                            self._topology_change_times.append(time.time())
+
+            self._first_update_link_timer_id = False
 
         elif event.timerId() == self._update_transmitting_image_timer_id:
             self._update_transmitting_image()
+
+        elif event.timerId() == self._statistics_timer_id:
+            self._update_statistics()
+
+    def _update_statistics(self):
+        if self._topology_change_times:
+            average_time = (time.time() - self._topology_change_times[0]) / \
+                len(self._topology_change_times)
+
+            self.statistics.timeBetweenChangesLabel.setText(
+                str(self.tr("{0:.2f} s")).format(1.0 / average_time))
 
     def _update_transmitting_image(self):
         new_positions = []

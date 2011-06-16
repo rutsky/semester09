@@ -60,7 +60,7 @@ class MainDockableWidget(QDockWidget):
             self.connectionDistSlider.setValue(value)
         else:
             ratio = value / 100.0
-            self.connectionDistLabel.setText("{0:.2}".format(ratio))
+            self.connectionDistLabel.setText("{0:.2f}".format(ratio))
             config.connection_distance = 0.5 * config.scene_width * ratio
 
     @pyqtSlot(int)
@@ -70,7 +70,7 @@ class MainDockableWidget(QDockWidget):
             self.disconnectionDistSlider.setValue(value)
         else:
             ratio = value / 100.0
-            self.disconnectionDistLabel.setText("{0:.2}".format(ratio))
+            self.disconnectionDistLabel.setText("{0:.2f}".format(ratio))
             config.disconnection_distance = 0.5 * config.scene_width * ratio
 
 def _test(timeout=1, disabled_loggers=None, level=None):

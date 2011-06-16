@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>322</width>
-    <height>180</height>
+    <width>320</width>
+    <height>146</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>320</width>
-    <height>175</height>
+    <height>146</height>
    </size>
   </property>
   <property name="features">
@@ -66,7 +66,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Average time in seconds between topology changes:</string>
+         <string>Average topology changes frequency:</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -76,7 +76,7 @@
       <item row="2" column="1">
        <widget class="QLabel" name="timeBetweenChangesLabel">
         <property name="text">
-         <string>0</string>
+         <string>0 s</string>
         </property>
        </widget>
       </item>
