@@ -22,12 +22,13 @@ __all__ = ["ImageTransferPacketItem"]
 
 import time
 
+from PyQt4 import QtGui
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 import palette
 
-class ImageTransferPacketItem(QGraphicsObject):
+class ImageTransferPacketItem(QtGui.QGraphicsObject):
     def __init__(self, packet, parent=None):
         super(ImageTransferPacketItem, self).__init__(parent)
 
