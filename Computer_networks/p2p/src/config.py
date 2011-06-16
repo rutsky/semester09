@@ -39,8 +39,11 @@ image_transfer_send_period = 1
 scene_width = 300
 scene_height = 210
 
-# Not constant value!
+# Not constant values:
 router_velocity_factor = 1
+display_router_connection_range = False
+connection_distance = 50
+disconnection_distance = 70
 
 def _test():
     # TODO: Use in separate file to test importing functionality.

@@ -107,9 +107,6 @@ class MainWindow(QMainWindow):
         # List of all links.
         self.links_list = []
 
-        self.connection_distance = 50
-        self.disconnection_distance = 70
-
         # Routers
         self._dt = 1 / 20.0
         self._refresh_timer_id = self.startTimer(int(1000 * self._dt))
@@ -134,6 +131,8 @@ class MainWindow(QMainWindow):
             self.shake_routers)
         self.panel.stopRoutersButton.clicked.connect(
             self.stop_routers)
+        self.panel.renderNodesRangeCheckBox.stateChanged.connect(
+            self.on_display_router_connection_range_changed)
 
         # Transmission widget.
         self.transmission = TransmissionWidget(self)
@@ -192,7 +191,7 @@ class MainWindow(QMainWindow):
                     r1 = self.routers[r1_idx]
                     r2 = self.routers[r2_idx]
                     link = self.links[r1_idx][r2_idx]
-                    if r1.distance(r2) >= self.disconnection_distance:
+                    if r1.distance(r2) >= config.disconnection_distance:
                         link.enabled = False
 
             for r1_idx in xrange(self.visible_routers):
@@ -201,7 +200,7 @@ class MainWindow(QMainWindow):
                     r2 = self.routers[r2_idx]
                     link = self.links[r1_idx][r2_idx]
                     
-                    if r1.distance(r2) <= self.connection_distance:
+                    if r1.distance(r2) <= config.connection_distance:
                         link.enabled = True
 
         elif event.timerId() == self._update_transmitting_image_timer_id:
@@ -337,6 +336,11 @@ class MainWindow(QMainWindow):
         # TODO
         self.receive_image_router.set_active_session(-1)
         self.send_image_router.stop_data_transfer()
+
+    @pyqtSlot(int)
+    def on_display_router_connection_range_changed(self, value):
+        for router in self.routers:
+            router.update()
 
     def _work(self):
         # TODO: move to __init__()

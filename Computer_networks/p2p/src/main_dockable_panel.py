@@ -36,9 +36,16 @@ class MainDockableWidget(QDockWidget):
         self.sceneTraverseTimeSlider.valueChanged.connect(
             self.on_scene_traverse_time_changed)
 
+        self.renderNodesRangeCheckBox.stateChanged.connect(
+            self.on_render_routers_changed)
+
     @pyqtSlot(int)
     def on_scene_traverse_time_changed(self, value):
         config.router_velocity_factor = config.scene_width / value
+
+    @pyqtSlot(int)
+    def on_render_routers_changed(self, value):
+        config.display_router_connection_range = bool(value)
 
 def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.

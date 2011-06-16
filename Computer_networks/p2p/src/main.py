@@ -25,6 +25,7 @@ import traceback
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import config
 from main_window import MainWindow
 
 def handle_int_signal(signum, frame):
@@ -100,6 +101,9 @@ def main():
 
     w.panel.nRoutersSlider.setValue(10)
     w.panel.sceneTraverseTimeSlider.setValue(150)
+    w.panel.renderNodesRangeCheckBox.setCheckState(
+        Qt.Checked if config.display_router_connection_range else
+        Qt.Unchecked)
     w.shake_routers()
 
     sys.exit(app.exec_())

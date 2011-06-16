@@ -212,8 +212,18 @@ class RouterItem(QGraphicsObject):
 
     def boundingRect(self):
         adjust = 2
+        
+        rect = QRectF(self.size_rect)
+        
+        #if config.display_router_connection_range:
+        if True:
+            rect = rect.united(QRectF(
+                -config.disconnection_distance,
+                -config.disconnection_distance,
+                config.disconnection_distance * 2,
+                config.disconnection_distance * 2))
 
-        return self.size_rect.adjusted(-adjust, -adjust, adjust, adjust)
+        return rect.adjusted(-adjust, -adjust, adjust, adjust)
 
     # TODO: Is circular shape really needed?
     def shape(self):
@@ -225,6 +235,17 @@ class RouterItem(QGraphicsObject):
         painter.setPen(QPen(Qt.black, 0))
         painter.setBrush(QBrush(self.color))
         painter.drawEllipse(self.size_rect)
+
+        if config.display_router_connection_range:
+            painter.setPen(QPen(Qt.red, 0))
+            painter.setBrush(QBrush())
+            painter.drawEllipse(QPoint(),
+                config.disconnection_distance, config.disconnection_distance)
+
+            painter.setPen(QPen(Qt.green, 0))
+            painter.setBrush(QBrush())
+            painter.drawEllipse(QPoint(),
+                config.connection_distance, config.connection_distance)
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionHasChanged and self.scene():
