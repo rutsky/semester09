@@ -216,6 +216,8 @@ class MainWindow(QMainWindow):
                             r1.distance(r2) >= config.disconnection_distance:
                         link.enabled = False
 
+                        # TODO: Misses case when number of routers changed
+                        # dynamically.
                         if not self._first_update_link_timer_id:
                             self._topology_change_times.append(time.time())
 

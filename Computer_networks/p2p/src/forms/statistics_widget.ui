@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>320</width>
-    <height>146</height>
+    <height>179</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,7 +25,7 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QGridLayout" name="gridLayout" columnstretch="1,0" columnminimumwidth="0,40">
+     <layout class="QGridLayout" name="gridLayout" columnstretch="1,0" columnminimumwidth="0,50">
       <property name="verticalSpacing">
        <number>12</number>
       </property>
