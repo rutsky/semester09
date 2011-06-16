@@ -42,8 +42,8 @@ from image_transfer_router_scene_item import SendImageRouterItem, \
 if config.use_openGL:
     from PyQt4.QtOpenGL import *
 
-def random_velocity(min, max):
-    return QLineF.fromPolar(random.uniform(min, max),
+def random_velocity():
+    return QLineF.fromPolar(max(0, random.gauss(1, 0.1)),
         random.uniform(0, 360.0)).p2()
 
 # TODO: Move almost all functionality from MainWindow to GraphicsView.
@@ -81,7 +81,9 @@ class MainWindow(QMainWindow):
         PyQt4.uic.loadUi('forms/main_window.ui', self)
 
         # Scene working rectangle.
-        self.scene_rect = QRectF(-150, -105, 300, 210)
+        self.scene_rect = QRectF(
+            -config.scene_width / 2, -config.scene_height / 2,
+            config.scene_width, config.scene_height)
 
         self.scene = QGraphicsScene()
         self.graphicsView = GraphicsView()
@@ -92,7 +94,6 @@ class MainWindow(QMainWindow):
         # Disable spatial indexing since all objects will be moving.
         self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
 
-        # Debug. Or not?
         self.scene_rect_item = self.scene.addRect(self.scene.sceneRect())
 
         self.name_it = itertools.count(0)
@@ -110,8 +111,6 @@ class MainWindow(QMainWindow):
         self.disconnection_distance = 70
 
         # Routers
-        self.router_velocity_range = (0.0, 20.0)
-
         self._dt = 1 / 20.0
         self._refresh_timer_id = self.startTimer(int(1000 * self._dt))
 
@@ -310,7 +309,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def shake_routers(self):
         for router in self.routers:
-            router.velocity = random_velocity(*self.router_velocity_range)
+            router.velocity = random_velocity()
 
     @pyqtSlot(int)
     def on_routers_num_changed(self, nRouters):

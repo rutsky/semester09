@@ -99,6 +99,7 @@ def main():
     w.show()
 
     w.panel.nRoutersSlider.setValue(10)
+    w.panel.sceneTraverseTimeSlider.setValue(150)
     w.shake_routers()
 
     sys.exit(app.exec_())

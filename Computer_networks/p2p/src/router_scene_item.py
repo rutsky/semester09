@@ -28,6 +28,7 @@ from collections import deque
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import config
 import palette
 import router_name
 from link_manager import RouterLinkManager
@@ -332,7 +333,8 @@ class RouterItem(QGraphicsObject):
             link.adjust()
 
     def advance(self, dt):
-        new_pos = self.pos() + self.velocity * dt
+        new_pos = self.pos() + \
+                self.velocity * dt * config.router_velocity_factor
         new_pos_in_scene = self._return_to_scene(new_pos)
 
         if new_pos.x() != new_pos_in_scene.x():

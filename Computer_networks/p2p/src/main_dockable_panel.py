@@ -33,6 +33,13 @@ class MainDockableWidget(QDockWidget):
 
         PyQt4.uic.loadUi('forms/main_dockable_panel.ui', self)
 
+        self.sceneTraverseTimeSlider.valueChanged.connect(
+            self.on_scene_traverse_time_changed)
+
+    @pyqtSlot(int)
+    def on_scene_traverse_time_changed(self, value):
+        config.router_velocity_factor = config.scene_width / value
+
 def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.
 

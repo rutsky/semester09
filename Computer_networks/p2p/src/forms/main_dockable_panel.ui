@@ -61,7 +61,7 @@
          <enum>QSlider::TicksAbove</enum>
         </property>
         <property name="tickInterval">
-         <number>1</number>
+         <number>2</number>
         </property>
        </widget>
       </item>
@@ -91,10 +91,10 @@
          <number>5</number>
         </property>
         <property name="maximum">
-         <number>20</number>
+         <number>180</number>
         </property>
         <property name="value">
-         <number>20</number>
+         <number>60</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -103,7 +103,7 @@
          <enum>QSlider::TicksAbove</enum>
         </property>
         <property name="tickInterval">
-         <number>1</number>
+         <number>15</number>
         </property>
        </widget>
       </item>
@@ -175,7 +175,7 @@
          <enum>QSlider::TicksAbove</enum>
         </property>
         <property name="tickInterval">
-         <number>1</number>
+         <number>2</number>
         </property>
        </widget>
       </item>

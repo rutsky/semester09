@@ -36,6 +36,12 @@ image_cut_columns = 10
 
 image_transfer_send_period = 1
 
+scene_width = 300
+scene_height = 210
+
+# Not constant value!
+router_velocity_factor = 1
+
 def _test():
     # TODO: Use in separate file to test importing functionality.
 
