@@ -63,6 +63,9 @@ class SendImageRouterItem(RouterItem):
 
         self._transfer_service = None
 
+    def stop_data_transfer(self):
+        self._transfer_service.reset_transfer_queue()
+
     def send_data(self, data_it):
         print "send_data" # DEBUG
         self._transfer_service.reset_transfer_queue()

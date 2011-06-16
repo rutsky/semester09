@@ -85,7 +85,11 @@ class TransmissionWidget(QDockWidget):
 
         pixmap = QPixmap(path)
         self.source_pixmap = pixmap
-        
+
+        if self.source_image_item is not None:
+            self.source_scene.removeItem(self.source_image_item)
+            self.source_image_item = None
+
         self.source_image_item = QGraphicsPixmapItem()
         self.source_scene.addItem(self.source_image_item)
         self.source_image_item.setVisible(True)
@@ -97,6 +101,10 @@ class TransmissionWidget(QDockWidget):
 
         self.transmitted_pixmap = QPixmap(pixmap.size())
         self.transmitted_pixmap.fill(QColor(200, 200, 200))
+
+        if self.transmitted_image_item is not None:
+            self.transmitted_scene.removeItem(self.transmitted_image_item)
+            self.transmitted_image_item = None
 
         self.transmitted_image_item = QGraphicsPixmapItem()
         self.transmitted_scene.addItem(self.transmitted_image_item)
@@ -110,7 +118,10 @@ class TransmissionWidget(QDockWidget):
 
     @pyqtSlot()
     def on_open_image(self):
-        pass
+        file_name = QFileDialog.getOpenFileName(self, self.tr("Open Image"),
+            "images", self.tr("Image Files (*.png *.jpg *.jpeg *.bmp)"))
+
+        self.load_image(file_name)
 
 def _test(timeout=1, disabled_loggers=None, level=None):
     # TODO: Use in separate file to test importing functionality.

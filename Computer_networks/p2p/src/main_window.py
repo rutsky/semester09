@@ -141,12 +141,7 @@ class MainWindow(QMainWindow):
         self.transmission.restartTransmissionButton.clicked.connect(
             self.on_restart_transmission)
         self.transmission.load_image("images/forest.jpg")
-        #self.panel.nRoutersSlider.valueChanged.connect(
-        #    self.on_routers_num_changed)
-        #self.panel.shakeRoutersButton.clicked.connect(
-        #    self.shake_routers)
-        #self.panel.stopRoutersButton.clicked.connect(
-        #    self.stop_routers)
+        self.transmission.openImageButton.clicked.connect(self.on_new_image)
 
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
@@ -322,6 +317,12 @@ class MainWindow(QMainWindow):
         # TODO: Race condition.
         session_key = self.send_image_router.send_data(data)
         self.receive_image_router.set_active_session(session_key)
+
+    @pyqtSlot()
+    def on_new_image(self):
+        # TODO
+        self.receive_image_router.set_active_session(-1)
+        self.send_image_router.stop_data_transfer()
 
     def _work(self):
         # TODO: move to __init__()
