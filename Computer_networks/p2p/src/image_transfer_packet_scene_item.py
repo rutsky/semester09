@@ -39,8 +39,8 @@ class ImageTransferPacketItem(QGraphicsObject):
         self._src_color  = palette.palette[self._packet.src]
         self._dest_color = palette.palette[self._packet.dest]
 
-        self._width = 1.0 * 10
-        self._height = 1.3 * 10
+        self._width = 1.0 * 3
+        self._height = 1.3 * 3
         
         self._size = QSizeF(self._width, self._height)
         self._size_rect = QRectF(
