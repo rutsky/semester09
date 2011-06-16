@@ -119,7 +119,8 @@ class TransmissionWidget(QDockWidget):
     @pyqtSlot()
     def on_open_image(self):
         file_name = QFileDialog.getOpenFileName(self, self.tr("Open Image"),
-            "images", self.tr("Image Files (*.png *.jpg *.jpeg *.bmp)"))
+            "images", self.tr("Image Files (*.png *.jpg *.jpeg *.bmp "
+                "*.gif *.ico *.svg *.tiff)"))
 
         self.load_image(file_name)
 
