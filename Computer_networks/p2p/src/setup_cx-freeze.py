@@ -31,6 +31,20 @@ include_files = [
             os.path.join('forms', 'main_window.ui')),
     (os.path.join('forms', 'main_dockable_panel.ui'), 
             os.path.join('forms', 'main_dockable_panel.ui')),
+    (os.path.join('forms', 'transmission_widget.ui'),
+            os.path.join('forms', 'transmission_widget.ui')),
+
+    (os.path.join('i18n', 'ru_RU.qm'),
+            os.path.join('i18n', 'ru_RU.qm')),
+
+    (os.path.join('images', 'README.txt'),
+            os.path.join('images', 'README.txt')),
+    (os.path.join('images', 'Tux.png'),
+            os.path.join('images', 'Tux.png')),
+    (os.path.join('images', 'castle.bmp'),
+            os.path.join('images', 'castle.bmp')),
+    (os.path.join('images', 'forest.jpg'),
+            os.path.join('images', 'forest.jpg')),
     ]
 includes = ['sip', 'encodings.ascii', 'encodings.utf_8', 'encodings.hex_codec']
 
