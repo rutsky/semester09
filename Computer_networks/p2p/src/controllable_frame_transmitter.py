@@ -55,6 +55,9 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
         self._dest_name = kwargs.pop('dest_name')
 
         # TODO: Overflow-vulnerable.
+        # DEBUG
+        #import random
+        #self._id_it = itertools.count(random.randint(0, 100))
         self._id_it = itertools.count(0)
 
         self._transmitting_heap = []
@@ -69,8 +72,8 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
     def _link_down(self):
         for heap_item in self._transmitting_heap:
             self._logger.debug(
-                "Deferred packet delivered with failure due to link down: "
-                "{0}".format(str(heap_item.packet)))
+                "Deferred packet with id={0} delivered with failure due to link down: "
+                "{1}".format(heap_item.id, str(heap_item.packet)))
             self.packet_received.emit(heap_item.id, False)
         self._transmitting_heap = []
         self._delivered_frames_queue = []
@@ -94,7 +97,8 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
                 self._delivered_frames_queue.append(raw_datagram)
                 heapq.heappop(self._transmitting_heap)
 
-                self._logger.debug("Deferred packet delivered: {0}".format(str(packet)))
+                self._logger.debug("Deferred packet with id={0} " \
+                    "delivered: {1}".format(id_, str(packet)))
                 self.packet_received.emit(id_, True)
             else:
                 break
@@ -130,8 +134,8 @@ class ControllableFrameTransmitter(FrameTransmitter, QObject):
 
                 self._logger.debug(
                     "Start transmission of deferred packet "
-                    "(deliver in {0} seconds): {1}".format(
-                        transmit_time, str(packet)))
+                    "(deliver in {0} seconds) with id={1}: {2}".format(
+                        transmit_time, heap_item.id, str(packet)))
 
                 self.packet_send.emit(heap_item.id,
                     current_time, delivery_time, protocol, packet)

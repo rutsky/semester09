@@ -315,7 +315,7 @@ def _test(timeout=1, disabled_loggers=None, level=None):
                 w = MainWindow()
                 w.show()
 
-                for i in xrange(3):
+                for i in xrange(2):
                     w.add_router()
 
                 w.shake_routers()

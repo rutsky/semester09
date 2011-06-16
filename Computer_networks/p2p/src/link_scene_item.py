@@ -350,7 +350,7 @@ class LinkItem(QGraphicsObject):
     def _adjust_transmitting_packet(self, tr_packet):
         # TODO: may be call prepareGeometryChange()?
 
-        self._logger.debug("_adjust_transmitting_packet: {0}".format(tr_packet))
+        #self._logger.debug("_adjust_transmitting_packet: {0}".format(tr_packet))
 
         if self.is_singular():
             tr_packet.packet_item.hide()
