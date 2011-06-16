@@ -54,12 +54,16 @@ class TransmissionWidget(QDockWidget):
         self.sourceGraphicsView = SourceGraphicsView()
         self.sourceGroupVBox.addWidget(self.sourceGraphicsView)
 
+        self.source_pixmap = None
+
         self.source_scene = QGraphicsScene()
         self.sourceGraphicsView.setScene(self.source_scene)
         self.source_image_item = None
 
         self.transmittedGraphicsView = TransmittedGraphicsView()
         self.transmittedGroupVBox.addWidget(self.transmittedGraphicsView)
+
+        self.transmitted_pixmap = None
 
         self.transmitted_scene = QGraphicsScene()
         self.transmittedGraphicsView.setScene(self.transmitted_scene)
@@ -80,6 +84,18 @@ class TransmissionWidget(QDockWidget):
         self.source_image_item.setVisible(True)
         self.source_image_item.setPixmap(pixmap)
         self.source_scene.setSceneRect(0, 0, pixmap.width(), pixmap.height())
+
+        self.sourceGraphicsView.fitInView(self.source_image_item,
+            Qt.KeepAspectRatio)
+
+        self.transmitted_pixmap = QPixmap(pixmap.size())
+
+        self.transmitted_image_item = QGraphicsPixmapItem()
+        self.transmitted_scene.addItem(self.source_image_item)
+        self.transmitted_image_item.setVisible(True)
+        self.transmitted_image_item.setPixmap(self.transmitted_pixmap)
+        self.transmitted_scene.setSceneRect(0, 0,
+            self.transmitted_pixmap.width(), self.transmitted_pixmap.height())
 
         self.sourceGraphicsView.fitInView(self.source_image_item,
             Qt.KeepAspectRatio)

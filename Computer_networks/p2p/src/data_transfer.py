@@ -101,6 +101,8 @@ class DataSendService(object):
         # TODO: Is lock required?
         self._session_key += 1
 
+        return self._session_key
+
     def _work(self):
         def handle_send():
             try:
@@ -171,21 +173,20 @@ class DataReceiveService(object):
 
     def _work(self):
         def handle_receive():
-            try:
-                data = self._transfer_data_queue.get_nowait()
-            except Queue.Empty:
-                have_data = False
-            else:
-                have_data = True
+            result = self._service_transmitter.receive_data(block=False)
+            if result is None:
+                return
 
-            if have_data:
-                self._logger.debug("Receive data packet")
-                # TODO
-                
-                #raw_data = TransferData(self._session_key, data).serialize()
-                #self._service_transmitter.send_data(
-                #    self._dest_router_name, raw_data)
+            src, raw_data = result
 
+            data = TransferData.deserialize(raw_data)
+            
+            self._logger.debug("Receive data packet")
+            # TODO
+
+            self._transfer_data_queue.put(
+                (data.session_key, data.data))
+            
         self._logger.info("Working thread started")
 
         while True:

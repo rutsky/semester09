@@ -66,13 +66,16 @@ class SendImageRouterItem(RouterItem):
     def send_data(self, data_it):
         print "send_data" # DEBUG
         self._transfer_service.reset_transfer_queue()
-        self._transfer_service.new_session()
+        session_key = self._transfer_service.new_session()
         self._transfer_service.append_to_transfer_queue(data_it)
+
+        return session_key
 
 class ReceiveImageRouterItem(RouterItem):
     def __init__(self, name, parent=None, enabled=True):
         self._transfer_service = None
         self._transfer_service_transmitter = None
+        self._session_key = None
         super(ReceiveImageRouterItem, self).__init__(name, parent, enabled)
 
     def _start_networking(self):
@@ -94,8 +97,20 @@ class ReceiveImageRouterItem(RouterItem):
 
         self._transfer_service = None
 
-    def receive_TODO(self):
-        pass
+    def set_active_session(self, session_key):
+        self._session_key = session_key
+
+    def receive(self):
+        try:
+            session_key, data = \
+                self._transfer_service.receive_queue().get_nowait()
+        except Queue.Empty:
+            return None
+        else:
+            if self._session_key != session_key:
+                return None
+            else:
+                return data
 
 def _test(timeout=1, level=None):
     # TODO: Use in separate file to test importing functionality.

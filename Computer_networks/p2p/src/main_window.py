@@ -115,9 +115,13 @@ class MainWindow(QMainWindow):
         self._dt = 1 / 20.0
         self._refresh_timer_id = self.startTimer(int(1000 * self._dt))
 
-        link_update_rate = 5 # timer per second
+        link_update_rate = 5 # times per second
         self._update_link_timer_id = \
             self.startTimer(int(1000 / link_update_rate))
+
+        transmitting_image_refresh_rate = 5 # times per second
+        self._update_transmitting_image_timer_id = \
+            self.startTimer(int(1000 / transmitting_image_refresh_rate))
 
         self.generate_routers()
             
@@ -200,6 +204,22 @@ class MainWindow(QMainWindow):
                     if r1.distance(r2) <= self.connection_distance:
                         link.enabled = True
 
+        elif event.timerId() == self._update_transmitting_image_timer_id:
+            self._update_transmitting_image()
+
+    def _update_transmitting_image(self):
+        while True:
+            data = self.receive_image_router.receive()
+
+            if data is None:
+                break
+
+            print "Receive!!" # DEBUG
+
+            print data
+            
+            x, y = data
+
     def generate_routers(self):
         def send_wrapper(name, **kwargs):
             return SendImageRouterItem(name, 1, **kwargs)
@@ -278,8 +298,11 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_restart_transmission(self):
-        data = range(100) # TODO
-        self.send_image_router.send_data(data)
+        data = [(x, y) for y in xrange(config.image_cut_rows)
+                            for x in xrange(config.image_cut_columns)]
+        # TODO: Race condition.
+        session_key = self.send_image_router.send_data(data)
+        self.receive_image_router.set_active_session(session_key)
 
     def _work(self):
         # TODO: move to __init__()
