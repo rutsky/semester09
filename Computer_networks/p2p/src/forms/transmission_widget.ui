@@ -75,7 +75,7 @@
       <item>
        <widget class="QLabel" name="successRatioLabel">
         <property name="text">
-         <string>0 %</string>
+         <string>0.0 %</string>
         </property>
        </widget>
       </item>

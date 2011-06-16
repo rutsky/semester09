@@ -143,6 +143,8 @@ class MainWindow(QMainWindow):
         self.transmission.load_image("images/forest.jpg")
         self.transmission.openImageButton.clicked.connect(self.on_new_image)
 
+        self._transmitted_parts = 0
+
         # If working thread will be able to acquire the lock, then it should
         # terminate himself.
         self._exit_lock = threading.RLock()
@@ -214,6 +216,7 @@ class MainWindow(QMainWindow):
             print data # DEBUG
 
             new_positions.append(data)
+            self._transmitted_parts += 1
 
         if new_positions:
             w = self.transmission.transmitted_pixmap.width()
@@ -231,6 +234,10 @@ class MainWindow(QMainWindow):
 
             self.transmission.transmitted_image_item.setPixmap(
                 self.transmission.transmitted_pixmap)
+
+        self.transmission.successRatioLabel.setText("{0:2.1f} %".format(
+            100.0 * self._transmitted_parts /
+                (config.image_cut_columns * config.image_cut_rows)))
 
     def generate_routers(self):
         def send_wrapper(name, **kwargs):
@@ -310,6 +317,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_restart_transmission(self):
+        self._transmitted_parts = 0
+
         self.transmission.reload_image()
         
         data = [(x, y) for y in xrange(config.image_cut_rows)
@@ -320,6 +329,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_new_image(self):
+        self._transmitted_parts = 0
+
         # TODO
         self.receive_image_router.set_active_session(-1)
         self.send_image_router.stop_data_transfer()
