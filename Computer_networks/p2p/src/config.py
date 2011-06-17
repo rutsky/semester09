@@ -40,6 +40,8 @@ scene_width = 300
 scene_height = 210
 
 num_of_topology_changes_in_stat = 10
+num_of_invalid_routes_in_stat = 15
+num_of_not_optimal_routes_in_stat = 15
 
 # Not constant values:
 router_velocity_factor = 1

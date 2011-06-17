@@ -164,6 +164,10 @@ class MainWindow(QMainWindow):
         self._transmitted_parts = 0
         self._topology_change_times = collections.deque(
             maxlen=config.num_of_topology_changes_in_stat)
+        self._invalid_routes_stat = collections.deque(
+            maxlen=config.num_of_invalid_routes_in_stat)
+        self._not_optimal_routes_stat = collections.deque(
+            maxlen=config.num_of_not_optimal_routes_in_stat)
 
         # TODO: Tabs order.
         self.tabifyDockWidget(self.transmission, self.panel)
@@ -352,12 +356,31 @@ class MainWindow(QMainWindow):
         assert valid_routes + not_optimal_routes + invalid_routes == \
                 self.visible_routers**2
 
+        self._invalid_routes_stat.append(invalid_routes)
+        self._not_optimal_routes_stat.append(not_optimal_routes)
+
         self.statistics.incorrectRoutesRatioLabel.setText(
-                str(self.tr("{0:.4f} %")).format(
+                str(self.tr("{0:.2f} %")).format(
                     100.0 * invalid_routes / self.visible_routers**2))
         self.statistics.notoptimalRoutesRatioLabel.setText(
-                str(self.tr("{0:.4f} %")).format(
+                str(self.tr("{0:.2f} %")).format(
                     100.0 * not_optimal_routes / self.visible_routers**2))
+
+        if self._invalid_routes_stat:
+            avg = sum(self._invalid_routes_stat) / \
+                len(self._invalid_routes_stat)
+
+            self.statistics.avgIncorrectRoutesRatioLabel.setText(
+                str(self.tr("{0:.2f} %")).format(
+                    100.0 * avg / self.visible_routers**2))
+
+        if self._not_optimal_routes_stat:
+            avg = sum(self._not_optimal_routes_stat) / \
+                len(self._not_optimal_routes_stat)
+
+            self.statistics.avgNotoptimalRoutesRatioLabel.setText(
+                str(self.tr("{0:.2f} %")).format(
+                    100.0 * avg / self.visible_routers**2))
 
     def _update_transmitting_image(self):
         new_positions = []
