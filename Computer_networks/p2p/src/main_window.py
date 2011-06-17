@@ -390,8 +390,8 @@ class MainWindow(QMainWindow):
             if data is None:
                 break
 
-            print "Receive!!" # DEBUG
-            print data # DEBUG
+            #print "Receive!!" # DEBUG
+            #print data # DEBUG
 
             new_positions.append(data)
             self._transmitted_parts += 1
