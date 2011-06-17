@@ -32,6 +32,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.Qt import *
 
+import networkx
+
 import config
 from router_scene_item import RouterItem
 from link_scene_item import LinkItem
@@ -244,12 +246,31 @@ class MainWindow(QMainWindow):
             self._update_statistics()
 
     def _update_statistics(self):
+        # Update topology changes frequency.
         if self._topology_change_times:
             average_time = (time.time() - self._topology_change_times[0]) / \
                 len(self._topology_change_times)
 
             self.statistics.timeBetweenChangesLabel.setText(
                 str(self.tr("{0:.2f} s")).format(1.0 / average_time))
+
+        # Obtain network topology.
+        g = networkx.Graph()
+        g.add_nodes_from(range(self.visible_routers))
+        for r_name, r in enumerate(self.routers[:self.visible_routers]):
+            for adj_r_name in r.link_manager.connected_routers():
+                g.add_edge(r_name, adj_r_name)
+
+        # DEBUG
+        if False and not hasattr(self, "_test"):
+            self._test = True
+            
+            import matplotlib.pyplot as plt
+
+            networkx.draw(g)
+            plt.savefig("network.png")
+
+        
 
     def _update_transmitting_image(self):
         new_positions = []
