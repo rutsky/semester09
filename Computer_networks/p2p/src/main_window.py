@@ -33,6 +33,8 @@ from PyQt4.QtCore import *
 from PyQt4.Qt import *
 
 import networkx
+from networkx.algorithms.shortest_paths.weighted import \
+    single_source_dijkstra_path_length
 
 import config
 from router_scene_item import RouterItem
@@ -256,21 +258,106 @@ class MainWindow(QMainWindow):
 
         # Obtain network topology.
         g = networkx.Graph()
-        g.add_nodes_from(range(self.visible_routers))
+        g.add_nodes_from(xrange(self.visible_routers))
         for r_name, r in enumerate(self.routers[:self.visible_routers]):
             for adj_r_name in r.link_manager.connected_routers():
                 g.add_edge(r_name, adj_r_name)
 
         # DEBUG
-        if False and not hasattr(self, "_test"):
-            self._test = True
-            
+        if False:
             import matplotlib.pyplot as plt
-
+            plt.clf()
             networkx.draw(g)
             plt.savefig("network.png")
 
-        
+        valid_routes = 0       # valid and optimal
+        invalid_routes = 0
+        not_optimal_routes = 0
+        for color in xrange(self.visible_routers):
+            # Build RIP network topology for paths to router `color'.
+            r_g = networkx.DiGraph()
+            r_g.add_nodes_from(xrange(self.visible_routers))
+            for r_name, r in enumerate(self.routers[:self.visible_routers]):
+                r_next = \
+                    r.rip_service.dynamic_routing_table().next_router(color)
+
+                if r_next is not None and r_next != r_name:
+                    r_g.add_edge(r_next, r_name)
+
+            # DEBUG
+            if False:
+                import matplotlib.pyplot as plt
+                plt.clf()
+                networkx.draw(r_g)
+                plt.savefig("rip_{0}.png".format(color))
+
+            cur_valid_routes = 0
+            cur_invalid_routes = 0
+            cur_not_optimal_routes = 0
+            #counted = set() # count by routers from which RIP shows direction.
+
+            # Detect not updated disconnected links.
+            invalid_edges = set(r_g.edges()) - set(g.edges()) - \
+                    set([(e[1], e[0]) for e in g.edges()])
+            #print "invalid_edges:", invalid_edges
+            for e in invalid_edges:
+                #cur_invalid_routes += 1
+                #assert e[1] not in counted
+                #counted.add(e[1])
+                r_g.remove_edge(*e)
+
+            paths = single_source_dijkstra_path_length(g, color)
+            rip_paths = single_source_dijkstra_path_length(r_g, color)
+
+            accessible_routers = set(paths.keys())
+
+            # DEBUG
+            #print accessible_routers
+            #print paths
+            #print rip_paths
+
+            # Not accessible by RIP but accessible by Dijkstra --- router has
+            # invalid route.
+            #print "cur_invalid_routes 0: ", cur_invalid_routes
+            cur_invalid_routes += \
+                len(accessible_routers - set(rip_paths.keys()))
+            #print "cur_invalid_routes 1: ", cur_invalid_routes
+
+            # Compare path lengths in accessible routes, if RIP path is longer
+            # then route is not optimal.
+            for r_name, length in rip_paths.iteritems():
+                assert r_name in paths
+                if length > paths[r_name]:
+                    cur_not_optimal_routes += 1
+                else:
+                    cur_valid_routes += 1
+
+            # If not accessible router has link --- invalid route.
+            for r_name in set(g.nodes()) - accessible_routers:
+                #print "r_g[r_name] =",r_g[r_name] # DEBUG
+                if len(r_g[r_name]) > 0:
+                    cur_invalid_routes += 1
+                else:
+                    cur_valid_routes += 1
+
+            # DEBUG
+            #print cur_valid_routes, cur_not_optimal_routes, cur_invalid_routes
+            assert cur_valid_routes + cur_not_optimal_routes + \
+                cur_invalid_routes == self.visible_routers
+
+            valid_routes += cur_valid_routes
+            not_optimal_routes += cur_not_optimal_routes
+            invalid_routes += cur_invalid_routes
+
+        assert valid_routes + not_optimal_routes + invalid_routes == \
+                self.visible_routers**2
+
+        self.statistics.incorrectRoutesRatioLabel.setText(
+                str(self.tr("{0:.4f} %")).format(
+                    100.0 * invalid_routes / self.visible_routers**2))
+        self.statistics.notoptimalRoutesRatioLabel.setText(
+                str(self.tr("{0:.4f} %")).format(
+                    100.0 * not_optimal_routes / self.visible_routers**2))
 
     def _update_transmitting_image(self):
         new_positions = []
