@@ -102,12 +102,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="forms/main_dockable_panel.ui" line="236"/>
         <source>Stop Nodes Motion</source>
-        <translation>Остановить движение узлов</translation>
+        <translation>Остановить узлы</translation>
     </message>
     <message>
         <location filename="forms/main_dockable_panel.ui" line="256"/>
         <source>Shake Nodes</source>
-        <translation>Запустить движение узлов</translation>
+        <translation>Запустить узлы</translation>
     </message>
     <message>
         <location filename="forms/transmission_widget.ui" line="71"/>

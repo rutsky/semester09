@@ -258,7 +258,7 @@ class MainWindow(QMainWindow):
                 len(self._topology_change_times)
 
             self.statistics.timeBetweenChangesLabel.setText(
-                str(self.tr("{0:.2f} s")).format(1.0 / average_time))
+                unicode(self.tr("{0:.2f} s")).format(1.0 / average_time))
 
         # Obtain network topology.
         g = networkx.Graph()
