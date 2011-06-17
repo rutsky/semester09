@@ -132,7 +132,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="forms/statistics_widget.ui" line="42"/>
         <source>Ratio of not optimal routes in routing tables:</source>
-        <translation>Доля неоптимальных путей в таблицах маршрутизации:</translation>
+        <translation type="unfinished">Доля не оптимальных путей в таблицах маршрутизации:</translation>
     </message>
     <message>
         <location filename="forms/statistics_widget.ui" line="52"/>
