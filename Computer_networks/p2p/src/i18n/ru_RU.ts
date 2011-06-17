@@ -14,7 +14,7 @@
         <translation type="obsolete">Количество роутеров:</translation>
     </message>
     <message>
-        <location filename="forms/main_dockable_panel.ui" line="169"/>
+        <location filename="forms/main_dockable_panel.ui" line="165"/>
         <source>0</source>
         <translation>0</translation>
     </message>
@@ -75,7 +75,7 @@
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Disconnection distance&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+        <translation type="obsolete">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -88,24 +88,24 @@ p, li { white-space: pre-wrap; }
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt; Ratio of scene half size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+        <translation type="obsolete">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; vertical-align:super;&quot;&gt;1&lt;/span&gt; Доля половины размера сцены.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="forms/main_dockable_panel.ui" line="214"/>
+        <location filename="forms/main_dockable_panel.ui" line="206"/>
         <source>Render connection and disconnection ranges</source>
         <translation>Рисовать зоны соединения и разъединения</translation>
     </message>
     <message>
-        <location filename="forms/main_dockable_panel.ui" line="236"/>
+        <location filename="forms/main_dockable_panel.ui" line="228"/>
         <source>Stop Nodes Motion</source>
         <translation>Остановить узлы</translation>
     </message>
     <message>
-        <location filename="forms/main_dockable_panel.ui" line="256"/>
+        <location filename="forms/main_dockable_panel.ui" line="248"/>
         <source>Shake Nodes</source>
         <translation>Запустить узлы</translation>
     </message>
@@ -132,7 +132,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="forms/statistics_widget.ui" line="42"/>
         <source>Ratio of not optimal routes in routing tables:</source>
-        <translation type="unfinished">Доля не оптимальных путей в таблицах маршрутизации:</translation>
+        <translation>Доля не оптимальных путей в таблицах маршрутизации:</translation>
     </message>
     <message>
         <location filename="forms/statistics_widget.ui" line="52"/>
@@ -158,6 +158,16 @@ p, li { white-space: pre-wrap; }
         <location filename="forms/statistics_widget.ui" line="121"/>
         <source>)</source>
         <translation>)</translation>
+    </message>
+    <message>
+        <location filename="forms/main_dockable_panel.ui" line="196"/>
+        <source>&lt;sup&gt;1&lt;/sup&gt; Ratio of scene half size.</source>
+        <translation>&lt;sup&gt;1&lt;/sup&gt; Доля половины размера сцены.</translation>
+    </message>
+    <message>
+        <location filename="forms/main_dockable_panel.ui" line="158"/>
+        <source>Disconnection distance&lt;sup&gt;1&lt;/sup&gt;:</source>
+        <translation>Расстояние разъединения&lt;sup&gt;1&lt;/sup&gt;:</translation>
     </message>
 </context>
 <context>
