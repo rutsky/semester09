@@ -32,7 +32,7 @@
       <item row="0" column="1">
        <widget class="QLabel" name="incorrectRoutesRatioLabel">
         <property name="text">
-         <string>0</string>
+         <string>0 %</string>
         </property>
        </widget>
       </item>
@@ -59,7 +59,7 @@
       <item row="1" column="1">
        <widget class="QLabel" name="notoptimalRoutesRatioLabel">
         <property name="text">
-         <string>0</string>
+         <string>0 %</string>
         </property>
        </widget>
       </item>
