@@ -19,5 +19,11 @@ import os
 env = Environment(tools=["default"])
 
 env['ENV']['HOME'] = os.environ['HOME']
-pdfOutput = env.PDF(target='50572_Rutsky_research_work.pdf', source='50572_Rutsky_research_work.tex')
+pdfOutput = env.PDF(target='50572_Rutsky_research_work.pdf',
+    source='50572_Rutsky_research_work.tex')
 #Depends(pdfOutput,Split('presentation.tex bibliography.bib'))
+
+pdfOutput = env.PDF(target='5057-12_Rutsky_research_work_report.pdf', 
+    source='5057-12_Rutsky_research_work_report.tex')
+
+# vim: set filetype=python ts=4 sw=4 et:
