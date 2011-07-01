@@ -14,7 +14,8 @@ class MyQUiLoader(QtUiTools.QUiLoader):
         self.baseinstance = baseinstance
 
     def createWidget(self, className, parent=None, name=""):
-        widget = QtUiTools.QUiLoader.createWidget(self, className, parent, name)
+        widget = QtUiTools.QUiLoader.createWidget(self, className, parent, 
+                name)
         if parent is None:
             return self.baseinstance
         else:
