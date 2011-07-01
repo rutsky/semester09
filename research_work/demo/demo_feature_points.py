@@ -21,7 +21,7 @@ def main():
     pylab.rc('image', interpolation='nearest')
     pylab.subplot(111)
     pylab.imshow(src_arr)
-    pylab.plot(*[k[0] for k in keypoints], marker='o', color='r', ls='')
+    pylab.plot(*zip(*[k[0] for k in keypoints]), marker='.', color='r', ls='')
 
     pylab.show()
 
