@@ -8,7 +8,7 @@ from numpy import array
 def main():
     src_cv_img = cv.LoadImage("data/gorskaya/images/1/g126.jpg")
 
-    src_arr = array(src_cv_img[:, :]) 
+    src_arr = array(src_cv_img[:, :])[:, :, ::-1]
 
     pylab.rc('image', interpolation='nearest')
     pylab.subplot(111)
