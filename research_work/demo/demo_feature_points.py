@@ -3,13 +3,16 @@
 import cv
 import numpy
 import pylab
+from numpy import array
 
 def main():
-    src = cv.LoadImage("data/gorskaya/images/1/g126.jpg")
+    src_cv_img = cv.LoadImage("data/gorskaya/images/1/g126.jpg")
+
+    src_arr = array(src_cv_img[:, :]) 
 
     pylab.rc('image', interpolation='nearest')
     pylab.subplot(111)
-    pylab.imshow(src[:, :])
+    pylab.imshow(src_arr)
 
     pylab.show()
 
