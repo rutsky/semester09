@@ -1,7 +1,7 @@
 % Report on research work for 10th semester in SPbSTU.
 % Copyright (C) 2010-2011 Vladimir Rutsky <altsysrq@gmail.com>
 
-\documentclass[a4paper,10pt]{article}
+\documentclass[a4paper,12pt]{article}
 
 % Encoding support.
 \usepackage{ucs}
@@ -38,6 +38,7 @@
 \usepackage{enumitem}
 %\usepackage{datetime}
 \usepackage{verbatim}
+\usepackage{commath}
 
 % from http://www.latex-community.org/forum/viewtopic.php?f=5&t=1383&start=0&st=0&sk=t&sd=a
 \makeatletter
@@ -71,7 +72,8 @@
 Направление съёмки отклоняется от вертикального вниз не более чем на несколько градусов.
 Снимки получены с высоким пространственным разрешением от 15 до 40~см на точку.
 
-Положения камеры в пространстве в момент съёмки известны с точностью до 50 метров. 
+Положения камеры в пространстве в момент съёмки известны с точностью до 50 метров, 
+ориентация камер~--- с точностью до $30^{\circ}$.
 Снятые камерой области поверхности Земли, пересекаются не менее чем половиной своей площади,
 и объекты, стоящие на снимаемой поверхности и снятые на обоих снимках, видны под разными углами.
 
@@ -108,9 +110,7 @@
 
 Среда разработки: Microsoft Visual Studio, NetBeans.
 
-Используемые библиотеки: TODO
-
-\pagebreak
+Используемые библиотеки: OpenCV, FLANN. % TODO
 
 \section{Выполненная работа}
 
@@ -149,14 +149,15 @@
 основные методы совмещения снимков описаны 
 в~\cite{szelisky06alignstichtut, szelisky10compvis}:
 \begin{enumerate}
-  \item Прямое попиксельное совмещение~[X]~--- вычислительно сложный подход; 
+  \item Прямое попиксельное совмещение~\cite{bergen92hmbme}~--- 
+  вычислительно сложный подход; 
   при проявлении параллакса на значительной площади метод работает очень плохо;
   точности позиций камер недостаточно для получения корректного
   результата.
-  \item Восстановление плотного облака 3D точек~[X]~--- очень перспективный, 
+  \item Восстановление плотного облака 3D точек~\cite{furu09mvs}~--- очень перспективный, 
   но вычислительно сложный подход.
   \item Восстановление информации о глубине пикселей, рассматривая исходные
-  изображения как стереопару~[X]~--- 
+  изображения как стереопару~\cite{scharstein02taxonomy}~--- 
   точности исходных данных недостаточно для построения модели эпиполярной 
   геометрии и последующей ректификации изображений.
   \item Совмещение снимков по особенным точкам изображения~[X]~--- 
@@ -188,8 +189,8 @@
   %чем меньше евклидово расстояние в $\mathbf{R}^n$ между их дескрипторами 
   % $d = |\mathbf{v}_1 - \mathbf{v}_2|$.
   
-  \item Между снимками ищется множество пар похожих на друг к друга особенных 
-  точек $\widetilde{S} = \{ (\mathbf{p}_i, \mathbf{p}_j ) \},$
+  \item Между снимками ищется множество пар похожих особенных 
+  точек $\widetilde{S} = \cbr{(\mathbf{p}_i, \mathbf{p}_j )},$
   где $\mathbf{p}_i$ из первого снимка, а $\mathbf{p}_j$ из второго.
   
   \item По найденным парам похожих особенных точек $\widetilde{S}$ производится 
@@ -328,6 +329,24 @@ RANSAC с ограниченным штрафом за точки-выбросы
 
 \begin{thebibliography}{9}
 
+\bibitem{bergen92hmbme}
+  J.\,R.\,Bergen, P.\,Anandan, K.\,J.\,Hanna, R.\,Hingorani, 
+  \emph{Hierarchical model-based motion estimation}.
+  Second European Conference on Computer Vision (ECCV’92), 
+  (Santa Margherita Liguere, Italy), 
+  стр.~237--252,
+  Springer-Verlag, 
+  1992.
+  
+\bibitem{scharstein02taxonomy}
+  D.\,Scharstein, R.\,Szeliski,
+  \emph{A taxonomy and evaluation of dense two-frame stereo correspondence algorithms}.
+  International journal of computer vision,
+  47~(1),
+  стр.~7--42,
+  Springer,
+  2002.
+
 \bibitem{forsythponce04compvis}
   Д.\,Форсайт, Ж.\,Понс,
   \emph{Компьютерное зрение. Современный подход}.
@@ -339,14 +358,18 @@ RANSAC с ограниченным штрафом за точки-выбросы
   \emph{Image Alignment and Stitching: A Tutorial}.
   Now Publishers Inc,
   2006.
+ 
+\bibitem{furu09mvs}
+  Yasutaka Furukawa, Jean Ponce,
+  \emph{Accurate, Dense, and Robust Multi-View Stereopsis}.
+  IEEE Trans. on Pattern Analysis and Machine Intelligence,
+  2009.
 
 \bibitem{szelisky10compvis}
   R.\,Szeliski,
   \emph{Computer Vision: Algorithms and Applications}.
   Springer,
   2010.
-  
-TODO
 
 \end{thebibliography}
 
@@ -367,3 +390,11 @@ TODO
 \end{comment}
 \end{document}
 
+% TODO: 
+% 1. раскрыть ссылки на литературу
+% 2.+  шрифт 12-14
+% 3. картинку с параллаксом
+% 4. обзор литературы --- вывод
+% показать проблематику
+% дана ориентация камер
+% указать, что предполагаем, что Земля на снимке плоская
