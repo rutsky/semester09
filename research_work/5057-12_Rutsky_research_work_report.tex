@@ -27,7 +27,7 @@
 \tolerance=2000
 %\flushbottom       % page height aligning
 %\hoffset=0cm
-\pagestyle{empty}  % without numeration
+%\pagestyle{empty}  % without numeration
 
 % Indenting first paragraph.
 \usepackage{indentfirst}
@@ -147,7 +147,7 @@
 \subsection{Обзор литературы}
 Поставленная задача относится к области знаний компьютерного зрения, 
 основные методы совмещения снимков описаны 
-в~\cite{szelisky06alignstichtut, szelisky10compvis}:
+в~\cite{zitova03is-survey, szelisky06alignstichtut, szelisky10compvis}:
 \begin{enumerate}
   \item Прямое попиксельное совмещение~\cite{bergen92hmbme}~--- 
   вычислительно сложный подход; 
@@ -160,7 +160,7 @@
   изображения как стереопару~\cite{scharstein02taxonomy}~--- 
   точности исходных данных недостаточно для построения модели эпиполярной 
   геометрии и последующей ректификации изображений.
-  \item Совмещение снимков по особенным точкам изображения~[X]~--- 
+  \item Совмещение снимков по особенным точкам изображения~\cite{cham98matchframework, brown03recognising, mclauchlan02mosaic}~--- 
   наиболее гибкий подход, на основе которого была решена поставленная задача, 
   описание будет представлено ниже.
 \end{enumerate}
@@ -177,7 +177,7 @@
 \subsection{Выбранный метод решения}
 
 Для построения ортофотоплана был выбран метод, основывающийся на выборе и 
-сопоставлении особенных точек изображения [X].
+сопоставлении особенных точек изображения~\cite{cham98matchframework, brown03recognising, mclauchlan02mosaic}.
 Общая схема алгоритма построения ортофотоплана состоит в следующем:
 \begin{enumerate}
   \item На снимках выбираются особенные точки $\cbr{ \mathbf{p}_i }$.
@@ -225,8 +225,8 @@
 изображений меняется незначительно, а ориентация камеры может измениться на 
 угол до $45^{\circ}$, поэтому оказалось достаточным использовать детектор
 особенных точек не инвариантный к масштабу, но инвариантный к повороту.
-В качестве такого детектора был реализован модифицированный детектор Харриса 
-[X].
+В качестве такого детектора был реализован модифицированный детектор 
+Харриса~\cite{harris88detector}.
 % TODO: Здесь можно написать о результатах работы с другими детекторами.
 
 \paragraph{Поиск похожих особенных точек}
@@ -241,19 +241,20 @@ $d = |\mathbf{v}_1 - \mathbf{v}_2|$.
 
 Таким образом поиск похожих особенных точек сводится к поиску ближайших 
 соседей для точек в пространстве $\mathbf{R}^n$.
-Данная задача приближённо решалась с помощью библиотеки FLANN~[X].
+Данная задача приближённо решалась с помощью библиотеки FLANN~\cite{muja09flann}.
 
 \paragraph{Оценка матрицы гомографии и фильтрация ошибочных совмещений}
 Для оценки матрицы гомографиии и выделения среди множества пар 
-соответствующих точек $S$ был реализован алгоритм MLESAC~[X]~---
-модификация RANSAC~[X], разработанная специально для оценки матрицы 
-гомографии.
+соответствующих точек $S$ был реализован алгоритм MLESAC~\cite{torr00mlesac}~---
+модификация RANSAC~\cite{fischler81ransac}, 
+разработанная специально для оценки матрицы гомографии.
 
 \paragraph{Оценка положений камер и особенных точек}
 Для получения оценок положений камер и особенных точек в пространстве был 
 использован метод уравнивания связок: формулировалась задача 
-минимизации суммы квадратов ошибок репроекции~[X], данная задача 
-оптимизации решалась алгоритмом Левенберга-Марквардта~[X].
+минимизации суммы квадратов ошибок репроекции~\cite{szelisky10compvis}, данная задача 
+оптимизации решалась алгоритмом 
+Левенберга-Марквардта~\cite{levenberg44leastsquares, marquardt63leastsquares}.
 % TODO: Здесь можно написать, что были попытки использовать другие способы
 % решения bundle adjustment.
 
@@ -305,38 +306,94 @@ RANSAC с ограниченным штрафом за точки-выбросы
 
 %TODO: Виньетирование и усреднение яркости.
 
-\subsection{Результаты}
+\section{Результаты}
 Был разработан конвейер построения ортофотоплана по паре некалиброванных 
 аэрофотоснимков с автоматическим выбором плоскости проектирования. 
 
 Разработанный конвейер был протестирован на реальных данных, в полученных 
 ортофотопланах снимки корректно состыкованы по плоскости Земли.
 
-\subsection{Дальнейшие исследования}
+\section{Дальнейшие исследования}
 %TODO: Ориентирование на водную поверхность при сшивке.
 
 Вычисления в использованных алгоритмах можно частично перенести на GPU, что 
 должно значительно ускорить конечную скорость работы.
 
 Вызванные параллаксом нестыковки на границе между совмещаемыми снимками можно
-убрать используя специальные алгоритмы [X, XX].
+убрать используя специальные алгоритмы~\cite{shum00mosaic, kang04mpps}.
 
 Построив плотное облако точек и восстановив геометрию 
-объектов на поверхности Земли [X, XX], возможно полностью убрать эффекты 
+объектов на поверхности Земли~\cite{furu09mvs}, возможно полностью убрать эффекты 
 параллакса и построить геометрически точный ортофотоплан.
 
 \section{Литература}
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
+
+\bibitem{levenberg44leastsquares}
+  K.\,Levenberg,
+  \emph{A method for the solution of certain problems in least squares}.
+  Quarterly of Applied Mathematics, 
+  2,
+  стр.~164--168.
+  1944.
+
+\bibitem{marquardt63leastsquares}
+   D.\,W.\,Marquardt,
+   \emph{An algorithm for least-squares estimation of nonlinear parameters}.
+   Journal of the Society for Industrial and Applied Mathematics,
+   11~(2),
+   стр.~431--441,
+   1963.
+
+\bibitem{fischler81ransac}
+  M.\,A.\,Fischler, R.\,C.\,Bolles,
+  \emph{Random sample consensus: A paradigm for model fitting with applications to image analysis and automated cartography}.
+  Communications of the ACM, 
+  24~(6),
+  стр.~381--395,
+  1981.
+ 
+\bibitem{harris88detector}
+  C.\,Harris, M.\,Stephens,
+  \emph{A combined corner and edge detector}.
+  Proceedings of the 4th Alvey Vision Conference,
+  15,
+  стр.~147--151,
+  1988.
 
 \bibitem{bergen92hmbme}
   J.\,R.\,Bergen, P.\,Anandan, K.\,J.\,Hanna, R.\,Hingorani, 
   \emph{Hierarchical model-based motion estimation}.
   Second European Conference on Computer Vision (ECCV’92), 
-  (Santa Margherita Liguere, Italy), 
   стр.~237--252,
   Springer-Verlag, 
   1992.
+
+\bibitem{cham98matchframework}
+  T.\,J.\,Cham, R.\,Cipolla,
+  \emph{A Statistical Framework for Long-Range Feature Matching in Uncalibrated Image Mosaicing}.
+  Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition,
+  стр.~442--447,
+  1998.
+
+\bibitem{torr00mlesac}
+  P.\,H.\,S.\,Torr, A.\,Zisserman,
+  \emph{MLESAC: A new robust estimator with application to estimating image geometry}.
+  Computer Vision and Image Understanding,
+  78~(1),
+  стр.~138--156,
+  Elsevier,
+  2000.
+  
+\bibitem{shum00mosaic}
+  H.\,Y.\,Shum, R.\,Szeliski,
+  \emph{Systems and experiment paper: Construction of panoramic image mosaics with global and local alignment}.
+  International Journal of Computer Vision,
+  36~(2),
+  стр.~101--130,
+  Springer,
+  2000.
   
 \bibitem{scharstein02taxonomy}
   D.\,Scharstein, R.\,Szeliski,
@@ -347,10 +404,41 @@ RANSAC с ограниченным штрафом за точки-выбросы
   Springer,
   2002.
 
+\bibitem{mclauchlan02mosaic}
+  P.\,F.\,McLauchlan, A.\,Jaenicke,
+  \emph{Image mosaicing using sequential bundle adjustment}.
+  Image and Vision Computing,
+  20~(9--10),
+  стр.~751--759,
+  Elsevier,
+  2002.
+
+\bibitem{zitova03is-survey}
+  B.\,Zitov\'a, J.\,Flusser,
+  \emph{Image registration methods: a survey}.
+  Image and Vision Computing,
+  21,
+  стр.~977--1000,
+  Elsevier,
+  2003.
+  
+\bibitem{brown03recognising}
+  M.\,Brown, D.\,G.\,Lowe,
+  \emph{Recognising panoramas},
+  Proceedings of the Ninth IEEE International Conference on Computer Vision,
+  стр.~1218--1225,
+  2003.
+
 \bibitem{forsythponce04compvis}
   Д.\,Форсайт, Ж.\,Понс,
   \emph{Компьютерное зрение. Современный подход}.
   М.: Издательский дом {\guillemotleft}Вильямс{\guillemotright},
+  2004.
+
+\bibitem{kang04mpps}
+  S.\,B.\,Kang, R.\,Szeliski, M.\,Uyttendaele,
+  \emph{Seamless stitching using multi-perspective plane sweep}.
+  Microsoft Research,
   2004.
 
 \bibitem{szelisky06alignstichtut}
@@ -360,9 +448,17 @@ RANSAC с ограниченным штрафом за точки-выбросы
   2006.
  
 \bibitem{furu09mvs}
-  Yasutaka Furukawa, Jean Ponce,
+  Y.\,Furukawa, J.\,Ponce,
   \emph{Accurate, Dense, and Robust Multi-View Stereopsis}.
   IEEE Trans. on Pattern Analysis and Machine Intelligence,
+  2009.
+ 
+\bibitem{muja09flann}
+  M.\,Muja, D.\,G.\,Lowe,
+  \emph{Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration}.
+  International Conference on Computer Vision Theory and Application VISSAPP'09,
+  стр.~331--340,
+  INSTICC Press,
   2009.
 
 \bibitem{szelisky10compvis}
