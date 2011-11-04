@@ -90,7 +90,7 @@
 Требуется по данным снимкам выбрать точки привязки и построить ортофотоплан.
 
 \section{Элементы исследования и новизны}
-Из-за параллакса значительно усложняется задача совмещения снимков. 
+Из-за параллакса значительно усложняется задача совмещения снимков (см. Рис.~\ref{fig:parallax}). 
 Например, при преобладании на снимках леса,
 снимки могут быть ошибочно совмещены не по плоскости Земли, 
 а по плоскости верхушек деревьев леса, и
@@ -186,14 +186,15 @@
     \draw[#1] #2 -- +(+0.1, -0.1);
 }
 
+\tikzstyle{image1 points fill} = [draw=black,fill=white]
+\tikzstyle{image2 points fill} = [draw=black,thick]
+
 \newcommand{\drawparallaxpicture}[3]{
   \begin{tikzpicture}[
       scale=0.85,
       Earth surface/.style={very thick},
       view ray/.style={dashed, thin},
       image/.style={very thick},
-      image1 points fill/.style={draw=black,fill=white},
-      image2 points fill/.style={draw=black,thick},
       projection help lines/.style={help lines}
     ]
 
@@ -292,11 +293,20 @@
 \drawparallaxpicture{(2,0)}{(3,0)}{(4,0)}
 }
   \quad
-  \subfloat[Не все снимаемые точки лежат в плоскости Земли.]%
+  \subfloat[Не все снимаемые точки лежат в плоскости Земли, наблюдается параллакс.]%
 {\label{fig:parallax-case}
 \drawparallaxpicture{(2,-0.5)}{(3,1.2)}{(4,0)}
 }
-  \caption{Съёмка поверхности Земли из двух точек $\mathbf{c}_1, \mathbf{c}_2$.}
+  \caption{Съёмка поверхности Земли из двух точек $\mathbf{c}_1, \mathbf{c}_2$ 
+    без параллакса~\subref{fig:parallax-free-case} и с параллаксом~\subref{fig:parallax-case}.
+    Снятые камерой изображения обозначены как $\mathbf{I}_1, \mathbf{I}_2$, 
+    снимаемые точки обозначены \protect\tikz \protect\fill[black] (0,0) circle (0.1);,
+    их положения на снимках обозначены 
+    \protect\tikz \protect\fill[image1 points fill] (0,0) circle (0.1);, 
+    \protect\tikz \protect\drawcross{image2 points fill}{(0,0)};.\\
+    В случае~\subref{fig:parallax-free-case} точки на снимках связаны преобразованием-гомографией,
+    в случае~\subref{fig:parallax-case} точки на снимках связаны значительно более сложными преобразованиями.
+}
   \label{fig:parallax}
 \end{figure}
 
