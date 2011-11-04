@@ -204,6 +204,11 @@
   удаления из $\widetilde{S}$ пар точек изображений, явно не связанных
   преобразованием матрицей гомографии $\mathbf{H}$.
   
+  В случае отсутствия параллакса, найдённой матрицы гомографии было бы достаточно 
+  для построения ортофотоснимка: из матрицы гомографии можно извлечь нормаль 
+  плоскости Земли и взаимное положение камер с точностью до масштаба~\cite{malis07homodecomp}, 
+  далее изображения можно репроецировать на истинную плоскость Земли.
+  
   \item Производится оценка положений камеры в пространстве в момент съёмки
   $\mathbf{c}_1, \mathbf{c}_2 \in \mathbf{R}^3$ и
   положений точек снимаемой поверхности $\cbr{ \mathbf{x}_k } \subset \mathbf{R}^3$,
@@ -446,7 +451,13 @@ RANSAC с ограниченным штрафом за точки-выбросы
   \emph{Image Alignment and Stitching: A Tutorial}.
   Now Publishers Inc,
   2006.
- 
+
+\bibitem{malis07homodecomp}
+  E.\,Malis, M.\,Vargas,
+  \emph{Deeper understanding of the homography decomposition for vision-based control}.
+  INRIA,
+  2007.
+
 \bibitem{furu09mvs}
   Y.\,Furukawa, J.\,Ponce,
   \emph{Accurate, Dense, and Robust Multi-View Stereopsis}.
