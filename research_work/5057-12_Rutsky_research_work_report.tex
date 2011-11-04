@@ -39,6 +39,8 @@
 %\usepackage{datetime}
 \usepackage{verbatim}
 \usepackage{commath}
+\usepackage{subfig}
+\usepackage{tikz}
 
 % from http://www.latex-community.org/forum/viewtopic.php?f=5&t=1383&start=0&st=0&sk=t&sd=a
 \makeatletter
@@ -175,6 +177,31 @@
 %под летательным аппаратом - параллакс незаметен.
 
 \subsection{Выбранный метод решения}
+
+\begin{figure}
+  \centering
+  \subfloat[Все снимаемые точки лежат в плоскости Земли.]%
+{\label{fig:parallax-free-case}
+  \begin{tikzpicture}
+    \draw[help lines] (0,0) grid (3,2);
+    \draw (0,0) coordinate (A) -- (3,2) coordinate (B)
+        (1,2) -- (3,0);
+    \fill[red] (intersection of A--B and 1,2--3,0) circle (2pt);
+  \end{tikzpicture}
+}
+  \quad
+  \subfloat[Не все снимаемые точки лежат в плоскости Земли.]%
+{\label{fig:parallax-case}
+  \begin{tikzpicture}
+    \draw[help lines] (0,0) grid (3,2);
+    \draw (0,0) coordinate (A) -- (3,2) coordinate (B)
+        (1,2) -- (3,0);
+    \fill[red] (intersection of A--B and 1,2--3,0) circle (2pt);
+  \end{tikzpicture}
+}
+  \caption{Съёмка из двух камер.}
+  \label{fig:parallax}
+\end{figure}
 
 Для построения ортофотоплана был выбран метод, основывающийся на выборе и 
 сопоставлении особенных точек изображения~\cite{cham98matchframework, brown03recognising, mclauchlan02mosaic}.
