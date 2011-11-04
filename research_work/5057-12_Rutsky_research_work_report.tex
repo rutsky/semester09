@@ -179,6 +179,13 @@
 
 \subsection{Выбранный метод решения}
 
+\newcommand{\drawcross}[2]{
+    \draw[#1] #2 -- +(+0.1, +0.1);
+    \draw[#1] #2 -- +(-0.1, +0.1);
+    \draw[#1] #2 -- +(-0.1, -0.1);
+    \draw[#1] #2 -- +(+0.1, -0.1);
+}
+
 \begin{figure}
   \centering
   \subfloat[Все снимаемые точки лежат в плоскости Земли.]%
@@ -222,6 +229,7 @@
   \quad
   \subfloat[Не все снимаемые точки лежат в плоскости Земли.]%
 {\label{fig:parallax-case}
+%\newcommand{\drawparallaxpicture}[3]{
   \begin{tikzpicture}[
       scale=0.85,
       Earth surface/.style={very thick},
@@ -231,6 +239,13 @@
       image2 points fill/.style={draw=black,thick},
       projection help lines/.style={help lines}
     ]
+
+    %\coordinate (P1) at #1;
+    %\coordinate (P2) at #2;
+    %\coordinate (P3) at #3;  
+    \coordinate (P1) at (2,-0.5);
+    \coordinate (P2) at (3,1.2);
+    \coordinate (P3) at (4,0);
   
     % Camera 1 view volume.
     \draw (0,0) coordinate (A1) -- 
@@ -243,10 +258,6 @@
       (1+5.25,0) coordinate (B2) -- 
       (1+2.5,6.3) coordinate (C2) node[above]{$\mathbf{c}_2$} -- 
       (A2);
-      
-    \coordinate (P1) at (2,-0.5);
-    \coordinate (P2) at (3,1.2);
-    \coordinate (P3) at (4,0);
       
     % Calculate points projection on Earth surface.
     \coordinate (p11) at (intersection of C1--P1 and A1--B1);
@@ -310,19 +321,14 @@
     \fill[image1 points fill] (Ip12) circle (0.1);
     \fill[image1 points fill] (Ip13) circle (0.1);
     
-    \newcommand{\drawcross}[2]{
-      \draw[#1] #2 -- +(+0.1, +0.1);
-      \draw[#1] #2 -- +(-0.1, +0.1);
-      \draw[#1] #2 -- +(-0.1, -0.1);
-      \draw[#1] #2 -- +(+0.1, -0.1);
-    }
-    
     \drawcross{image2 points fill}{(Ip21)}
     \drawcross{image2 points fill}{(Ip22)}
     \drawcross{image2 points fill}{(Ip23)}
 
   \end{tikzpicture}
 }
+
+%\drawparallaxpicture{(2,-0.5)}{(3,1.2)}{(4,0)}
   \caption{Съёмка поверхности Земли из двух точек $\mathbf{c}_1, \mathbf{c}_2$.}
   \label{fig:parallax}
 \end{figure}
