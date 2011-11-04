@@ -186,50 +186,7 @@
     \draw[#1] #2 -- +(+0.1, -0.1);
 }
 
-\begin{figure}
-  \centering
-  \subfloat[Все снимаемые точки лежат в плоскости Земли.]%
-{\label{fig:parallax-free-case}
-  \begin{tikzpicture}[
-      scale=0.85,
-      Earth surface/.style={thick},
-      view ray/.style={dashed, thin},
-    ]
-  
-    % Camera 1 view volume.
-    \draw (0,0) coordinate (A1) -- 
-      (5,0) coordinate (B1) -- 
-      (2.5, 6) coordinate (C1) node[above]{$\mathbf{c}_1$} -- 
-      (A1);
-      
-    % Camera 2 view volume.
-    \draw (1+0,0) coordinate (A2) -- 
-      (1+5.25,0) coordinate (B2) -- 
-      (1+2.5,6.3) coordinate (C2) node[above]{$\mathbf{c}_2$} -- 
-      (A2);
-      
-    % Visible points on Earth surface.
-    \fill[black] (2,0) coordinate (P1) circle (0.1);
-    \fill[black] (3,0) coordinate (P2) circle (0.1);
-    \fill[black] (4,0) coordinate (P3) circle (0.1);
-    
-    % View rays from camera to visible points on Earth surface.
-    \draw[view ray] (C1) -- (P1);
-    \draw[view ray] (C1) -- (P2);
-    \draw[view ray] (C1) -- (P3);
-
-    \draw[view ray] (C2) -- (P1);
-    \draw[view ray] (C2) -- (P2);
-    \draw[view ray] (C2) -- (P3);
-
-    % Earth surface.
-    \draw[Earth surface] (-1.6,0) node[above right] {Земля} -- (6.75,0);
-  \end{tikzpicture}
-}
-  \quad
-  \subfloat[Не все снимаемые точки лежат в плоскости Земли.]%
-{\label{fig:parallax-case}
-%\newcommand{\drawparallaxpicture}[3]{
+\newcommand{\drawparallaxpicture}[3]{
   \begin{tikzpicture}[
       scale=0.85,
       Earth surface/.style={very thick},
@@ -240,12 +197,12 @@
       projection help lines/.style={help lines}
     ]
 
-    %\coordinate (P1) at #1;
-    %\coordinate (P2) at #2;
-    %\coordinate (P3) at #3;  
-    \coordinate (P1) at (2,-0.5);
-    \coordinate (P2) at (3,1.2);
-    \coordinate (P3) at (4,0);
+    \coordinate (P1) at #1;
+    \coordinate (P2) at #2;
+    \coordinate (P3) at #3;  
+    %\coordinate (P1) at (2,-0.5);
+    %\coordinate (P2) at (3,1.2);
+    %\coordinate (P3) at (4,0);
   
     % Camera 1 view volume.
     \draw (0,0) coordinate (A1) -- 
@@ -328,7 +285,17 @@
   \end{tikzpicture}
 }
 
-%\drawparallaxpicture{(2,-0.5)}{(3,1.2)}{(4,0)}
+\begin{figure}
+  \centering
+  \subfloat[Все снимаемые точки лежат в плоскости Земли.]%
+{\label{fig:parallax-free-case}
+\drawparallaxpicture{(2,0)}{(3,0)}{(4,0)}
+}
+  \quad
+  \subfloat[Не все снимаемые точки лежат в плоскости Земли.]%
+{\label{fig:parallax-case}
+\drawparallaxpicture{(2,-0.5)}{(3,1.2)}{(4,0)}
+}
   \caption{Съёмка поверхности Земли из двух точек $\mathbf{c}_1, \mathbf{c}_2$.}
   \label{fig:parallax}
 \end{figure}
